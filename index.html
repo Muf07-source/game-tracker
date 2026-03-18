@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>游戏日报</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2ee;
+    --bg2: #edeae4;
+    --bg3: #e4e0d8;
+    --card: #ffffff;
+    --border: #ddd9d0;
+    --text: #1a1814;
+    --text2: #6b6660;
+    --text3: #a09b94;
+    --accent: #d4622a;
+    --accent2: #e8845a;
+    --green: #2a7d4f;
+    --red: #c0392b;
+    --blue: #2563a8;
+    --yellow: #b8860b;
+    --purple: #7c3aad;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --nav-h: 64px;
+    --font: 'Noto Sans SC', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: var(--font); color: var(--text); }
+
+  /* ── App Shell ── */
+  #app { height: 100vh; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; position: relative; background: var(--bg); }
+  .page { flex: 1; overflow-y: auto; padding-bottom: calc(var(--nav-h) + 12px); display: none; }
+  .page.active { display: block; }
+
+  /* ── Bottom Nav ── */
+  #nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    height: var(--nav-h); background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 8px 8px;
+    z-index: 50;
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: none; cursor: pointer;
+    padding: 8px 4px; border-radius: var(--radius-sm);
+    transition: background 0.15s;
+    color: var(--text3); font-size: 10px; font-family: var(--font);
+  }
+  .nav-btn .icon { font-size: 20px; line-height: 1; }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn.active .icon { transform: translateY(-1px); }
+
+  /* ── Header ── */
+  .page-header {
+    padding: 20px 18px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-title { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
+  .page-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    border: none; cursor: pointer; font-family: var(--font);
+    font-size: 13px; font-weight: 700; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:active { background: #b8501f; }
+  .btn-ghost { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:active { background: var(--bg3); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-full { width: 100%; justify-content: center; }
+  .btn-danger { background: #fde8e8; color: var(--red); border: 1px solid #fbd5d5; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Forms ── */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-input {
+    width: 100%; padding: 10px 12px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); font-family: var(--font);
+    font-size: 14px; color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  textarea.form-input { resize: none; min-height: 100px; line-height: 1.6; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(4px); z-index: 200;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 480px; max-height: 88vh;
+    overflow-y: auto; padding: 20px 18px 36px;
+    animation: slideUp 0.25s cubic-bezier(.32,1,.68,1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .modal-title { font-size: 17px; font-weight: 900; }
+  .modal-close { width: 30px; height: 30px; border-radius: 8px; background: var(--bg2); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+
+  /* ── Game Switcher ── */
+  #game-switcher {
+    display: flex; gap: 8px; padding: 12px 18px;
+    overflow-x: auto; scrollbar-width: none;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+  }
+  #game-switcher::-webkit-scrollbar { display: none; }
+  .game-tab {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--card);
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    white-space: nowrap; transition: all 0.15s;
+    color: var(--text2);
+  }
+  .game-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── Resource Cards Grid ── */
+  .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 18px; }
+  .res-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+    box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .res-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
+  .res-emoji { font-size: 22px; margin-bottom: 6px; }
+  .res-name { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-weight: 500; }
+  .res-value { font-size: 22px; font-family: var(--mono); font-weight: 500; color: var(--text); line-height: 1; }
+  .res-unit { font-size: 10px; color: var(--text3); margin-left: 2px; }
+  .res-delta { font-size: 11px; margin-top: 4px; font-weight: 700; }
+  .res-delta.up { color: var(--green); }
+  .res-delta.down { color: var(--red); }
+  .res-delta.flat { color: var(--text3); }
+  .sparkline-wrap { margin-top: 8px; }
+
+  /* ── Log List ── */
+  .log-list { padding: 0 18px; }
+  .log-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px;
+    margin-bottom: 10px; box-shadow: var(--shadow);
+  }
+  .log-date { font-size: 12px; color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  .log-resources { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .log-res-chip {
+    background: var(--bg2); border-radius: 6px;
+    padding: 3px 8px; font-size: 12px; color: var(--text2);
+  }
+  .log-note { font-size: 12px; color: var(--text3); font-style: italic; }
+  .log-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+  /* ── Tasks ── */
+  .task-section-title { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; padding: 14px 18px 6px; }
+  .task-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    background: var(--card); transition: background 0.15s;
+  }
+  .task-item:first-child { border-top: 1px solid var(--border); }
+  .task-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--border); background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+    font-size: 12px;
+  }
+  .task-check.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .task-text { flex: 1; font-size: 14px; }
+  .task-text.done { text-decoration: line-through; color: var(--text3); }
+  .task-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+  .task-badge.daily { background: #dbeafe; color: var(--blue); }
+  .task-badge.once { background: #ede9fe; color: var(--purple); }
+  .task-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 2px; }
+
+  /* ── Diary ── */
+  .diary-view-toggle { display: flex; gap: 8px; padding: 12px 18px 0; }
+  .view-btn { flex: 1; padding: 8px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--card); font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+  .view-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tag-filter { display: flex; gap: 6px; padding: 10px 18px; overflow-x: auto; scrollbar-width: none; }
+  .tag-filter::-webkit-scrollbar { display: none; }
+  .tag-chip { flex-shrink: 0; padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--card); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; color: var(--text2); }
+  .tag-chip.active { color: #fff; border-color: transparent; }
+  .diary-list { padding: 10px 18px; }
+  .diary-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+    margin-bottom: 10px; box-shadow: var(--shadow); cursor: pointer;
+    transition: box-shadow 0.15s; position: relative; overflow: hidden;
+  }
+  .diary-card:active { box-shadow: var(--shadow-lg); }
+  .diary-tag-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 14px 0 0 14px; }
+  .diary-card-inner { padding-left: 10px; }
+  .diary-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .diary-tag-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+  .diary-date { font-size: 11px; color: var(--text3); margin-left: auto; }
+  .diary-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .diary-preview { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .diary-thumb { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; float: right; margin-left: 10px; }
+  .diary-bind-icon { font-size: 11px; color: var(--blue); margin-top: 6px; }
+  .diary-game-tag { font-size: 10px; color: var(--text3); background: var(--bg2); padding: 2px 7px; border-radius: 8px; }
+
+  /* ── Detail View ── */
+  #detail-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    z-index: 150; display: none; flex-direction: column;
+    max-width: 480px; left: 50%; transform: translateX(-50%);
+  }
+  #detail-overlay.open { display: flex; }
+  .detail-header { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+  .detail-back { background: var(--bg2); border: none; width: 34px; height: 34px; border-radius: 10px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .detail-body { flex: 1; overflow-y: auto; padding: 18px; }
+  .detail-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .detail-content { font-size: 15px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+  .detail-images { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .detail-images img { width: calc(50% - 4px); border-radius: 10px; object-fit: cover; }
+  .detail-log-bind { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 10px 12px; margin-top: 14px; font-size: 12px; color: var(--blue); }
+  .detail-actions { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--border); }
+
+  /* ── Image Previews in Editor ── */
+  .img-preview-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .img-preview-item { position: relative; width: 72px; height: 72px; }
+  .img-preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .img-preview-del { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--red); color: #fff; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+
+  /* ── Sparkline SVG ── */
+  .sparkline { width: 100%; height: 32px; overflow: visible; }
+
+  /* ── Empty State ── */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+  .empty-text { font-size: 14px; }
+
+  /* ── Section Actions ── */
+  .section-actions { padding: 0 18px 10px; display: flex; gap: 8px; }
+
+  /* ── Tag colors ── */
+  .tag-攻略 { background: #dcfce7; color: #166534; }
+  .tag-心得 { background: #dbeafe; color: #1e40af; }
+  .tag-吐槽 { background: #fee2e2; color: #991b1b; }
+  .tag-日常 { background: #fef9c3; color: #854d0e; }
+  .tag-其他 { background: #f3f4f6; color: #374151; }
+  .bar-攻略 { background: #16a34a; }
+  .bar-心得 { background: #2563eb; }
+  .bar-吐槽 { background: #dc2626; }
+  .bar-日常 { background: #ca8a04; }
+  .bar-其他 { background: #6b7280; }
+
+  /* ── Misc ── */
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6660' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+  .toggle { width: 44px; height: 24px; background: var(--border); border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; border: none; }
+  .toggle.on { background: var(--accent); }
+  .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .toggle.on::after { transform: translateX(20px); }
+  .toast { position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%; transform: translateX(-50%); background: #1a1814; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; z-index: 500; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+  .manage-res-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .manage-res-item:last-child { border-bottom: none; }
+  .manage-res-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; margin-left: auto; padding: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Bottom Nav ── -->
+  <div id="nav">
+    <button class="nav-btn active" data-page="resources" onclick="switchPage('resources')">
+      <span class="icon">📊</span>资源
+    </button>
+    <button class="nav-btn" data-page="logs" onclick="switchPage('logs')">
+      <span class="icon">📋</span>日志
+    </button>
+    <button class="nav-btn" data-page="tasks" onclick="switchPage('tasks')">
+      <span class="icon">✅</span>任务
+    </button>
+    <button class="nav-btn" data-page="diary" onclick="switchPage('diary')">
+      <span class="icon">📔</span>日记
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: 资源
+  ══════════════════════════════════════════ -->
+  <div id="page-resources" class="page active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">📊 资源总览</div>
+        <div class="page-sub" id="res-date"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-game')">＋ 游戏</button>
+    </div>
+    <div id="game-switcher"></div>
+    <div id="res-content">
+      <div class="empty"><div class="empty-icon">🎮</div><div class="empty-text">还没有游戏，点右上角添加</div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: 日志
+  ══════════════════════════════════════════ -->
+  <div id="page-logs" class="page">
+    <div class="page-header">
+      <div><div class="page-title">📋 记录历史</div></div>
+    </div>
+    <div id="game-switcher-logs"></div>
+    <div class="section-actions" style="padding-top:12px">
+      <button class="btn btn-primary btn-full" onclick="openLogModal()">＋ 记录今日数据</button>
+    </div>
+    <div id="log-content"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: 任务
+  ══════════════════════════════════════════ -->
+  <div id="page-tasks" class="page">
+    <div class="page-header">
+      <div><div class="page-title">✅ 任务清单</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-task')">＋ 任务</button>
+    </div>
+    <div id="game-switcher-tasks"></div>
+    <div id="task-content"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PAGE: 日记
+  ══════════════════════════════════════════ -->
+  <div id="page-diary" class="page">
+    <div class="page-header">
+      <div><div class="page-title">📔 游戏日记</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openDiaryEditor(null)">＋ 写日记</button>
+    </div>
+    <div class="diary-view-toggle">
+      <button class="view-btn active" id="diary-view-game" onclick="setDiaryView('game')">本游戏</button>
+      <button class="view-btn" id="diary-view-all" onclick="setDiaryView('all')">全部游戏</button>
+    </div>
+    <div class="tag-filter" id="tag-filter"></div>
+    <div id="diary-content" class="diary-list"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       DETAIL OVERLAY (日记详情)
+  ══════════════════════════════════════════ -->
+  <div id="detail-overlay">
+    <div class="detail-header">
+      <button class="detail-back" onclick="closeDetail()">←</button>
+      <div style="flex:1">
+        <div id="detail-title" style="font-size:17px;font-weight:900"></div>
+      </div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-meta" id="detail-meta"></div>
+      <div class="detail-content" id="detail-content"></div>
+      <div class="detail-images" id="detail-images"></div>
+      <div class="detail-log-bind" id="detail-log-bind" style="display:none"></div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn btn-ghost btn-full" onclick="editCurrentDiary()">✏️ 编辑</button>
+      <button class="btn btn-danger btn-full" onclick="deleteCurrentDiary()">🗑 删除</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       MODALS
+  ══════════════════════════════════════════ -->
+
+  <!-- 添加游戏 -->
+  <div class="modal-overlay" id="modal-add-game">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">添加游戏</div>
+        <button class="modal-close" onclick="closeModal('modal-add-game')">×</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">游戏名称</label>
+        <input class="form-input" id="add-game-name" placeholder="例如：原神">
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label class="form-label">图标 emoji</label>
+          <input class="form-input" id="add-game-emoji" placeholder="🎮" maxlength="4">
+        </div>
+        <div class="form-group">
+          <label class="form-label">主题色</label>
+          <input type="color" class="form-input" id="add-game-color" value="#d4622a" style="padding:6px;height:44px;cursor:pointer">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="confirmAddGame()">添加游戏</button>
+    </div>
+  </div>
+
+  <!-- 管理资源类型 -->
+  <div class="modal-overlay" id="modal-manage-res">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">管理资源类型</div>
+        <button class="modal-close" onclick="closeModal('modal-manage-res')">×</button>
+      </div>
+      <div id="manage-res-list"></div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px">添加新资源</div>
+      <div class="row">
+        <div class="form-group">
+          <label class="form-label">图标</label>
+          <input class="form-input" id="new-res-emoji" placeholder="💎" maxlength="4">
+        </div>
+        <div class="form-group" style="flex:2">
+          <label class="form-label">名称</label>
+          <input class="form-input" id="new-res-name" placeholder="原石">
+        </div>
+        <div class="form-group">
+          <label class="form-label">单位</label>
+          <input class="form-input" id="new-res-unit" placeholder="个">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="confirmAddResource()">添加资源</button>
+    </div>
+  </div>
+
+  <!-- 记录数据 -->
+  <div class="modal-overlay" id="modal-add-log">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">记录今日数据</div>
+        <button class="modal-close" onclick="closeModal('modal-add-log')">×</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">日期</label>
+        <input type="date" class="form-input" id="log-date">
+      </div>
+      <div id="log-inputs"></div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <input class="form-input" id="log-note" placeholder="今天做了什么…">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="confirmAddLog()">保存记录</button>
+    </div>
+  </div>
+
+  <!-- 添加任务 -->
+  <div class="modal-overlay" id="modal-add-task">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">添加任务</div>
+        <button class="modal-close" onclick="closeModal('modal-add-task')">×</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">任务内容</label>
+        <input class="form-input" id="new-task-text" placeholder="例如：完成每日委托">
+      </div>
+      <div class="toggle-row">
+        <span style="font-size:14px;font-weight:700">每日自动重置</span>
+        <button class="toggle on" id="task-daily-toggle" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div style="height:14px"></div>
+      <button class="btn btn-primary btn-full" onclick="confirmAddTask()">添加任务</button>
+    </div>
+  </div>
+
+  <!-- 写日记 / 编辑日记 -->
+  <div class="modal-overlay" id="modal-diary-editor">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="diary-editor-title">写日记</div>
+        <button class="modal-close" onclick="closeModal('modal-diary-editor')">×</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">标题（可选）</label>
+        <input class="form-input" id="diary-title-input" placeholder="给这篇日记起个标题…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">正文</label>
+        <textarea class="form-input" id="diary-content-input" placeholder="记录今天的游戏时光…" style="min-height:130px"></textarea>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label class="form-label">标签</label>
+          <select class="form-input" id="diary-tag-select">
+            <option>攻略</option><option>心得</option><option>吐槽</option><option>日常</option><option>其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span style="font-size:13px;font-weight:700">绑定今日资源记录</span>
+        <button class="toggle" id="bind-log-toggle" onclick="toggleBindLog()"></button>
+      </div>
+      <div id="bind-log-select-wrap" style="display:none;margin-bottom:14px">
+        <select class="form-input" id="bind-log-select"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">图片（可多选）</label>
+        <input type="file" id="diary-img-input" accept="image/*" multiple style="display:none" onchange="handleImgSelect(event)">
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('diary-img-input').click()">📷 从相册选择</button>
+        <div class="img-preview-list" id="diary-img-previews"></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="confirmDiary()">保存日记</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+const STORAGE_KEY = 'gametracker_v2';
+let state = {
+  games: [],        // GameProfile[]
+  allDiary: []      // DiaryEntry[] (全局日记)
+};
+
+// GameProfile: { id, name, emoji, color, resources[], logs[], tasks[], diary[] }
+// ResourceDef: { id, name, emoji, unit }
+// DailyLog:    { id, date, note, entries: [{resourceId, value}] }
+// TaskItem:    { id, text, isDone, isDaily, lastReset }
+// DiaryEntry:  { id, date, title, content, tag, bindLogId, gameId, images[] (base64) }
+
+// ── 存储 ──
+function load() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = JSON.parse(raw);
+  } catch(e) {}
+  resetDailyTasks();
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {}
+}
+
+function uid() { return Math.random().toString(36).slice(2,9); }
+function today() { return new Date().toISOString().slice(0,10); }
+function fmtDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  const isToday = d === today();
+  const label = isToday ? '今天 · ' : '';
+  return label + dt.toLocaleDateString('zh-CN',{month:'short',day:'numeric'});
+}
+
+function resetDailyTasks() {
+  const t = today();
+  state.games.forEach(g => {
+    (g.tasks||[]).forEach(tk => {
+      if (tk.isDaily && tk.lastReset !== t) {
+        tk.isDone = false; tk.lastReset = t;
+      }
+    });
+  });
+}
+
+function getGame() {
+  return state.games.find(g => g.id === activeGame) || null;
+}
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let activeGame = null;
+let currentPage = 'resources';
+let diaryView = 'game';  // 'game' | 'all'
+let diaryFilterTag = '';
+let editingDiaryId = null;
+let viewingDiaryId = null;
+let editorImages = []; // {dataUrl, name}[]
+
+// ══════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === page);
+  });
+  renderPage(page);
+}
+
+function renderPage(page) {
+  if (page === 'resources') renderResources();
+  if (page === 'logs')      { renderGameSwitcher('game-switcher-logs'); renderLogs(); }
+  if (page === 'tasks')     { renderGameSwitcher('game-switcher-tasks'); renderTasks(); }
+  if (page === 'diary')     renderDiary();
+}
+
+// ══════════════════════════════════════════════════════════
+// GAME SWITCHER
+// ══════════════════════════════════════════════════════════
+function renderGameSwitcher(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = state.games.map(g => `
+    <button class="game-tab ${g.id===activeGame?'active':''}"
+      style="${g.id===activeGame?`background:${g.color};border-color:${g.color}`:''}"`
+      onclick="selectGame('${g.id}','${containerId}')">
+      ${g.emoji} ${g.name}
+    </button>
+  `).join('') + (state.games.length===0?'<span style="color:var(--text3);font-size:13px;padding:4px">还没有游戏</span>':'');
+}
+
+function selectGame(id, fromSwitcher) {
+  activeGame = id;
+  // re-render all switchers
+  ['game-switcher','game-switcher-logs','game-switcher-tasks'].forEach(renderGameSwitcher);
+  renderPage(currentPage);
+}
+
+// ══════════════════════════════════════════════════════════
+// RESOURCES PAGE
+// ══════════════════════════════════════════════════════════
+function renderResources() {
+  document.getElementById('res-date').textContent =
+    new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  renderGameSwitcher('game-switcher');
+
+  const el = document.getElementById('res-content');
+  const game = getGame();
+  if (!game) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🎮</div><div class="empty-text">还没有游戏，点右上角添加</div></div>`;
+    return;
+  }
+
+  if (game.resources.length === 0) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        <div class="empty-text">还没有资源类型</div>
+      </div>
+      <div class="section-actions">
+        <button class="btn btn-ghost btn-full" onclick="openManageRes()">⚙️ 管理资源类型</button>
+        <button class="btn btn-primary btn-full" onclick="openLogModal()">＋ 记录数据</button>
+      </div>`;
+    return;
+  }
+
+  const logs = (game.logs||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+
+  el.innerHTML = `
+    <div class="res-grid">${game.resources.map(r => renderResCard(r, logs, game.color)).join('')}</div>
+    <div class="section-actions">
+      <button class="btn btn-ghost" onclick="openManageRes()">⚙️ 管理资源</button>
+      <button class="btn btn-primary" style="flex:2" onclick="openLogModal()">＋ 记录今日数据</button>
+    </div>`;
+}
+
+function renderResCard(res, logs, color) {
+  const vals = logs.map(l => {
+    const e = (l.entries||[]).find(e=>e.resourceId===res.id);
+    return e ? e.value : null;
+  }).filter(v=>v!==null);
+
+  const latest = vals.length > 0 ? vals[vals.length-1] : 0;
+  const prev   = vals.length > 1 ? vals[vals.length-2] : null;
+  const delta  = prev !== null ? latest - prev : null;
+
+  let deltaHtml = '';
+  if (delta !== null) {
+    const cls = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+    const sym = delta > 0 ? '▲' : delta < 0 ? '▼' : '─';
+    deltaHtml = `<div class="res-delta ${cls}">${sym} ${Math.abs(delta).toLocaleString()}</div>`;
+  }
+
+  const spark = vals.length >= 2 ? buildSparkline(vals, color) : '';
+
+  return `
+    <div class="res-card">
+      <div class="res-card-accent" style="background:${color}"></div>
+      <div class="res-emoji">${res.emoji}</div>
+      <div class="res-name">${res.name}</div>
+      <div class="res-value">${latest.toLocaleString()}<span class="res-unit">${res.unit}</span></div>
+      ${deltaHtml}
+      ${spark ? `<div class="sparkline-wrap">${spark}</div>` : ''}
+    </div>`;
+}
+
+function buildSparkline(vals, color) {
+  const W=120, H=32;
+  const min=Math.min(...vals), max=Math.max(...vals), range=Math.max(max-min,1);
+  const pts = vals.map((v,i)=>{
+    const x = (i/(vals.length-1))*W;
+    const y = H - ((v-min)/range)*H*0.85 - H*0.075;
+    return `${x},${y}`;
+  }).join(' ');
+  const lx=(vals.length-1)/(vals.length-1)*W;
+  const ly=H-((vals[vals.length-1]-min)/range)*H*0.85-H*0.075;
+  return `<svg class="sparkline" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.8"/>
+    <circle cx="${lx}" cy="${ly}" r="3" fill="${color}"/>
+  </svg>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGS PAGE
+// ══════════════════════════════════════════════════════════
+function renderLogs() {
+  const el = document.getElementById('log-content');
+  const game = getGame();
+  if (!game) { el.innerHTML=`<div class="empty"><div class="empty-icon">🎮</div><div class="empty-text">请先选择游戏</div></div>`; return; }
+
+  const logs = (game.logs||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  if (!logs.length) {
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">还没有记录</div></div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="log-list">${logs.map(log => {
+    const chips = (log.entries||[]).map(e=>{
+      const res = (game.resources||[]).find(r=>r.id===e.resourceId);
+      if (!res) return '';
+      return `<span class="log-res-chip">${res.emoji} ${res.name} ${e.value.toLocaleString()}${res.unit}</span>`;
+    }).join('');
+    return `
+      <div class="log-item">
+        <div class="log-date">${fmtDate(log.date)}${log.date===today()?'':''}</div>
+        <div class="log-resources">${chips||'<span style="color:var(--text3);font-size:12px">无资源数据</span>'}</div>
+        ${log.note?`<div class="log-note">📝 ${log.note}</div>`:''}
+        <div class="log-actions">
+          <button class="btn btn-danger btn-sm" onclick="deleteLog('${log.id}')">删除</button>
+        </div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// TASKS PAGE
+// ══════════════════════════════════════════════════════════
+function renderTasks() {
+  const el = document.getElementById('task-content');
+  const game = getGame();
+  if (!game) { el.innerHTML=`<div class="empty"><div class="empty-icon">🎮</div><div class="empty-text">请先选择游戏</div></div>`; return; }
+
+  const tasks = game.tasks||[];
+  if (!tasks.length) {
+    el.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">还没有任务，点右上角添加</div></div>`;
+    return;
+  }
+
+  const daily = tasks.filter(t=>t.isDaily);
+  const once  = tasks.filter(t=>!t.isDaily);
+
+  let html = '';
+  if (daily.length) {
+    html += `<div class="task-section-title">每日任务</div>`;
+    html += daily.map(t=>taskItemHtml(t)).join('');
+  }
+  if (once.length) {
+    html += `<div class="task-section-title">一次性任务</div>`;
+    html += once.map(t=>taskItemHtml(t)).join('');
+  }
+  el.innerHTML = html;
+}
+
+function taskItemHtml(t) {
+  return `
+    <div class="task-item">
+      <div class="task-check ${t.isDone?'done':''}" onclick="toggleTask('${t.id}')">${t.isDone?'✓':''}</div>
+      <div class="task-text ${t.isDone?'done':''}">${t.text}</div>
+      <span class="task-badge ${t.isDaily?'daily':'once'}">${t.isDaily?'每日':'一次'}</span>
+      <button class="task-del" onclick="deleteTask('${t.id}')">×</button>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// DIARY PAGE
+// ══════════════════════════════════════════════════════════
+const TAGS = ['攻略','心得','吐槽','日常','其他'];
+
+function setDiaryView(v) {
+  diaryView = v;
+  document.getElementById('diary-view-game').classList.toggle('active', v==='game');
+  document.getElementById('diary-view-all').classList.toggle('active', v==='all');
+  renderDiary();
+}
+
+function renderDiary() {
+  // tag filter
+  const tf = document.getElementById('tag-filter');
+  tf.innerHTML = ['全部',...TAGS].map(tag => {
+    const val = tag==='全部'?'':tag;
+    const active = diaryFilterTag===val;
+    return `<button class="tag-chip ${active?'active':''} ${active&&val?'tag-'+val:''}"
+      style="${active&&val?`background:var(--accent);border-color:var(--accent)`:active?'background:var(--text);border-color:var(--text);color:#fff':''}"
+      onclick="filterDiaryTag('${val}')">${tag}</button>`;
+  }).join('');
+
+  // entries
+  let entries = [];
+  if (diaryView === 'game') {
+    const game = getGame();
+    entries = game ? [...(game.diary||[])] : [];
+  } else {
+    state.games.forEach(g => { entries.push(...(g.diary||[])); });
+    entries.push(...(state.allDiary||[]));
+  }
+  if (diaryFilterTag) entries = entries.filter(e=>e.tag===diaryFilterTag);
+  entries.sort((a,b)=>b.date.localeCompare(a.date));
+
+  const el = document.getElementById('diary-content');
+  if (!entries.length) {
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📔</div><div class="empty-text">还没有日记，点右上角写一篇</div></div>`;
+    return;
+  }
+  el.innerHTML = entries.map(e=>diaryCardHtml(e)).join('');
+}
+
+function diaryCardHtml(e) {
+  const preview = (e.content||'').slice(0,60) + ((e.content||'').length>60?'…':'');
+  const thumb = e.images&&e.images.length ? `<img class="diary-thumb" src="${e.images[0]}" alt="">` : '';
+  const gameName = diaryView==='all' ? (() => { const g=state.games.find(g=>g.id===e.gameId); return g?`<span class="diary-game-tag">${g.emoji} ${g.name}</span>`:''; })() : '';
+  return `
+    <div class="diary-card" onclick="openDetail('${e.id}')">
+      <div class="diary-tag-bar bar-${e.tag}"></div>
+      <div class="diary-card-inner">
+        ${thumb}
+        <div class="diary-card-top">
+          <span class="diary-tag-badge tag-${e.tag}">${e.tag}</span>
+          ${gameName}
+          <span class="diary-date">${fmtDate(e.date)}</span>
+        </div>
+        <div class="diary-title">${e.title||'（无标题）'}</div>
+        <div class="diary-preview">${preview}</div>
+        ${e.bindLogId?`<div class="diary-bind-icon">📊 关联了资源记录</div>`:''}
+      </div>
+    </div>`;
+}
+
+function filterDiaryTag(tag) {
+  diaryFilterTag = tag;
+  renderDiary();
+}
+
+// ══════════════════════════════════════════════════════════
+// DETAIL OVERLAY
+// ══════════════════════════════════════════════════════════
+function findDiaryEntry(id) {
+  for (const g of state.games) {
+    const e = (g.diary||[]).find(e=>e.id===id);
+    if (e) return e;
+  }
+  return (state.allDiary||[]).find(e=>e.id===id) || null;
+}
+
+function openDetail(id) {
+  viewingDiaryId = id;
+  const e = findDiaryEntry(id);
+  if (!e) return;
+
+  document.getElementById('detail-title').textContent = e.title || '（无标题）';
+
+  // meta
+  const game = state.games.find(g=>g.id===e.gameId);
+  document.getElementById('detail-meta').innerHTML = `
+    <span class="diary-tag-badge tag-${e.tag}">${e.tag}</span>
+    <span style="font-size:12px;color:var(--text3)">${e.date}</span>
+    ${game?`<span class="diary-game-tag">${game.emoji} ${game.name}</span>`:''}`;
+
+  document.getElementById('detail-content').textContent = e.content || '';
+
+  // images
+  const imgEl = document.getElementById('detail-images');
+  imgEl.innerHTML = (e.images||[]).map(src=>`<img src="${src}" style="width:calc(50% - 4px);border-radius:10px;object-fit:cover">`).join('');
+
+  // bound log
+  const bindEl = document.getElementById('detail-log-bind');
+  if (e.bindLogId && game) {
+    const log = (game.logs||[]).find(l=>l.id===e.bindLogId);
+    if (log) {
+      const chips = (log.entries||[]).map(en=>{
+        const res = (game.resources||[]).find(r=>r.id===en.resourceId);
+        return res ? `${res.emoji}${res.name} ${en.value.toLocaleString()}${res.unit}` : '';
+      }).filter(Boolean).join('  ·  ');
+      bindEl.innerHTML = `📊 关联记录 ${log.date}：${chips||'无数据'}${log.note?`<br>📝 ${log.note}`:''}`;
+      bindEl.style.display = 'block';
+    } else { bindEl.style.display='none'; }
+  } else { bindEl.style.display='none'; }
+
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+function editCurrentDiary() {
+  closeDetail();
+  const e = findDiaryEntry(viewingDiaryId);
+  if (e) openDiaryEditor(e);
+}
+
+function deleteCurrentDiary() {
+  if (!confirm('确定删除这篇日记？')) return;
+  for (const g of state.games) {
+    const idx = (g.diary||[]).findIndex(e=>e.id===viewingDiaryId);
+    if (idx>=0) { g.diary.splice(idx,1); break; }
+  }
+  const idx2 = (state.allDiary||[]).findIndex(e=>e.id===viewingDiaryId);
+  if (idx2>=0) state.allDiary.splice(idx2,1);
+  save(); closeDetail(); renderDiary();
+  showToast('日记已删除');
+}
+
+// ══════════════════════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// 点击遮罩关闭
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); });
+});
+
+// ── Add Game ──
+function confirmAddGame() {
+  const name = document.getElementById('add-game-name').value.trim();
+  if (!name) { showToast('请输入游戏名称'); return; }
+  const emoji = document.getElementById('add-game-emoji').value.trim() || '🎮';
+  const color = document.getElementById('add-game-color').value;
+  const g = { id:uid(), name, emoji, color, resources:[], logs:[], tasks:[], diary:[] };
+  state.games.push(g);
+  activeGame = g.id;
+  save(); closeModal('modal-add-game');
+  document.getElementById('add-game-name').value='';
+  renderPage(currentPage);
+  ['game-switcher','game-switcher-logs','game-switcher-tasks'].forEach(renderGameSwitcher);
+  showToast(`${emoji} ${name} 已添加`);
+}
+
+// ── Manage Resources ──
+function openManageRes() {
+  refreshManageResList();
+  openModal('modal-manage-res');
+}
+
+function refreshManageResList() {
+  const game = getGame(); if (!game) return;
+  const el = document.getElementById('manage-res-list');
+  if (!game.resources.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:13px;text-align:center;padding:10px 0">还没有资源，添加第一个</div>`;
+    return;
+  }
+  el.innerHTML = game.resources.map(r => `
+    <div class="manage-res-item">
+      <span style="font-size:20px">${r.emoji}</span>
+      <span style="font-size:14px;font-weight:700">${r.name}</span>
+      <span style="font-size:12px;color:var(--text3)">${r.unit}</span>
+      <button class="manage-res-del" onclick="deleteResource('${r.id}')">×</button>
+    </div>`).join('');
+}
+
+function confirmAddResource() {
+  const game = getGame(); if (!game) return;
+  const name = document.getElementById('new-res-name').value.trim();
+  if (!name) { showToast('请输入资源名称'); return; }
+  const emoji = document.getElementById('new-res-emoji').value.trim() || '📦';
+  const unit  = document.getElementById('new-res-unit').value.trim() || '个';
+  game.resources.push({ id:uid(), name, emoji, unit });
+  save(); refreshManageResList();
+  document.getElementById('new-res-name').value='';
+  document.getElementById('new-res-emoji').value='';
+  document.getElementById('new-res-unit').value='';
+  showToast(`${emoji} ${name} 已添加`);
+}
+
+function deleteResource(id) {
+  const game = getGame(); if (!game) return;
+  game.resources = game.resources.filter(r=>r.id!==id);
+  save(); refreshManageResList(); renderResources();
+}
+
+// ── Add Log ──
+function openLogModal() {
+  const game = getGame();
+  if (!game) { showToast('请先选择游戏'); return; }
+  if (!game.resources.length) { openManageRes(); return; }
+
+  document.getElementById('log-date').value = today();
+  document.getElementById('log-note').value = '';
+
+  // 填入最新值
+  const lastLog = (game.logs||[]).slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const inputs = game.resources.map(r => {
+    const lastVal = lastLog ? ((lastLog.entries||[]).find(e=>e.resourceId===r.id)||{}).value ?? '' : '';
+    return `
+      <div class="form-group">
+        <label class="form-label">${r.emoji} ${r.name}（${r.unit}）</label>
+        <input class="form-input" type="number" inputmode="decimal" id="log-res-${r.id}" value="${lastVal}" placeholder="0">
+      </div>`;
+  }).join('');
+  document.getElementById('log-inputs').innerHTML = inputs;
+  openModal('modal-add-log');
+}
+
+function confirmAddLog() {
+  const game = getGame(); if (!game) return;
+  const date = document.getElementById('log-date').value;
+  const note = document.getElementById('log-note').value.trim();
+  const entries = game.resources.map(r => ({
+    resourceId: r.id,
+    value: parseFloat(document.getElementById('log-res-'+r.id).value) || 0
+  }));
+
+  // 同日覆盖
+  const idx = (game.logs||[]).findIndex(l=>l.date===date);
+  const log = { id: (idx>=0?(game.logs[idx].id):uid()), date, note, entries };
+  if (idx>=0) game.logs[idx]=log; else game.logs.push(log);
+
+  save(); closeModal('modal-add-log');
+  renderPage(currentPage);
+  showToast('✅ 记录已保存');
+}
+
+function deleteLog(id) {
+  if (!confirm('确定删除这条记录？')) return;
+  const game = getGame(); if (!game) return;
+  game.logs = (game.logs||[]).filter(l=>l.id!==id);
+  save(); renderLogs();
+  showToast('记录已删除');
+}
+
+// ── Tasks ──
+function confirmAddTask() {
+  const game = getGame(); if (!game) return;
+  const text = document.getElementById('new-task-text').value.trim();
+  if (!text) { showToast('请输入任务内容'); return; }
+  const isDaily = document.getElementById('task-daily-toggle').classList.contains('on');
+  game.tasks = game.tasks||[];
+  game.tasks.push({ id:uid(), text, isDone:false, isDaily, lastReset:today() });
+  save(); closeModal('modal-add-task');
+  document.getElementById('new-task-text').value='';
+  renderTasks();
+  showToast('任务已添加');
+}
+
+function toggleTask(id) {
+  const game = getGame(); if (!game) return;
+  const t = (game.tasks||[]).find(t=>t.id===id);
+  if (t) { t.isDone=!t.isDone; save(); renderTasks(); }
+}
+
+function deleteTask(id) {
+  const game = getGame(); if (!game) return;
+  game.tasks = (game.tasks||[]).filter(t=>t.id!==id);
+  save(); renderTasks();
+}
+
+// ── Diary ──
+function openDiaryEditor(entry) {
+  editingDiaryId = entry ? entry.id : null;
+  editorImages = entry && entry.images ? entry.images.map(src=>({dataUrl:src})) : [];
+
+  document.getElementById('diary-editor-title').textContent = entry ? '编辑日记' : '写日记';
+  document.getElementById('diary-title-input').value = entry ? (entry.title||'') : '';
+  document.getElementById('diary-content-input').value = entry ? (entry.content||'') : '';
+  document.getElementById('diary-tag-select').value = entry ? (entry.tag||'日常') : '日常';
+
+  // bind log
+  const game = getGame();
+  const bindToggle = document.getElementById('bind-log-toggle');
+  bindToggle.classList.remove('on');
+  document.getElementById('bind-log-select-wrap').style.display='none';
+
+  const sel = document.getElementById('bind-log-select');
+  sel.innerHTML = '<option value="">（不绑定）</option>';
+  if (game) {
+    (game.logs||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(l=>{
+      const opt = document.createElement('option');
+      opt.value = l.id;
+      opt.textContent = `${l.date}${l.note?' · '+l.note:''}`;
+      sel.appendChild(opt);
+    });
+  }
+  if (entry && entry.bindLogId) {
+    bindToggle.classList.add('on');
+    document.getElementById('bind-log-select-wrap').style.display='block';
+    sel.value = entry.bindLogId;
+  }
+
+  refreshEditorImages();
+  openModal('modal-diary-editor');
+}
+
+function toggleBindLog() {
+  const toggle = document.getElementById('bind-log-toggle');
+  toggle.classList.toggle('on');
+  document.getElementById('bind-log-select-wrap').style.display =
+    toggle.classList.contains('on') ? 'block' : 'none';
+}
+
+function handleImgSelect(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      editorImages.push({ dataUrl: e.target.result });
+      refreshEditorImages();
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value='';
+}
+
+function refreshEditorImages() {
+  const el = document.getElementById('diary-img-previews');
+  el.innerHTML = editorImages.map((img,i)=>`
+    <div class="img-preview-item">
+      <img src="${img.dataUrl}" alt="">
+      <button class="img-preview-del" onclick="removeEditorImg(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeEditorImg(i) {
+  editorImages.splice(i,1);
+  refreshEditorImages();
+}
+
+function confirmDiary() {
+  const content = document.getElementById('diary-content-input').value.trim();
+  if (!content) { showToast('请输入日记内容'); return; }
+
+  const game = getGame();
+  const bindOn = document.getElementById('bind-log-toggle').classList.contains('on');
+  const bindLogId = bindOn ? document.getElementById('bind-log-select').value : '';
+
+  const entry = {
+    id: editingDiaryId || uid(),
+    date: today(),
+    title: document.getElementById('diary-title-input').value.trim(),
+    content,
+    tag: document.getElementById('diary-tag-select').value,
+    bindLogId: bindLogId || '',
+    gameId: game ? game.id : '',
+    images: editorImages.map(i=>i.dataUrl)
+  };
+
+  if (editingDiaryId) {
+    // 更新
+    let found = false;
+    for (const g of state.games) {
+      const idx = (g.diary||[]).findIndex(e=>e.id===editingDiaryId);
+      if (idx>=0) { g.diary[idx]=entry; found=true; break; }
+    }
+    if (!found) {
+      const idx2=(state.allDiary||[]).findIndex(e=>e.id===editingDiaryId);
+      if (idx2>=0) state.allDiary[idx2]=entry;
+    }
+  } else {
+    if (game) { game.diary=game.diary||[]; game.diary.push(entry); }
+    else { state.allDiary=state.allDiary||[]; state.allDiary.push(entry); }
+  }
+
+  save(); closeModal('modal-diary-editor'); renderDiary();
+  showToast(editingDiaryId?'日记已更新':'📔 日记已保存');
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2000);
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+load();
+if (state.games.length) activeGame = state.games[0].id;
+renderPage('resources');
+['game-switcher','game-switcher-logs','game-switcher-tasks'].forEach(renderGameSwitcher);
+</script>
+</body>
+</html>
