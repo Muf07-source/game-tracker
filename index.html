@@ -1,0 +1,2424 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>囤囤鼠来哩</title>
+<style>
+:root {
+  /* 主题色变量 – 支持 HSL 动态调整 */
+  --accent-h:145;--accent-s:18%;--accent-l:57%;
+  --accent:hsl(var(--accent-h),var(--accent-s),var(--accent-l));
+  --accent2:hsl(var(--accent-h),calc(var(--accent-s) + 6%),calc(var(--accent-l) + 8%));
+  --accbg:hsl(var(--accent-h),30%,95%);
+  --green:#6B9E78;--red:#C07070;--blue:#7E9AB8;
+  /*卡片透明度 */
+  --card-opacity:1;
+  --bg:#F6F5F0;--bg2:#EDEBE4;--bg3:#E1DED6;
+  --card:rgba(255,255,255,var(--card-opacity));--border:#DDD9D0;
+  --text:#2C2A25;--text2:#6B6660;--text3:#A09A90;
+  --shadow:none;--shadow2:none;
+  --r:16px;--r2:12px;--r3:10px;
+  --nav:#FFFFFF;--navborder:#E8E4DC;
+}
+[data-theme=dark]{
+  --bg:#151413;--bg2:#1C1B19;--bg3:#252320;
+  --card:rgba(30,29,26,var(--card-opacity));--border:#2E2C27;
+  --text:#E8E4DC;--text2:#9A9488;--text3:#5C5850;
+  --accbg:hsl(var(--accent-h),25%,11%);
+  --green:#8BC49A;--red:#D08080;--blue:#90AAD0;
+  --nav:#1C1B19;--navborder:#2E2C27;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,'Helvetica Neue','PingFang SC','Noto Sans SC',sans-serif;color:var(--text);overflow:hidden;transition:background0.3s,color 0.3s}
+#app{height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
+
+/*── NAV ── Q版气泡 */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:62px;background:var(--nav);border-top:2px solid var(--navborder);display:flex;z-index:90;transition:background 0.3s;padding:0 4px}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;font-size:9px;font-weight:700;color:var(--text3);cursor:pointer;font-family:inherit;transition:all 0.2s;letter-spacing:0.5px;border-radius:14px;margin:6px 2px}
+.nb.on{color:var(--accent);background:var(--accbg)}
+.nb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 0.2s}
+.nb.on svg{transform:scale(1.15)}
+
+/* ── PAGES ── */
+.pg{flex:1;overflow-y:auto;padding-bottom:70px;display:none}
+.pg.on{display:block}
+
+/* ── HEADER ── Q版渐变标题 */
+.hdr{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:10;border-bottom:2px solid var(--border)}
+.ht{font-size:18px;font-weight:900;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hs{font-size:11px;color:var(--text3);margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+
+/* ── THEME TOGGLE ── */
+.theme-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:var(--bg2);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.theme-btn:active{transform:scale(0.88)}
+
+/* ── BUTTONS ── Q版圆润*/
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 18px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;transition:all 0.15s}
+.btn:active{opacity:0.7;transform:scale(0.95)}
+.bp{background:var(--accent);color:#fff;box-shadow:0 3px 10px hsla(var(--accent-h),40%,50%,0.3)}
+.bg{background:var(--bg2);color:var(--text2);border:2px solid var(--border)}
+.bd{background:var(--bg2);color:var(--red);border:2px solid var(--border)}
+[data-theme=dark] .bd{background:#2A1818;color:#D08080;border-color:#3A2020}
+.bfull{width:100%}.bsm{padding:5px 12px;font-size:12px}
+.btn-icon{width:32px;height:32px;padding:0;border-radius:50%;font-size:15px}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:6px;padding:10px 20px;overflow-x:auto;border-bottom:2px solid var(--border);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:6px 16px;border-radius:20px;border:2px solid var(--border);background:var(--card);font-size:12px;font-weight:700;cursor:pointer;color:var(--text3);white-space:nowrap;transition:all 0.2s}
+.tab.on{color:#fff;border-color:transparent;box-shadow:0 3px 8px rgba(0,0,0,0.15)}
+
+/* ── SECTION ── */
+.sact{padding:0 20px 10px;display:flex;gap:8px}
+.sec-h{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:14px 20px 6px}
+
+/* ── GAME CARD ── */
+.game-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);margin:0 20px 14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.game-hdr{display:flex;align-items:center;gap:12px;padding:14px 16px 10px;flex-wrap:wrap}
+.game-icon{width:46px;height:46px;border-radius:14px;object-fit:cover;flex-shrink:0;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
+.game-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.game-info{flex:1;min-width:0}.game-name{font-size:15px;font-weight:700}
+.game-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.game-btns{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.game-color-strip{height:4px;width:100%}
+.acct-list{padding:0 14px 12px}
+.acct-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border-radius:14px;margin-bottom:6px;cursor:pointer;transition:all 0.15s;border:2px solid transparent}
+.acct-row:active{background:var(--bg3);border-color:var(--accent)}
+.acct-avatar{width:34px;height:34px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;border:2px solid var(--border)}
+.acct-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.acct-info{flex:1;min-width:0}.acct-name{font-size:13px;font-weight:700}
+.acct-note{font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct-btns{display:flex;gap:5px;flex-shrink:0}
+
+/* ── RESOURCE CARDS ── */
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 20px}
+.rcard{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.05)}
+.raccent{position:absolute;top:0;left:0;right:0;height:4px}
+.remoji{font-size:22px;margin-bottom:6px;display:block}
+.rname{font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600}
+.rval{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text)}
+.runit{font-size:10px;color:var(--text3);margin-left:2px}
+.rdelta{font-size:11px;margin-top:4px;font-weight:700}
+.rup{color:var(--green)}.rdn{color:var(--red)}.rfl{color:var(--text3)}
+.spark{width:100%;height:26px;overflow:visible;margin-top:6px}
+
+/* ── LOG── */
+.logitem{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.logdate{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
+.chip{background:var(--accbg);border-radius:10px;padding:3px 10px;font-size:12px;color:var(--accent);font-weight:600;border:1.5px solid hsla(var(--accent-h),40%,60%,0.2)}
+.lognote{font-size:12px;color:var(--text3);font-style:italic}
+
+/* ── TASKS ── */
+.titem{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1.5px solid var(--border);background:var(--card)}
+.titem:first-of-type{border-top:1.5px solid var(--border)}
+.tcheck{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:12px;color:#fff;transition:all 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+.tcheck.on{background:var(--green);border-color:var(--green);box-shadow:0 2px 8px rgba(107,158,120,0.4)}
+.ttxt{flex:1;font-size:14px;line-height:1.4;font-weight:500}
+.ttxt.done{text-decoration:line-through;color:var(--text3)}
+.tbadge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0}
+.tbdaily{background:var(--accbg);color:var(--accent);border:1.5px solid hsla(var(--accent-h),40%,60%,0.3)}
+[data-theme=dark] .tbdaily{background:hsla(var(--accent-h),25%,12%,1);color:hsl(var(--accent-h),40%,70%)}
+.tbonce{background:var(--bg2);color:var(--text2);border:1.5px solid var(--border)}
+[data-theme=dark] .tbonce{background:#252320;color:#9A9488}
+.tdel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:2px 4px;border-radius:50%;transition:all 0.15s}
+
+/* ── CALENDAR ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 8px}
+.cal-nav-title{font-size:16px;font-weight:700}
+.cal-nav-btn{background:var(--bg2);border:1px solid var(--border);width:32px;height:32px;border-radius:var(--r3);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 20px 12px}
+.cal-dow{font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0}
+.cal-day{min-height:38px;border-radius:var(--r3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);position:relative;transition:background 0.15s}
+.cal-day.other{color:var(--text3)}
+.cal-day.today{background:var(--accbg);color:var(--accent);font-weight:800}
+.cal-day.has-log::after{content:'';width:4px;height:4px;border-radius:50%;background:var(--accent);position:absolute;bottom:3px}
+.cal-day.sel{background:var(--accent);color:#fff}
+.cal-day.sel::after{background:#fff}
+.cal-detail{margin:0 20px 12px;background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px}
+.cal-detail-date{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px}
+
+/* NEW:日历全局详情中的游戏分组样式 */
+.cal-game-group{margin-bottom:12px}
+.cal-game-group:last-child{margin-bottom:0}
+.cal-game-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.cal-game-title .cal-game-ico{width:22px;height:22px;border-radius:5px;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden;flex-shrink:0}
+.cal-game-title .cal-game-ico img{width:100%;height:100%;object-fit:cover;border-radius:5px}
+.cal-acct-block{margin-left:4px;margin-bottom:8px;padding:8px 10px;background:var(--bg2);border-radius:var(--r3)}
+.cal-acct-block:last-child{margin-bottom:0}
+.cal-acct-name{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.cal-acct-name .cal-acct-ava{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;overflow:hidden;background:var(--bg3);flex-shrink:0}
+.cal-acct-name .cal-acct-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+
+/* ── CHART ── */
+.chart-wrap{padding:12px 20px}
+.chart-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:0 3px 10px rgba(0,0,0,0.05)}
+.chart-title{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text)}
+
+/* ══════════════════════════════════════════全屏详情页(账号详情 & 日记详情)像原生App 从右滑入，不是底部 sheet
+   ══════════════════════════════════════════ */
+.detail-page{
+  position:fixed;
+  top:0;left:50%;
+  transform:translateX(-50%) translateX(100%);
+  width:100%;max-width:480px;height:100vh;
+  background:var(--bg);
+  z-index:200;
+  display:flex;flex-direction:column;
+  transition:transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  overflow:hidden;
+}
+.detail-page.open{transform:translateX(-50%) translateX(0);}
+
+/*详情页 header */
+.dp-hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px 12px;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.dp-back{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--bg2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px;color:var(--text2);
+  flex-shrink:0;
+}
+.dp-back:active{opacity:0.7}
+.dp-title{
+  flex:1;font-size:16px;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.dp-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* 详情页 body */
+.dp-body{
+  flex:1;overflow-y:auto;padding-bottom:80px;
+}
+
+/* 账号详情 -顶部账号信息条 */
+.acct-detail-banner{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 20px 14px;
+  border-bottom:1px solid var(--border);
+}
+.acct-detail-ava{
+  width:52px;height:52px;border-radius:50%;
+  background:var(--bg2);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;overflow:hidden;flex-shrink:0;
+}
+.acct-detail-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.acct-detail-info{flex:1}
+.acct-detail-name{font-size:17px;font-weight:700}
+.acct-detail-note{font-size:12px;color:var(--text3);margin-top:2px}
+.acct-detail-desc{
+  margin:0 20px 12px;
+  padding:11px 14px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);
+  font-size:13px;color:var(--text2);line-height:1.7;
+}
+
+/* 日记详情 */
+.diary-det-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:12px 20px 0;
+}
+.diary-det-body{
+  padding:14px 20px;
+  font-size:15px;line-height:1.9;
+  white-space:pre-wrap;color:var(--text);
+}
+.diary-det-imgs{
+  display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px;
+}
+.diary-det-imgs img{
+  width:calc(50% - 4px);border-radius:12px;object-fit:cover;
+}
+
+/* ── MODAL (Bottom Sheet) ── */
+.mover{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.mbox{background:var(--card);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:0 0 36px;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.32,0.72,0,1)}
+.mover.show .mbox{transform:translateY(0)}
+.m-handle{width:40px;height:5px;background:var(--border);border-radius:3px;margin:12px auto 0}
+.mhdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 0}
+.mtitle{font-size:17px;font-weight:900;color:var(--text)}
+.mclose{width:30px;height:30px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);font-size:16px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center}
+.mbody{padding:14px 20px 0}
+
+/* ── FORM ── */
+.fg{margin-bottom:14px}
+.fl{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;display:block;letter-spacing:0.5px;text-transform:uppercase}
+.fi{width:100%;padding:12px 14px;background:var(--bg2);border:2px solid var(--border);border-radius:var(--r2);font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border-color 0.15s}
+.fi:focus{border-color:var(--accent)}
+textarea.fi{resize:none;min-height:88px;line-height:1.6}
+select.fi{-webkit-appearance:none;appearance:none}
+.frow{display:flex;gap:10px}.frow .fg{flex:1}
+.divider{height:2px;background:var(--border);margin:12px 0;border-radius:1px}
+.togrow{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.tog{width:46px;height:26px;background:var(--border);border-radius:13px;position:relative;cursor:pointer;border:none;flex-shrink:0;transition:background 0.2s}
+.tog.on{background:var(--accent)}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 2px 5px rgba(0,0,0,0.2)}
+.tog.on::after{transform:translateX(20px)}
+
+/* ── IMG UPLOAD ── */
+.upload-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:24px 0;border:2px dashed var(--border);border-radius:var(--r);background:var(--bg2);cursor:pointer;font-size:13px;color:var(--text3);font-weight:700;font-family:inherit;transition:border-color 0.15s}
+.upload-btn:active{border-color:var(--accent)}
+.game-icon-preview{width:60px;height:60px;border-radius:var(--r2);object-fit:cover;border:2px solid var(--border);cursor:pointer;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden}
+.game-icon-preview img{width:100%;height:100%;object-fit:cover;border-radius:var(--r2)}
+.iplist{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
+.ipitem{position:relative;width:64px;height:64px}
+.ipitem img{width:100%;height:100%;object-fit:cover;border-radius:var(--r3)}
+.ipdel{position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:11px;cursor:pointer;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center}
+.mresitem{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1.5px solid var(--border)}
+.mresitem:last-child{border-bottom:none}
+.mresdel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;margin-left:auto;padding:2px 4px}
+
+/* ── DATA── */
+.data-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1.5px solid var(--border)}
+.data-row:first-child{border-top:1.5px solid var(--border)}
+.data-row-label{font-size:14px;font-weight:700;color:var(--text)}
+.data-row-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:44px 20px;color:var(--text3)}
+.empty .ei{font-size:40px;margin-bottom:10px;opacity:0.55;display:block;animation:bob 2s ease-in-out infinite}.empty .et{font-size:14px;font-weight:500}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 24px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;max-width:300px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.25)}
+#toast.on{opacity:1}
+
+/* ── 颜色预设 ── */
+.color-presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.color-dot{width:34px;height:34px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.15s;box-shadow:0 2px 6px rgba(0,0,0,0.1)}
+.color-dot:active{transform:scale(0.88)}
+.color-dot.sel{border-color:var(--text);box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--text)}
+
+/* ── DIARY ── */
+.dvtog{display:flex;gap:8px;padding:10px 20px 0}
+.dvbtn{flex:1;padding:8px;border-radius:20px;border:2px solid var(--border);background:var(--card);font-size:13px;font-weight:700;cursor:pointer;color:var(--text2);transition:all 0.15s}
+.dvbtn.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 3px 10px hsla(var(--accent-h),40%,50%,0.3)}
+.tagrow{display:flex;gap:6px;padding:8px 20px;overflow-x:auto;scrollbar-width:none}
+.tagrow::-webkit-scrollbar{display:none}
+.tchip{flex-shrink:0;padding:5px 14px;border-radius:20px;border:2px solid var(--border);background:var(--card);font-size:12px;font-weight:700;cursor:pointer;color:var(--text2);transition:all 0.15s}
+.tchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.dlist{padding:8px 20px}
+.dcard{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.dcard:active{opacity:0.8;transform:scale(0.99)}
+.dtbar{position:absolute;left:0;top:0;bottom:0;width:4px}
+.dcin{padding-left:10px}
+.dctop{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap}
+.dtbadge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+.ddate{font-size:11px;color:var(--text3);margin-left:auto}
+.dtitle{font-size:14px;font-weight:700;margin-bottom:2px;color:var(--text)}
+.dprev{font-size:12px;color:var(--text2);line-height:1.4}
+.dthumb{width:52px;height:52px;border-radius:10px;object-fit:cover;float:right;margin-left:8px}
+.dgtag{font-size:10px;color:var(--text3);background:var(--bg2);padding:2px 8px;border-radius:8px}
+.t攻略{background:#EFF5EF;color:#5A8A6A}.b攻略{background:#8BA995}
+.t心得{background:#E8EEF8;color:#5A7AA8}.b心得{background:#A8BEDF}
+.t吐槽{background:#F5ECEC;color:#A06060}.b吐槽{background:#C07070}
+.t日常{background:#F2EDE5;color:#9A8060}.b日常{background:#CBAF98}
+.t其他{background:#EDEDED;color:#707070}.b其他{background:#A0A0A0}
+[data-theme=dark] .t攻略{background:#1A2A1A;color:#8BC49A}
+[data-theme=dark] .t心得{background:#1A2040;color:#90AAD0}
+[data-theme=dark] .t吐槽{background:#2A1818;color:#D08080}
+[data-theme=dark] .t日常{background:#2A2010;color:#D0B888}
+[data-theme=dark] .t其他{background:#252525;color:#909090}
+
+/* NEW: 存储用量条 */
+.storage-bar-wrap{margin-top:12px}
+.storage-bar-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:flex;justify-content:space-between}
+.storage-bar{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.storage-bar-fill{height:100%;border-radius:4px;transition:width 0.3s}
+
+/* ── Q版额外美化 ── */
+.game-name{font-size:15px;font-weight:800!important}
+.game-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.game-btns .btn{padding:4px 10px!important;font-size:11px!important}
+.acct-btns .btn{padding:4px 9px!important;font-size:11px!important}
+
+/* 通知卡片 */
+.notif-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);margin:10px 20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 3px 12px rgba(0,0,0,0.06)}
+.notif-icon{font-size:26px;flex-shrink:0;width:44px;height:44px;background:var(--accbg);border-radius:14px;display:flex;align-items:center;justify-content:center}
+.notif-info{flex:1;min-width:0}
+.notif-title{font-size:13px;font-weight:700;color:var(--text)}
+.notif-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* 主题自定义面板 */
+.theme-section{padding:14px 20px 0}
+.theme-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.opacity-row{display:flex;align-items:center;gap:10px}
+.opacity-slider{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:var(--bg3);outline:none;cursor:pointer}
+.opacity-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);cursor:pointer}
+.opacity-val{font-size:12px;font-weight:700;color:var(--accent);width:34px;text-align:right}
+
+/* 分享日报卡片 */
+.share-preview-wrap{padding:10px 20px}
+.share-card-inner{background:linear-gradient(135deg,var(--accbg),var(--bg2));border:2px solid var(--border);border-radius:20px;padding:20px;overflow:hidden;position:relative}
+.share-card-inner::before{content:'🐭';position:absolute;right:-8px;bottom:-8px;font-size:72px;opacity:0.08;pointer-events:none}
+.share-card-title{font-size:16px;font-weight:900;color:var(--accent);margin-bottom:4px}
+.share-card-date{font-size:11px;color:var(--text3);margin-bottom:14px}
+.share-res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.share-res-item{background:var(--card);border-radius:12px;padding:10px;border:2px solid var(--border)}
+.share-res-name{font-size:10px;color:var(--text3);font-weight:600}
+.share-res-val{font-size:17px;font-weight:900;color:var(--text);margin-top:2px}
+
+/* 默认Q版鼠鼠图标替代🐭 */
+.q-default-game-icon{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,var(--accbg),var(--bg2))}
+.q-default-acct-icon{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;background:linear-gradient(135deg,var(--accbg),var(--bg2))}
+
+/* 日报卡片区域 */
+.report-section{padding:10px 20px}
+.report-hdr{font-size:15px;font-weight:900;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="nav">
+    <button class="nb on" id="nb-task" onclick="goPage('task')"><svg viewBox="0 0 24 24"><path d="M9 11l33L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>任务</button>
+    <button class="nb" id="nb-res" onclick="goPage('res')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>资源</button><button class="nb" id="nb-log" onclick="goPage('log')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>日志</button>
+    <!-- MODIFIED: 修复SVG rxry缺少空格-->
+    <button class="nb" id="nb-cal" onclick="goPage('cal')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>日历</button>
+    <button class="nb" id="nb-chart" onclick="goPage('chart')"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>图表</button>
+    <button class="nb" id="nb-diary" onclick="goPage('diary')"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>日记</button>
+  </div>
+
+  <!-- 任务 -->
+  <div class="pg on" id="pg-task">
+    <div class="hdr">
+      <div><div class="ht">囤囤鼠来哩</div><div class="hs" id="task-date"></div></div>
+      <div class="hdr-right">
+        <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☾</button>
+        <button class="theme-btn" onclick="showM('m-data')" title="设置" style="font-size:14px">⚙</button>
+        <button class="btn bp bsm" onclick="showM('m-addtask')">＋ 任务</button>
+      </div>
+    </div>
+    <div class="tabs" id="task-gtabs"></div>
+    <div class="tabs" id="task-atabs"></div>
+    <div id="tasklist"></div>
+  </div>
+
+  <!-- 资源 -->
+  <div class="pg" id="pg-res">
+    <div class="hdr">
+      <div class="ht">囤囤鼠来哩 🐭</div>
+      <div class="hdr-right">
+        <button class="theme-btn" onclick="toggleTheme()">☾</button>
+        <!-- MODIFIED: 添加数据管理入口按钮 -->
+        <button class="theme-btn" onclick="showM('m-data')" title="数据管理" style="font-size:14px">⚙</button>
+        <button class="btn bp bsm" onclick="showM('m-addgame')">＋ 游戏</button>
+      </div>
+    </div>
+    <div id="res-content" style="padding-top:10px"></div>
+  </div>
+
+  <!-- 日志 -->
+  <div class="pg" id="pg-log">
+    <div class="hdr">
+      <div class="ht">记录历史</div>
+      <button class="theme-btn" onclick="toggleTheme()">☾</button></div>
+    <div class="tabs" id="log-gtabs"></div>
+    <div class="tabs" id="log-atabs"></div>
+    <div class="sact" style="padding-top:10px">
+      <button class="btn bp bfull" onclick="showLogM()">＋ 新增记录</button>
+    </div>
+    <div id="loglist" style="padding:0 20px"></div>
+  </div>
+
+  <!-- 日历 MODIFIED: 移除游戏/账号 tabs，改为全局日历 -->
+  <div class="pg" id="pg-cal">
+    <div class="hdr">
+      <div class="ht">日历</div>
+      <button class="theme-btn" onclick="toggleTheme()">☾</button>
+    </div><!--不再有cal-gtabs 和 cal-atabs -->
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calMov(-1)">‹</button>
+      <div class="cal-nav-title" id="cal-title"></div>
+      <button class="cal-nav-btn" onclick="calMov(1)">›</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div id="cal-detail"></div>
+  </div>
+
+  <!-- 图表 -->
+  <div class="pg" id="pg-chart">
+    <div class="hdr">
+      <div class="ht">趋势图表</div>
+      <button class="theme-btn" onclick="toggleTheme()">☾</button>
+    </div>
+    <div class="tabs" id="chart-gtabs"></div>
+    <div class="tabs" id="chart-atabs"></div>
+    <div class="chart-wrap" id="chart-content"></div>
+  </div>
+
+  <!-- 日记 -->
+  <div class="pg" id="pg-diary">
+    <div class="hdr">
+      <div class="ht">囤囤鼠来哩日记</div>
+      <div class="hdr-right">
+        <button class="theme-btn" onclick="toggleTheme()">☾</button>
+        <button class="btn bp bsm" onclick="showDE(null)">＋ 写日记</button>
+      </div>
+    </div>
+    <div class="dvtog">
+      <button class="dvbtn on" id="dvg" onclick="setDV('acct')">本账号</button>
+      <button class="dvbtn" id="dva" onclick="setDV('all')">全部</button></div>
+    <div class="tagrow" id="tagrow"></div>
+    <div class="dlist" id="dlist"></div>
+  </div>
+
+  <!-- ══ 全屏详情页：账号资源详情 ══ -->
+  <div class="detail-page" id="dp-acct">
+    <div class="dp-hdr">
+      <button class="dp-back" onclick="closeDPAcct()">←</button>
+      <div class="dp-title" id="dp-acct-title">账号详情</div>
+      <div class="dp-actions" id="dp-acct-actions"></div>
+    </div>
+    <div class="dp-body" id="dp-acct-body"></div>
+  </div>
+
+  <!-- ══ 全屏详情页：日记详情 ══ -->
+  <div class="detail-page" id="dp-diary">
+    <div class="dp-hdr">
+      <button class="dp-back" onclick="closeDPDiary()">←</button>
+      <div class="dp-title" id="dp-diary-title">日记</div>
+      <div class="dp-actions" id="dp-diary-actions"></div>
+    </div>
+    <div class="dp-body" id="dp-diary-body"></div>
+  </div>
+
+  <!-- ══ MODALS ══ -->
+
+  <!-- 添加/编辑游戏 -->
+  <div class="mover" id="m-addgame" onclick="bgC(event,'m-addgame')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle" id="addgame-title">添加游戏</div><button class="mclose" onclick="hideM('m-addgame')">×</button></div>
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">游戏图标</label>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="game-icon-preview" id="game-icon-preview" onclick="document.getElementById('game-icon-file').click()">🐭</div>
+            <div style="flex:1">
+              <input type="file" id="game-icon-file" accept="image/*" style="display:none" onchange="onGameIconPick(event)">
+              <button class="btn bg bfull bsm" onclick="document.getElementById('game-icon-file').click()">上传图标</button>
+              <!-- MODIFIED: 添加清除图标按钮 -->
+              <button class="btn bd bsm" onclick="clearGameIcon()" style="margin-top:4px;width:100%">清除图标</button>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">或输入 emoji：<input class="fi" id="ag-emoji" placeholder="🐭" maxlength="4" style="width:66px;display:inline-block;padding:5px 8px;font-size:16px;margin-left:4px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="fg"><label class="fl">游戏名称</label><input class="fi" id="ag-name" placeholder="例如：原神"></div>
+        <div class="fg">
+          <label class="fl">主题色</label>
+          <div class="color-presets" id="color-presets"></div>
+          <input type="color" class="fi" id="ag-color" value="#8BA995" style="padding:5px;height:40px;cursor:pointer;margin-top:8px">
+        </div>
+        <input type="hidden" id="ag-id">
+        <input type="hidden" id="ag-icon-data">
+        <button class="btn bp bfull" onclick="doAddGame()" style="margin-top:4px">保存游戏</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加/编辑账号 -->
+  <div class="mover" id="m-addacct" onclick="bgC(event,'m-addacct')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle" id="addacct-title">添加账号</div><button class="mclose" onclick="hideM('m-addacct')">×</button></div>
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">账号头像</label>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:52px;height:52px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;cursor:pointer" id="acct-avatar-preview" onclick="document.getElementById('acct-avatar-file').click()">🐭</div>
+            <div style="flex:1">
+              <input type="file" id="acct-avatar-file" accept="image/*" style="display:none" onchange="onAcctAvatarPick(event)">
+              <button class="btn bg bfull bsm" onclick="document.getElementById('acct-avatar-file').click()">上传头像</button>
+              <!-- MODIFIED: 添加清除头像按钮 -->
+              <button class="btn bd bsm" onclick="clearAcctAvatar()" style="margin-top:4px;width:100%">清除头像</button>
+            </div>
+          </div>
+        </div>
+        <div class="fg"><label class="fl">账号名称</label><input class="fi" id="aa-name" placeholder="例如：主号"></div>
+        <div class="fg"><label class="fl">备注</label><input class="fi" id="aa-note" placeholder="账号备注（选填）"></div>
+        <div class="fg"><label class="fl">账号简介</label><textarea class="fi" id="aa-desc" placeholder="更多说明（选填）" style="min-height:70px"></textarea></div>
+        <input type="hidden" id="aa-id">
+        <input type="hidden" id="aa-gid">
+        <input type="hidden" id="aa-avatar-data">
+        <button class="btn bp bfull" onclick="doSaveAcct()" style="margin-top:4px">保存账号</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理资源 -->
+  <div class="mover" id="m-manres" onclick="bgC(event,'m-manres')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle" id="manres-title">管理资源类型</div><button class="mclose" onclick="hideM('m-manres')">×</button></div>
+      <div class="mbody">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px">资源类型在同一游戏下所有账号共享</div>
+        <div id="manreslist"></div>
+        <div class="divider"></div>
+        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:9px">添加新资源</div>
+        <div class="frow">
+          <div class="fg"><label class="fl">图标</label><input class="fi" id="nr-emoji" placeholder="💎" maxlength="4"></div>
+          <div class="fg" style="flex:2"><label class="fl">名称</label><input class="fi" id="nr-name" placeholder="原石"></div>
+          <div class="fg"><label class="fl">单位</label><input class="fi" id="nr-unit" placeholder="个"></div>
+        </div>
+        <input type="hidden" id="manres-gid">
+        <button class="btn bp bfull" onclick="doAddRes()">添加资源</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 记录数据 -->
+  <div class="mover" id="m-addlog" onclick="bgC(event,'m-addlog')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle" id="addlog-title">记录数据</div><button class="mclose" onclick="hideM('m-addlog')">×</button></div>
+      <div class="mbody">
+        <div class="frow">
+          <div class="fg"><label class="fl">日期</label><input type="date" class="fi" id="log-date"></div>
+          <div class="fg"><label class="fl">时段（可选）</label><input class="fi" id="log-time" placeholder="早/中/晚"></div></div>
+        <div id="log-inputs"></div>
+        <div class="fg"><label class="fl">备注</label><input class="fi" id="log-note" placeholder="今天做了什么…"></div>
+        <button class="btn bp bfull" onclick="doAddLog()">保存记录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加任务 -->
+  <div class="mover" id="m-addtask" onclick="bgC(event,'m-addtask')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle">添加任务</div><button class="mclose" onclick="hideM('m-addtask')">×</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl">任务内容</label><input class="fi" id="nt-text" placeholder="例如：完成每日委托"></div>
+        <div class="togrow">
+          <div><div style="font-size:14px;font-weight:600">每日自动重置</div><div style="font-size:11px;color:var(--text3);margin-top:2px">每天打开自动重置为未完成</div></div>
+          <button class="tog on" id="nt-daily" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div style="height:10px"></div>
+        <button class="btn bp bfull" onclick="doAddTask()">添加任务</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 写日记 -->
+  <div class="mover" id="m-diary" onclick="bgC(event,'m-diary')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle" id="dm-ttl">写日记</div><button class="mclose" onclick="hideM('m-diary')">×</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl">标题（可选）</label><input class="fi" id="d-ttl" placeholder="给这篇日记起个标题…"></div>
+        <div class="fg"><label class="fl">正文</label><textarea class="fi" id="d-cnt" placeholder="记录今天的游戏时光…"></textarea></div>
+        <div class="fg"><label class="fl">标签</label>
+          <select class="fi" id="d-tag"><option>攻略</option><option>心得</option><option>吐槽</option><option selected>日常</option><option>其他</option></select>
+        </div>
+        <div class="togrow">
+          <span style="font-size:13px;font-weight:600">绑定资源记录</span>
+          <button class="tog" id="d-btog" onclick="togBind()"></button>
+        </div>
+        <div id="d-bsel" style="display:none;margin-bottom:12px"><select class="fi" id="d-lsel"></select></div>
+        <div class="fg">
+          <label class="fl">图片</label>
+          <input type="file" id="d-imgs" accept="image/*" multiple style="display:none" onchange="onImgPick(event)"><button class="btn bg bfull bsm" onclick="document.getElementById('d-imgs').click()">选择图片</button>
+          <div class="iplist" id="iplist"></div>
+        </div>
+        <input type="hidden" id="d-edit-id">
+        <button class="btn bp bfull" onclick="doDiary()">保存日记</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据管理 -->
+  <div class="mover" id="m-data" onclick="bgC(event,'m-data')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle">数据管理</div><button class="mclose" onclick="hideM('m-data')">×</button></div>
+      <div class="mbody">
+        <div class="data-row">
+          <div><div class="data-row-label">导出数据</div><div class="data-row-sub">保存为JSON文件到手机（含图片）</div></div>
+          <button class="btn bp bsm" onclick="exportData()">导出</button>
+        </div>
+        <div class="data-row">
+          <div><div class="data-row-label">导入数据</div><div class="data-row-sub">从JSON文件恢复</div></div>
+          <button class="btn bg bsm" onclick="document.getElementById('import-file').click()">导入</button>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+        <div class="data-row">
+          <div><div class="data-row-label">清空所有数据</div><div class="data-row-sub">不可恢复，请先导出备份</div></div>
+          <button class="btn bd bsm" onclick="clearAll()">清空</button>
+        </div>
+        <!--存储用量显示 -->
+        <div class="storage-bar-wrap">
+          <div class="storage-bar-label">
+            <span>存储用量</span>
+            <span id="storage-usage-text">计算中…</span>
+          </div>
+          <div class="storage-bar">
+            <div class="storage-bar-fill" id="storage-usage-bar" style="width:0%;background:var(--accent)"></div>
+          </div>
+        </div>
+        <!-- 快捷功能入口 -->
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+          <button class="btn bg bfull" onclick="hideM('m-data');showM('m-theme')" style="justify-content:flex-start;gap:10px">🎨 <span>主题自定义</span></button>
+          <button class="btn bg bfull" onclick="hideM('m-data');openNotifModal()" style="justify-content:flex-start;gap:10px">🔔 <span>每日打卡提醒</span></button>
+          <button class="btn bg bfull" onclick="hideM('m-data');openShareModal()" style="justify-content:flex-start;gap:10px">📸 <span>生成资源日报图片</span></button>
+        </div>
+        <!--版本与存储说明 -->
+        <div style="margin-top:14px;padding:12px;background:var(--bg2);border-radius:var(--r3);font-size:12px;color:var(--text3);line-height:1.8">
+          <b style="color:var(--text2);font-size:13px">📦 数据存储说明</b><br>
+          文字数据：浏览器 <b>localStorage</b>，key为 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">gt_v6</code>，约 5MB<br>
+          图片数据：<b>IndexedDB</b>，容量通常为设备存储的 <b>50%</b>，几个 G随便用 🎉<br>
+          图标/头像：存IDB，压缩到 128px<br>
+          日记图片：存 IDB，压缩到 800px<br>
+          迁移：旧版base64 图片会自动迁移到 IndexedDB<br>
+          导出备份：现已支持<b>导出含图片</b>的完整备份，导入时自动还原图片<br>
+          注意事项：换浏览器或清除浏览器数据会丢失，请定期点「导出」备份
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 主题自定义 Modal ══ -->
+  <div class="mover" id="m-theme" onclick="bgC(event,'m-theme')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle">🎨 主题自定义</div><button class="mclose" onclick="hideM('m-theme')">×</button></div>
+      <div class="mbody">
+        <div class="theme-section">
+          <div class="theme-section-title">主题色</div>
+          <div class="color-presets" id="theme-color-presets"></div>
+          <div class="fg" style="margin-top:10px">
+            <label class="fl">自定义颜色</label>
+            <input type="color" class="fi" id="theme-custom-color" value="#8BA995" style="padding:5px;height:44px;cursor:pointer" onchange="applyThemeColor(this.value)">
+          </div>
+        </div>
+        <div class="theme-section" style="margin-top:4px">
+          <div class="theme-section-title">卡片透明度</div>
+          <div class="opacity-row">
+            <input type="range" class="opacity-slider" id="opacity-slider" min="0.4" max="1" step="0.05" value="1" oninput="applyCardOpacity(this.value)">
+            <span class="opacity-val" id="opacity-val">100%</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px">降低透明度可让卡片呈现毛玻璃感（深色模式更明显）</div>
+        </div>
+        <div class="theme-section" style="margin-top:4px;padding-bottom:10px">
+          <div class="theme-section-title">预设配色方案</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px" id="theme-schemes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 每日打卡提醒 Modal ══ -->
+  <div class="mover" id="m-notif" onclick="bgC(event,'m-notif')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle">🔔 每日打卡提醒</div><button class="mclose" onclick="hideM('m-notif')">×</button></div>
+      <div class="mbody">
+        <div class="notif-card">
+          <div class="notif-icon">🐭</div>
+          <div class="notif-info">
+            <div class="notif-title">浏览器通知提醒</div>
+            <div class="notif-sub" id="notif-status">检测权限中…</div>
+          </div>
+        </div>
+        <div id="notif-body" style="margin-top:12px">
+          <div class="togrow">
+            <div>
+              <div style="font-size:14px;font-weight:700">开启每日提醒</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">每天定时提醒你来囤囤资源</div>
+            </div>
+            <button class="tog" id="notif-tog" onclick="toggleNotif()"></button>
+          </div>
+          <div class="fg" style="margin-top:10px">
+            <label class="fl">提醒时间</label>
+            <input type="time" class="fi" id="notif-time" value="20:00" onchange="saveNotifSettings()">
+          </div><div class="fg">
+            <label class="fl">提醒内容</label>
+            <input class="fi" id="notif-msg" value="🐭 囤囤鼠提醒你：今日还没打卡，快来记录资源吧！" placeholder="自定义提醒文字">
+          </div>
+          <button class="btn bp bfull" onclick="testNotif()" style="margin-top:4px">发送测试通知</button>
+          <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.7">
+            ⚠️ 浏览器通知需要页面保持打开状态。建议将本页添加到手机主屏，效果更好。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 资源日报分享 Modal ══ -->
+  <div class="mover" id="m-share" onclick="bgC(event,'m-share')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle">📸 生成日报图片</div><button class="mclose" onclick="hideM('m-share')">×</button></div>
+      <div class="mbody">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px">预览效果（点击下方按钮生成截图）</div>
+        <div class="share-preview-wrap">
+          <div class="share-card-inner" id="share-card">
+            <div class="share-card-title">🐭 囤囤鼠来哩</div>
+            <div class="share-card-date" id="share-date"></div>
+            <div class="share-res-grid" id="share-res-grid"></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn bg" style="flex:1" onclick="refreshShareCard()">🔄 刷新</button>
+          <button class="btn bp" style="flex:1" onclick="downloadShareCard()">💾 保存图片</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.7">
+          图片会截取当前账号的最新资源数据。长按图片可保存到相册。
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// 数据版本管理说明
+// -----------------------------------------------
+// 当前存储key：gt_v6（localStorage）
+// 旧版key列表（升级时自动迁移，不会丢数据）：
+//   gt_v5, gt_v4, gt_v3, gt_v2,
+//   gametracker_v2, game_tracker_v1
+//
+// 未来版本升级规则：
+//   1. 把新key 加到 SK变量
+//   2. 把旧 key 追加到 ALL_KEYS 数组前面
+//   3. 在 migrate() 函数里处理字段变更
+//   => 用户数据自动安全迁移，不需要手动操作
+// ═══════════════════════════════════════════════
+var SK='gt_v6';
+var ALL_KEYS=['gt_v6','gt_v5','gt_v4','gt_v3','gt_v2','gametracker_v2','game_tracker_v1'];
+var state={games:[]};
+var curGid=null,curAid=null,curPage='task';
+var _bjNow=(function(){var n=new Date(),u=n.getTime()+n.getTimezoneOffset()*60000;return new Date(u+8*3600000);})(),calY=_bjNow.getFullYear(),calM=_bjNow.getMonth(),calSel=null;
+var dView='acct',dTag='',edImgs=[],tmpGameIcon=null,tmpAcctAvatar=null;
+var manResGid=null;
+var toastT;
+
+var COLOR_PRESETS=[
+  {name:'水泽绿',color:'#A1C1A1'},{name:'潋烟绿',color:'#8BA995'},
+  {name:'雪松棕',color:'#D2C4B2'},{name:'晴空蓝',color:'#A8BEDF'},
+  {name:'远山青',color:'#C7D5E8'},{name:'雾沙灰',color:'#D8C9BA'},
+  {name:'残霜灰',color:'#C4C0C1'},{name:'灰茶红',color:'#BA9B92'},
+  {name:'枯枝褐',color:'#987F74'},{name:'茶烟棕',color:'#CBAF98'},
+  {name:'页边褐',color:'#DBB9A4'},{name:'窗纱紫',color:'#B6A9C8'},
+  {name:'烟水蓝',color:'#A09BC3'},{name:'雀羽青',color:'#9DBFC3'}
+];
+
+// ── MIGRATE──
+function migrate(old){
+  if(!old||!old.games)return old;
+  for(var i=0;i<old.games.length;i++){
+    var g=old.games[i];
+    if(!g.resources)g.resources=[];
+    if(g.color==='#e05c20'||g.color==='#f07030')g.color='#8BA995';
+    var accts=g.accounts||[];
+    for(var j=0;j<accts.length;j++){
+      var a=accts[j];
+      if(a.resources&&a.resources.length){
+        for(var k=0;k<a.resources.length;k++){
+          var r=a.resources[k],exists=false;
+          for(var m=0;m<g.resources.length;m++){if(g.resources[m].id===r.id){exists=true;break;}}
+          if(!exists)g.resources.push(r);
+        }
+        delete a.resources;
+      }if(!a.logs)a.logs=[];
+      if(!a.tasks)a.tasks=[];
+      if(!a.diary)a.diary=[];
+    }
+  }
+  return old;
+}
+
+// ── STORAGE ──
+function loadData(){
+  var raw=null;
+  for(var i=0;i<ALL_KEYS.length;i++){
+    try{var o=localStorage.getItem(ALL_KEYS[i]);if(o){raw=o;if(i>0){toast('检测到旧版数据，已自动迁移 ✅');}break;}}catch(e){}
+  }
+  if(raw){try{state=JSON.parse(raw);migrate(state);}catch(e){state={games:[]};}}
+  if(!state.games)state.games=[];
+  saveData();
+  resetDaily();
+}
+function saveData(){
+  try{localStorage.setItem(SK,JSON.stringify(state));}
+  catch(e){toast('存储失败，数据可能过大，请导出备份后清理图片');}
+}
+
+// ══════════════════════════════════════════
+// ① 修复：导出时将IndexedDB 图片内嵌到 JSON，导入时还原
+// ══════════════════════════════════════════
+function exportData(){toast('正在打包图片数据，请稍候…');
+  // 收集所有 idb 引用
+  var idbRefs = [];
+  for(var gi=0;gi<state.games.length;gi++){
+    var g=state.games[gi];
+    if(g.iconData && isIdbRef(g.iconData)) idbRefs.push(g.iconData);
+    var aa=g.accounts||[];
+    for(var ai=0;ai<aa.length;ai++){
+      var a=aa[ai];
+      if(a.avatarData && isIdbRef(a.avatarData)) idbRefs.push(a.avatarData);
+      var diary=a.diary||[];
+      for(var di=0;di<diary.length;di++){
+        var imgs=diary[di].images||[];
+        for(var ii=0;ii<imgs.length;ii++){
+          if(isIdbRef(imgs[ii])) idbRefs.push(imgs[ii]);
+        }
+      }
+    }
+  }
+  if(!idbRefs.length){
+    // 没有 IDB 图片，直接导出
+    _doExportJSON(state, {});
+    return;
+  }
+  // 从 IndexedDB 读取所有图片
+  var imgBundle = {};
+  var pending = idbRefs.length;
+  idbRefs.forEach(function(ref){
+    var key = idbKey(ref);
+    idbGet(key, function(err, data){
+      if(data) imgBundle[key] = data;
+      pending--;
+      if(pending === 0) _doExportJSON(state, imgBundle);
+    });
+  });
+}
+
+function _doExportJSON(stateData, imgBundle){
+  var exportObj = {
+    _exportVersion: 2,
+    _exportDate: today(),
+    state: stateData,
+    images: imgBundle  // key → base64 dataUrl
+  };
+  var data = JSON.stringify(exportObj);
+  var blob = new Blob([data],{type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '囤囤鼠来哩_备份_' + today() + '.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  var sizeKB = Math.round(data.length/1024);
+  toast('数据已导出（含' + Object.keys(imgBundle).length + '张图片，' + (sizeKB>1024?(Math.round(sizeKB/102.4)/10+'MB'):(sizeKB+'KB')) + '）');
+}
+
+function importData(ev){
+  var file=ev.target.files[0];if(!file)return;
+  var r=new FileReader();
+  r.onload=function(e){
+    try{
+      var d=JSON.parse(e.target.result);
+      //兼容新旧格式
+      var newState, imgBundle;
+      if(d._exportVersion >= 2 && d.state){
+        // 新格式：{ _exportVersion, state, images }
+        newState = d.state;
+        imgBundle = d.images || {};
+      } else if(d.games){
+        // 旧格式：直接就是 state
+        newState = d;
+        imgBundle = {};
+      } else {
+        toast('文件格式不对');return;
+      }
+      if(!confirm('导入会覆盖当前数据，确定吗？')) return;
+
+      // 先还原图片到 IndexedDB
+      var imgKeys = Object.keys(imgBundle);
+      if(imgKeys.length){
+        toast('正在还原 '+imgKeys.length+' 张图片…');
+        var pending2 = imgKeys.length;
+        imgKeys.forEach(function(key){
+          idbPut(key, imgBundle[key], function(err){
+            pending2--;
+            if(pending2===0){
+              // 图片全部还原后再更新 state
+              state = newState;
+              migrate(state);
+              saveData();
+              toast('导入成功！含'+imgKeys.length+' 张图片');
+              setTimeout(function(){location.reload();}, 800);
+            }
+          });
+        });
+      } else {
+        state = newState;
+        migrate(state);
+        saveData();
+        location.reload();
+      }
+    }catch(ex){toast('文件读取失败：'+ex.message);}
+  };
+  r.readAsText(file);ev.target.value='';
+}
+
+function clearAll(){
+  if(confirm('确定清空所有数据？此操作不可恢复！')){state={games:[]};saveData();location.reload();}
+}
+
+// NEW: 计算并显示存储用量
+function updateStorageUsage(){
+  try{
+    var data=localStorage.getItem(SK)||'';
+    var bytes=new Blob([data]).size;
+    var maxBytes=5*1024*1024; // 5MB
+    var pct=Math.min(100,Math.round(bytes/maxBytes*100));
+    var sizeStr=bytes<1024?(bytes+'B'):bytes<1048576?(Math.round(bytes/1024)+'KB'):(Math.round(bytes/1048576*10)/10+'MB');
+    var el=document.getElementById('storage-usage-text');
+    var bar=document.getElementById('storage-usage-bar');
+    if(el)el.textContent=sizeStr+' /5MB ('+pct+'%)';
+    if(bar){
+      bar.style.width=pct+'%';
+      bar.style.background=pct>80?'var(--red)':pct>60?'#D0A040':'var(--accent)';
+    }
+  }catch(e){}
+}
+
+
+// ═══════════════════════════════════════════════════════
+// IndexedDB 图片存储层
+// DB: tdr_imagesStore: imagesKey: string id
+// ═══════════════════════════════════════════════════════
+var IDB_NAME='tdr_images', IDB_VER=1, IDB_STORE='images';
+var _idb=null;
+
+function idbOpen(cb){
+  if(_idb){cb(null,_idb);return;}
+  var req=indexedDB.open(IDB_NAME,IDB_VER);
+  req.onupgradeneeded=function(e){
+    var db=e.target.result;
+    if(!db.objectStoreNames.contains(IDB_STORE)){
+      db.createObjectStore(IDB_STORE,{keyPath:'id'});
+    }
+  };
+  req.onsuccess=function(e){_idb=e.target.result;cb(null,_idb);};
+  req.onerror=function(e){cb(e.target.error,null);};
+}
+
+//存图片：idbPut(id, dataUrl, callback)
+function idbPut(id, dataUrl, cb){
+  idbOpen(function(err,db){
+    if(err){if(cb)cb(err);return;}
+    var tx=db.transaction(IDB_STORE,'readwrite');
+    var store=tx.objectStore(IDB_STORE);
+    store.put({id:id, data:dataUrl});
+    tx.oncomplete=function(){if(cb)cb(null);};
+    tx.onerror=function(e){if(cb)cb(e.target.error);};
+  });
+}
+
+// 取图片：idbGet(id, callback(err, dataUrl))
+function idbGet(id, cb){
+  idbOpen(function(err,db){
+    if(err){cb(err,null);return;}
+    var tx=db.transaction(IDB_STORE,'readonly');
+    var req=tx.objectStore(IDB_STORE).get(id);
+    req.onsuccess=function(){cb(null, req.result?req.result.data:null);};
+    req.onerror=function(e){cb(e.target.error,null);};
+  });
+}
+
+// 删图片
+function idbDel(id, cb){
+  idbOpen(function(err,db){
+    if(err){if(cb)cb(err);return;}
+    var tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).delete(id);
+    tx.oncomplete=function(){if(cb)cb(null);};
+  });
+}
+
+// 批量删
+function idbDelMany(ids, cb){
+  if(!ids||!ids.length){if(cb)cb();return;}
+  idbOpen(function(err,db){
+    if(err){if(cb)cb(err);return;}
+    var tx=db.transaction(IDB_STORE,'readwrite');
+    var store=tx.objectStore(IDB_STORE);
+    for(var i=0;i<ids.length;i++)store.delete(ids[i]);
+    tx.oncomplete=function(){if(cb)cb(null);};
+  });
+}
+
+// ── IDB 引用 key格式 ──
+// "idb:game_icon_{gameId}"
+// "idb:acct_avatar_{acctId}"
+// "idb:diary_img_{entryId}_{idx}"
+function isIdbRef(s){return typeof s==='string'&&s.slice(0,4)==='idb:';}
+function idbKey(s){return s?s.slice(4):'';}
+
+// 从引用解析图片 URL（带缓存）
+var _imgCache={};
+function resolveImgRef(ref, cb){
+  if(!ref){cb(null,'');return;}
+  //旧式base64（向后兼容）
+  if(!isIdbRef(ref)){cb(null,ref);return;}
+  var key=idbKey(ref);
+  if(_imgCache[key]){cb(null,_imgCache[key]);return;}
+  idbGet(key,function(err,data){
+    if(data)_imgCache[key]=data;
+    cb(err,data||'');
+  });
+}
+
+// 批量解析并渲染（传入 refs 数组，回调 urls 数组）
+function resolveMany(refs, cb){
+  var results=new Array(refs.length).fill('');
+  var pending=refs.length;
+  if(!pending){cb(results);return;}
+  refs.forEach(function(ref,i){
+    resolveImgRef(ref,function(err,url){
+      results[i]=url||'';
+      pending--;
+      if(pending===0)cb(results);
+    });
+  });
+}
+
+// ── 存游戏图标到 IDB，返回引用 ──
+function saveGameIcon(gid, dataUrl, cb){
+  var key='game_icon_'+gid;
+  idbPut(key,dataUrl,function(err){
+    cb(err, err?null:('idb:'+key));
+  });
+}
+
+// ── 存账号头像到 IDB，返回引用 ──
+function saveAcctAvatar(aid, dataUrl, cb){
+  var key='acct_avatar_'+aid;
+  idbPut(key,dataUrl,function(err){
+    cb(err, err?null:('idb:'+key));
+  });
+}
+
+// ── 存日记图片到 IDB，返回引用 ──
+function saveDiaryImg(entryId, idx, dataUrl, cb){
+  var key='diary_img_'+entryId+'_'+idx;
+  idbPut(key,dataUrl,function(err){
+    cb(err, err?null:('idb:'+key));
+  });
+}
+
+// ── 迁移旧 base64 到 IDB（首次启动时自动执行）──
+function migrateImagesToIDB(){
+  var migrated=0;
+  var jobs=[];
+  //扫描所有游戏/账号
+  for(var gi=0;gi<state.games.length;gi++){
+    var g=state.games[gi];
+    if(g.iconData&&!isIdbRef(g.iconData)){
+      (function(gg){
+        jobs.push(function(done){
+          saveGameIcon(gg.id,gg.iconData,function(err,ref){
+            if(!err&&ref){gg.iconData=ref;migrated++;}
+            done();
+          });
+        });
+      })(g);
+    }var aa=g.accounts||[];
+    for(var ai=0;ai<aa.length;ai++){
+      var a=aa[ai];
+      if(a.avatarData&&!isIdbRef(a.avatarData)){
+        (function(aa_){
+          jobs.push(function(done){
+            saveAcctAvatar(aa_.id,aa_.avatarData,function(err,ref){
+              if(!err&&ref){aa_.avatarData=ref;migrated++;}
+              done();
+            });
+          });
+        })(a);
+      }
+      // 日记图片
+      var diary=a.diary||[];
+      for(var di=0;di<diary.length;di++){
+        var entry=diary[di];
+        if(entry.images&&entry.images.length){
+          for(var ii=0;ii<entry.images.length;ii++){
+            if(!isIdbRef(entry.images[ii])){
+              (function(ee,iidx){
+                jobs.push(function(done){
+                  saveDiaryImg(ee.id,iidx,ee.images[iidx],function(err,ref){
+                    if(!err&&ref){ee.images[iidx]=ref;migrated++;}
+                    done();
+                  });
+                });
+              })(entry,ii);
+            }
+          }
+        }
+      }
+    }
+  }
+  // 串行执行（避免 IDB 并发写争用）
+  function runNext(i){
+    if(i>=jobs.length){
+      if(migrated>0){saveData();console.log('[IDB] 已迁移'+migrated+'张图片到IndexedDB');}
+      return;
+    }
+    jobs[i](function(){runNext(i+1);});
+  }
+  runNext(0);
+}
+
+
+// ── 图片渲染助手 ──
+// 给img 元素一个 idb 引用，异步加载
+function setImgSrc(imgEl, ref){
+  if(!ref){return;}
+  if(!isIdbRef(ref)){imgEl.src=ref;return;}
+  imgEl.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';// 透明占位idbGet(idbKey(ref),function(err,data){if(data)imgEl.src=data;});
+}
+
+// 解析 ref 返回可用的 src（同步优先缓存，异步回退）
+function imgSrcOrPlaceholder(ref){
+  if(!ref)return '';
+  if(!isIdbRef(ref))return ref;// 旧 base64，直接用
+  var key=idbKey(ref);
+  return _imgCache[key]||'';// 若已缓存则直接用，否则空（后续setImgSrc 填充）
+}
+
+// 渲染后批量填充 IDB 图片（扫描 DOM 里所有 data-idbref 属性）
+function fillIdbImgs(container){
+  var imgs=(container||document).querySelectorAll('[data-idbref]');
+  imgs.forEach(function(el){
+    var ref=el.getAttribute('data-idbref');
+    if(!ref)return;
+    if(!isIdbRef(ref)){el.src=ref;return;}
+    var key=idbKey(ref);
+    if(_imgCache[key]){el.src=_imgCache[key];return;}
+    idbGet(key,function(err,data){
+      if(data){_imgCache[key]=data;el.src=data;}
+    });
+  });
+}
+
+// 生成 img 标签 HTML，自动处理 IDB 引用
+function imgTagH(ref, style, extraAttrs){
+  extraAttrs=extraAttrs||'';
+  if(!ref)return '';
+  if(!isIdbRef(ref)){
+    return '<img src="'+ref+'" style="'+style+'" '+extraAttrs+'>';
+  }
+  var cached=_imgCache[idbKey(ref)];
+  if(cached){
+    return '<img src="'+cached+'" style="'+style+'" '+extraAttrs+'>';
+  }
+  // 占位 + data-idbref 属性，fillIdbImgs() 会异步填充
+  return '<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-idbref="'+ref+'" style="'+style+'" '+extraAttrs+'>';
+}
+
+// ── UTILS ──
+function uid(){return Math.random().toString(36).slice(2,9);}
+//── 北京时间工具 (UTC+8) ──
+function bjDate(){
+  // 返回北京时间的 Date 对象（可靠跨时区）
+  var now=new Date();
+  var utc=now.getTime()+now.getTimezoneOffset()*60000;
+  return new Date(utc+8*3600000);
+}
+function today(){
+  var d=bjDate();
+  var m=d.getMonth()+1,dd=d.getDate();
+  return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd;
+}
+function fmtD(d){var dt=new Date(d+'T00:00:00');return (dt.getMonth()+1)+'月'+dt.getDate()+'日';}
+function bjNow(){return bjDate();}
+function G(gid){var id=gid||curGid;for(var i=0;i<state.games.length;i++)if(state.games[i].id===id)return state.games[i];return null;}
+function A(gid,aid){var g=G(gid);if(!g)return null;var aa=g.accounts||[];for(var i=0;i<aa.length;i++)if(aa[i].id===(aid||curAid))return aa[i];return null;}
+function resetDaily(){
+  var t=today();
+  var changed=false;
+  for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var ts=aa[j].tasks||[];for(var k=0;k<ts.length;k++){if(ts[k].isDaily&&ts[k].lastReset!==t){ts[k].isDone=false;ts[k].lastReset=t;changed=true;}}}}
+  if(changed){saveData();if(curPage==='task')rTasks();}
+}
+// ── 跨天自动检测（每分钟检查一次）──
+var _dailyCheckDay='';
+setInterval(function(){
+  var t=today();
+  if(t!==_dailyCheckDay){_dailyCheckDay=t;resetDaily();toast('每日任务已自动重置 🌅');}
+},60000);
+function toast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on');},2500);}
+
+// NEW: 图片压缩工具函数
+function compressImage(dataUrl, maxSize, callback){
+  var img=new Image();
+  img.onload=function(){
+    var w=img.width,h=img.height;
+    if(w<=maxSize&&h<=maxSize){callback(dataUrl);return;}
+    var ratio=Math.min(maxSize/w,maxSize/h);
+    var nw=Math.round(w*ratio),nh=Math.round(h*ratio);
+    var canvas=document.createElement('canvas');
+    canvas.width=nw;canvas.height=nh;
+    var ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0,nw,nh);
+    var result=canvas.toDataURL('image/jpeg',0.8);
+    callback(result);
+  };
+  img.src=dataUrl;
+}
+
+// ── MODAL ──
+function showM(id){
+  var el=document.getElementById(id);
+  el.style.display='flex';
+  // NEW: 打开数据管理时刷新存储用量
+  if(id==='m-data')updateStorageUsage();
+  requestAnimationFrame(function(){requestAnimationFrame(function(){el.classList.add('show');});});
+}
+function hideM(id){
+  var el=document.getElementById(id);
+  el.classList.remove('show');
+  setTimeout(function(){el.style.display='none';},350);
+}
+function bgC(e,id){if(e.target===e.currentTarget)hideM(id);}
+
+// ── THEME ──
+var isDark=false;
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'');
+  var btns=document.querySelectorAll('.theme-btn');
+  for(var i=0;i<btns.length;i++)btns[i].textContent=isDark?'☀':'☾';
+  try{localStorage.setItem('gt_theme',isDark?'dark':'light');}catch(e){}
+}
+function loadTheme(){
+  try{var t=localStorage.getItem('gt_theme');if(t==='dark'){isDark=true;document.documentElement.setAttribute('data-theme','dark');var btns=document.querySelectorAll('.theme-btn');for(var i=0;i<btns.length;i++)btns[i].textContent='☀';}}catch(e){}
+}
+
+// ── PAGE NAV ──
+function goPage(p){
+  curPage=p;
+  var ps=['task','res','log','cal','chart','diary'];
+  for(var i=0;i<ps.length;i++){document.getElementById('pg-'+ps[i]).classList.toggle('on',ps[i]===p);document.getElementById('nb-'+ps[i]).classList.toggle('on',ps[i]===p);}
+  rPage(p);
+}
+function rPage(p){
+  if(p==='task'){rGTabs('task-gtabs','task');rATabs('task-atabs','task');rTasks();}
+  if(p==='res'){rRes();}
+  if(p==='log'){rGTabs('log-gtabs','log');rATabs('log-atabs','log');rLogs();}
+  // MODIFIED: 日历不再需要 tabs
+  if(p==='cal'){rCal();}
+  if(p==='chart'){rGTabs('chart-gtabs','chart');rATabs('chart-atabs','chart');rCharts();}
+  if(p==='diary'){rDiary();}
+}
+
+// ── TABS ──
+function rGTabs(elId,ctx){
+  var el=document.getElementById(elId),h='';
+  for(var i=0;i<state.games.length;i++){
+    var g=state.games[i],on=g.id===curGid;
+    var s=on?'background:'+g.color+';border-color:'+g.color:'';
+    var ico=g.iconData?imgTagH(g.iconData,'width:15px;height:15px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:3px'):g.emoji+' ';
+    h+='<button class="tab'+(on?' on':'')+'" style="'+s+'" onclick="selG(\''+g.id+'\',\''+ctx+'\')">'+ico+g.name+'</button>';
+  }
+  el.innerHTML=h||'<span style="color:var(--text3);font-size:12px">还没有游戏</span>';
+  fillIdbImgs(el);
+}
+function rATabs(elId,ctx){
+  var el=document.getElementById(elId),g=G(),h='';
+  if(!g){el.innerHTML='';return;}
+  var aa=g.accounts||[];
+  for(var i=0;i<aa.length;i++){
+    var a=aa[i],on=a.id===curAid;
+    var s=on?'background:'+g.color+';border-color:'+g.color:'';
+    h+='<button class="tab'+(on?' on':'')+'" style="'+s+'" onclick="selA(\''+a.id+'\',\''+ctx+'\')">'+a.name+'</button>';
+  }
+  el.innerHTML=h||'<span style="color:var(--text3);font-size:12px">还没有账号</span>';
+}
+function selG(gid,ctx){
+  curGid=gid;var g=G();var aa=g?g.accounts||[]:[];curAid=aa.length?aa[0].id:null;
+  rGTabs((ctx+'-gtabs'),ctx);rATabs((ctx+'-atabs'),ctx);if(ctx==='task')rTasks();else if(ctx==='log')rLogs();else if(ctx==='chart')rCharts();
+  // MODIFIED: 日历不再通过 selG 触发
+}
+function selA(aid,ctx){
+  curAid=aid;rATabs((ctx+'-atabs'),ctx);
+  if(ctx==='task')rTasks();else if(ctx==='log')rLogs();else if(ctx==='chart')rCharts();
+  // MODIFIED: 日历不再通过 selA 触发
+}
+function rAllTabs(){
+  // MODIFIED: 日历不再需要 tabs
+  var pages=['task','log','chart'];
+  for(var i=0;i<pages.length;i++){rGTabs(pages[i]+'-gtabs',pages[i]);rATabs(pages[i]+'-atabs',pages[i]);}
+}
+
+// ── RESOURCE MANAGE ──
+function openManRes(gid){
+  manResGid=gid;var g=G(gid);
+  document.getElementById('manres-title').textContent='资源类型 · '+(g?g.name:'');
+  document.getElementById('manres-gid').value=gid;
+  rManResList();showM('m-manres');
+}
+function rManResList(){
+  var g=G(manResGid),el=document.getElementById('manreslist');
+  if(!g||!g.resources||!g.resources.length){el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:8px 0">还没有资源类型</div>';return;}
+  var h='';
+  for(var i=0;i<g.resources.length;i++){var r=g.resources[i];h+='<div class="mresitem"><span style="font-size:18px">'+r.emoji+'</span><span style="font-size:14px;font-weight:600;color:var(--text)">'+r.name+'</span><span style="font-size:12px;color:var(--text3)">'+r.unit+'</span><button class="mresdel" onclick="delResItem(\''+r.id+'\')">×</button></div>';}
+  el.innerHTML=h;
+}
+function doAddRes(){
+  var g=G(manResGid);if(!g){toast('游戏不存在');return;}
+  var name=document.getElementById('nr-name').value.trim();if(!name){toast('请输入名称');return;}
+  var emoji=document.getElementById('nr-emoji').value.trim()||'📦',unit=document.getElementById('nr-unit').value.trim()||'个';
+  if(!g.resources)g.resources=[];g.resources.push({id:uid(),name:name,emoji:emoji,unit:unit});
+  saveData();rManResList();document.getElementById('nr-name').value='';document.getElementById('nr-emoji').value='';document.getElementById('nr-unit').value='';toast(name+' 已添加');
+}
+function delResItem(id){var g=G(manResGid);if(!g)return;g.resources=g.resources.filter(function(r){return r.id!==id;});saveData();rManResList();}
+
+// ── RES PAGE ──
+function rRes(){
+  var el=document.getElementById('res-content');
+  if(!state.games.length){el.innerHTML='<div class="empty"><div class="ei">📦</div><div class="et">还没有游戏，点右上角添加</div></div>';return;}
+  var h='';
+  for(var i=0;i<state.games.length;i++)h+=gameCardH(state.games[i]);
+  el.innerHTML=h;fillIdbImgs(el);
+}
+function gameCardH(g){
+  var aa=g.accounts||[];
+  var iconEl=g.iconData?imgTagH(g.iconData,'width:100%;height:100%;object-fit:cover;border-radius:10px'):'<span style="font-size:22px">'+g.emoji+'</span>';
+  var acctH='';
+  if(aa.length){
+    for(var i=0;i<aa.length;i++){
+      var a=aa[i];
+      var avEl=a.avatarData?imgTagH(a.avatarData,'width:100%;height:100%;object-fit:cover;border-radius:50%'):'<span style="font-size:14px">🐭</span>';
+      acctH+='<div class="acct-row" onclick="openAcctDP(\''+g.id+'\',\''+a.id+'\')">'+'<div class="acct-avatar">'+avEl+'</div>'+'<div class="acct-info"><div class="acct-name">'+a.name+'</div>'+(a.note?'<div class="acct-note">'+a.note+'</div>':'')+'</div>'
+        +'<div class="acct-btns">'+'<button class="btn bg bsm" onclick="event.stopPropagation();openManRes(\''+g.id+'\')">资源</button>'
+        +'<button class="btn bg bsm" onclick="event.stopPropagation();editAcct(\''+g.id+'\',\''+a.id+'\')">编辑</button>'
+        +'<button class="btn bp bsm" onclick="event.stopPropagation();openLogFor(\''+g.id+'\',\''+a.id+'\')">记录</button>'
+        +'<button class="btn bd bsm" onclick="event.stopPropagation();delAcct(\''+g.id+'\',\''+a.id+'\')">×</button>'
+        +'</div></div>';
+    }
+  } else {
+    acctH='<div style="color:var(--text3);font-size:12px;padding:4px 0">还没有账号</div>';
+  }
+  return '<div class="game-card">'
+    +'<div class="game-color-strip" style="background:'+g.color+'"></div>'
+    +'<div class="game-hdr">'
+    +'<div class="game-icon">'+iconEl+'</div>'
+    +'<div class="game-info"><div class="game-name">'+g.name+'</div><div class="game-sub">'+aa.length+'个账号 · '+(g.resources||[]).length+'种资源</div></div>'
+    +'<div class="game-btns">'
+    +'<button class="btn bg bsm" onclick="openManRes(\''+g.id+'\')">资源</button>'
+    +'<button class="btn bg bsm" onclick="editGame(\''+g.id+'\')">编辑</button>'
+    +'<button class="btn bg bsm" onclick="openAddAcct(\''+g.id+'\')">＋账号</button>'
+    +'<button class="btn bd bsm" onclick="delGame(\''+g.id+'\')">删除</button>'
+    +'</div></div>'
+    +'<div class="acct-list">'+acctH+'</div>'
+    +'</div>';
+}
+
+// ══════════════════════════════════════════
+//全屏详情页：账号资源详情
+// ══════════════════════════════════════════
+var dpAcctGid=null,dpAcctAid=null;
+
+function openAcctDP(gid,aid){
+  dpAcctGid=gid;dpAcctAid=aid;
+  curGid=gid;curAid=aid;
+  var g=G(gid),a=A(gid,aid);if(!g||!a)return;
+  document.getElementById('dp-acct-title').textContent=g.name+' · '+a.name;
+  document.getElementById('dp-acct-actions').innerHTML=
+    '<button class="btn bg bsm" onclick="openManRes(\''+gid+'\')" style="font-size:11px">管理资源</button>'
+    +'<button class="btn bg bsm" onclick="openShareFor(\''+gid+'\',\''+aid+'\')" style="font-size:11px">📸</button>'
+    +'<button class="btn bp bsm" onclick="openLogFor(\''+gid+'\',\''+aid+'\')" style="font-size:11px">＋记录</button>';
+  renderAcctDPBody(gid,aid);
+  document.getElementById('dp-acct').classList.add('open');
+}
+
+function renderAcctDPBody(gid,aid){
+  var g=G(gid),a=A(gid,aid);if(!g||!a)return;
+  var logs=(a.logs||[]).slice().sort(function(a,b){return a.date.localeCompare(b.date);});
+  var res=g.resources||[];
+  var avEl=a.avatarData?imgTagH(a.avatarData,'width:100%;height:100%;object-fit:cover;border-radius:50%'):'<span style="font-size:22px">🐭</span>';
+  var h='';
+  //账号 banner
+  h+='<div class="acct-detail-banner">'
+    +'<div class="acct-detail-ava">'+avEl+'</div>'
+    +'<div class="acct-detail-info">'
+    +'<div class="acct-detail-name">'+a.name+'</div>'
+    +(a.note?'<div class="acct-detail-note">'+a.note+'</div>':'')
+    +'</div>'
+    +'</div>';
+  if(a.desc)h+='<div class="acct-detail-desc">'+a.desc+'</div>';
+  // 资源卡片
+  if(!res.length){
+    h+='<div class="empty"><div class="ei">📦</div><div class="et">还没有资源类型<br><span style="font-size:12px">点右上角「管理资源」添加</span></div></div>';
+  } else {
+    h+='<div class="sec-h">资源数据</div><div class="res-grid">';
+    for(var i=0;i<res.length;i++)h+=rCardH(res[i],logs,g.color);
+    h+='</div>';
+  }
+  // 最近记录
+  var recentLogs=(a.logs||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,5);
+  if(recentLogs.length){
+    h+='<div class="sec-h">最近记录</div><div style="padding:0 20px">';
+    for(var i=0;i<recentLogs.length;i++){
+      var l=recentLogs[i],chips='';
+      for(var j=0;j<(l.entries||[]).length;j++){var e=l.entries[j],r=null;for(var k=0;k<res.length;k++){if(res[k].id===e.resourceId){r=res[k];break;}}if(r)chips+='<span class="chip">'+r.emoji+r.name+' '+e.value.toLocaleString()+r.unit+'</span>';}
+      h+='<div class="logitem"><div class="logdate">'+(l.date===today()?'今天':fmtD(l.date))+(l.timeNote?' · '+l.timeNote:'')+'</div><div class="chips">'+(chips||'无数据')+'</div>'+(l.note?'<div class="lognote">'+l.note+'</div>':'')+'</div>';
+    }
+    h+='</div>';
+  }
+  h+='<div style="padding:0 20px 16px"><button class="btn bp bfull" onclick="openLogFor(\''+gid+'\',\''+aid+'\')">＋ 记录今日数据</button></div>';
+  var bodyEl=document.getElementById('dp-acct-body');
+  bodyEl.innerHTML=h;fillIdbImgs(bodyEl);
+}
+
+function closeDPAcct(){
+  document.getElementById('dp-acct').classList.remove('open');
+}
+
+// ── SPARKS & CARDS ──
+function rCardH(res,logs,color){
+  var vals=[];
+  for(var i=0;i<logs.length;i++){var es=logs[i].entries||[];for(var j=0;j<es.length;j++){if(es[j].resourceId===res.id){vals.push(es[j].value);break;}}}
+  var latest=vals.length?vals[vals.length-1]:0,prev=vals.length>1?vals[vals.length-2]:null,delta=prev!==null?latest-prev:null,dh='';
+  if(delta!==null){var cls=delta>0?'rup':delta<0?'rdn':'rfl',sym=delta>0?'▲':delta<0?'▼':'─';dh='<div class="rdelta '+cls+'">'+sym+' '+Math.abs(delta).toLocaleString()+'</div>';}
+  var sp=vals.length>=2?sparkH(vals,color):'';
+  return '<div class="rcard"><div class="raccent" style="background:'+color+'"></div><div class="remoji">'+res.emoji+'</div><div class="rname">'+res.name+'</div><div class="rval">'+latest.toLocaleString()+'<span class="runit">'+res.unit+'</span></div>'+dh+sp+'</div>';
+}
+function sparkH(vals,color){
+  var W=100,H=24,mn=vals[0],mx=vals[0];
+  for(var i=1;i<vals.length;i++){if(vals[i]<mn)mn=vals[i];if(vals[i]>mx)mx=vals[i];}
+  var range=Math.max(mx-mn,1),pts='';
+  for(var i=0;i<vals.length;i++){var x=(i/(vals.length-1))*W,y=H-((vals[i]-mn)/range)*H*0.78-H*0.11;pts+=x+','+y+' ';}
+  var lx=W,ly=H-((vals[vals.length-1]-mn)/range)*H*0.78-H*0.11;
+  return '<svg class="spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linejoin="round" opacity="0.7"/><circle cx="'+lx+'" cy="'+ly+'" r="2.5" fill="'+color+'"/></svg>';
+}
+
+// ── ADD/EDIT GAME ──
+function initColorPresets(){
+  var el=document.getElementById('color-presets');if(!el)return;
+  var h='';
+  for(var i=0;i<COLOR_PRESETS.length;i++){
+    var c=COLOR_PRESETS[i];
+    h+='<div class="color-dot" style="background:'+c.color+'" title="'+c.name+'" onclick="pickPresetColor(\''+c.color+'\')"></div>';
+  }
+  el.innerHTML=h;
+}
+function pickPresetColor(c){
+  document.getElementById('ag-color').value=c;
+  var dots=document.querySelectorAll('.color-dot');
+  for(var i=0;i<dots.length;i++){dots[i].classList.toggle('sel',dots[i].style.background===c||dots[i].style.backgroundColor===hexToRgb(c));}
+}
+function hexToRgb(hex){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'rgb('+r+', '+g+', '+b+')';}
+function editGame(gid){
+  var g=G(gid);if(!g)return;
+  document.getElementById('addgame-title').textContent='编辑游戏';
+  document.getElementById('ag-id').value=gid;
+  document.getElementById('ag-name').value=g.name;
+  document.getElementById('ag-emoji').value=g.emoji||'🐭';
+  document.getElementById('ag-color').value=g.color;
+  document.getElementById('ag-icon-data').value=g.iconData||'';
+  var prev=document.getElementById('game-icon-preview');
+  if(g.iconData){
+    resolveImgRef(g.iconData,function(err,url){
+      tmpGameIcon=url||g.iconData;
+      if(url){prev.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r2)">';}
+      else{prev.innerHTML=g.emoji||'🐭';}
+    });
+  } else {
+    tmpGameIcon=null;
+    prev.innerHTML=g.emoji||'🐭';
+  }
+  initColorPresets();showM('m-addgame');
+}
+// MODIFIED: 修复图标保存逻辑 - 使用标记区分「没改」和「清除」
+var iconCleared=false;
+function doAddGame(){
+  var name=document.getElementById('ag-name').value.trim();if(!name){toast('请输入游戏名称');return;}
+  var emoji=document.getElementById('ag-emoji').value.trim()||'🐭';
+  var color=document.getElementById('ag-color').value;
+  var existId=document.getElementById('ag-id').value;
+  var iconDataRaw=tmpGameIcon||'';
+  function _finishAddGame(iconRef){
+    if(existId){
+      var g=G(existId);
+      if(g){
+        g.name=name;g.emoji=emoji;g.color=color;
+        if(iconRef!==null){g.iconData=iconRef;}
+        else if(iconCleared){
+          // 清除：删IDB 里的旧图
+          if(g.iconData&&isIdbRef(g.iconData))idbDel(idbKey(g.iconData));
+          g.iconData='';
+        }
+      }
+      toast('游戏已更新');
+    } else {
+      var newG={id:uid(),name:name,emoji:emoji||'🐭',color:color,iconData:iconRef||'',resources:[],accounts:[]};
+      state.games.push(newG);
+      toast(name+' 已添加');
+    }
+    saveData();hideM('m-addgame');document.getElementById('ag-id').value='';document.getElementById('ag-name').value='';tmpGameIcon=null;iconCleared=false;
+    rRes();rAllTabs();
+  }
+  if(iconDataRaw){
+    // 确定gameId
+    var targetGid=existId||'pending_'+uid();
+    if(existId){
+      saveGameIcon(existId,iconDataRaw,function(err,ref){_finishAddGame(err?iconDataRaw:ref);});
+    } else {
+      // 先生成id，存图再添加
+      var newId=uid();
+      saveGameIcon(newId,iconDataRaw,function(err,ref){
+        //覆盖闭包：直接操作
+        var iconRef2=err?iconDataRaw:ref;
+        var newG2={id:newId,name:name,emoji:emoji||'🐭',color:color,iconData:iconRef2,resources:[],accounts:[]};
+        state.games.push(newG2);
+        toast(name+' 已添加');
+        saveData();hideM('m-addgame');document.getElementById('ag-id').value='';document.getElementById('ag-name').value='';tmpGameIcon=null;iconCleared=false;
+        rRes();rAllTabs();
+      });return;// 异步结束
+    }
+  } else {
+    _finishAddGame(null);
+  }
+}
+function delGame(gid){
+  if(!confirm('确定删除游戏及所有数据？'))return;
+  var g=G(gid);
+  if(g){
+    // 清理 IDB 图片
+    var idbKeys=[];
+    if(g.iconData&&isIdbRef(g.iconData))idbKeys.push(idbKey(g.iconData));
+    var aa=g.accounts||[];
+    for(var ai=0;ai<aa.length;ai++){
+      if(aa[ai].avatarData&&isIdbRef(aa[ai].avatarData))idbKeys.push(idbKey(aa[ai].avatarData));var diary=aa[ai].diary||[];
+      for(var di=0;di<diary.length;di++){
+        var imgs=diary[di].images||[];
+        for(var ii=0;ii<imgs.length;ii++)if(isIdbRef(imgs[ii]))idbKeys.push(idbKey(imgs[ii]));
+      }
+    }
+    if(idbKeys.length)idbDelMany(idbKeys);
+  }
+  state.games=state.games.filter(function(g){return g.id!==gid;});
+  if(curGid===gid){curGid=state.games.length?state.games[0].id:null;curAid=null;}
+  saveData();rRes();rAllTabs();toast('已删除');
+}
+
+// NEW: 清除游戏图标
+function clearGameIcon(){
+  tmpGameIcon=null;
+  iconCleared=true;
+  var emoji=document.getElementById('ag-emoji').value.trim()||'🐭';
+  document.getElementById('game-icon-preview').innerHTML=emoji;
+  toast('图标已清除');
+}
+
+// NEW: 清除账号头像
+var avatarCleared=false;
+function clearAcctAvatar(){
+  tmpAcctAvatar=null;
+  avatarCleared=true;
+  document.getElementById('acct-avatar-preview').innerHTML='🐭';
+  toast('头像已清除');
+}
+
+// ── ADD/EDIT ACCOUNT ──
+function openAddAcct(gid){addAcctSetup(gid,null);}
+function editAcct(gid,aid){addAcctSetup(gid,aid);}
+function addAcctSetup(gid,aid){
+  document.getElementById('aa-gid').value=gid;
+  document.getElementById('aa-id').value=aid||'';
+  tmpAcctAvatar=null;
+  avatarCleared=false;
+  if(aid){
+    var a=A(gid,aid);if(!a)return;
+    document.getElementById('addacct-title').textContent='编辑账号';
+    document.getElementById('aa-name').value=a.name;
+    document.getElementById('aa-note').value=a.note||'';
+    document.getElementById('aa-desc').value=a.desc||'';
+    document.getElementById('aa-avatar-data').value=a.avatarData||'';
+    var prev=document.getElementById('acct-avatar-preview');
+    if(a.avatarData){
+      resolveImgRef(a.avatarData,function(err,url){
+        tmpAcctAvatar=url||a.avatarData;
+        if(url){prev.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+        else{prev.innerHTML='🐭';}
+      });
+    } else {
+      tmpAcctAvatar=null;
+      prev.innerHTML='🐭';
+    }
+  } else {
+    document.getElementById('addacct-title').textContent='添加账号';
+    document.getElementById('aa-name').value='';document.getElementById('aa-note').value='';document.getElementById('aa-desc').value='';
+    document.getElementById('aa-avatar-data').value='';
+    document.getElementById('acct-avatar-preview').innerHTML='🐭';
+  }
+  showM('m-addacct');
+}
+function doSaveAcct(){
+  var gid=document.getElementById('aa-gid').value;
+  var aid=document.getElementById('aa-id').value;
+  var g=G(gid);if(!g){toast('游戏不存在');return;}
+  var name=document.getElementById('aa-name').value.trim();if(!name){toast('请输入账号名称');return;}
+  var note=document.getElementById('aa-note').value.trim();
+  var desc=document.getElementById('aa-desc').value.trim();
+  var avatarDataRaw=tmpAcctAvatar||'';
+  if(!g.accounts)g.accounts=[];
+  function _finishSaveAcct(avatarRef){
+    if(aid){
+      var a=A(gid,aid);
+      if(a){
+        a.name=name;a.note=note;a.desc=desc;
+        if(avatarRef!==null){a.avatarData=avatarRef;}
+        else if(avatarCleared){
+          if(a.avatarData&&isIdbRef(a.avatarData))idbDel(idbKey(a.avatarData));
+          a.avatarData='';
+        }
+      }
+      toast('账号已更新');
+    } else {
+      g.accounts.push({id:aid||uid(),name:name,note:note,desc:desc,avatarData:avatarRef||'',logs:[],tasks:[],diary:[]});
+      toast(name+' 已添加');
+    }
+    saveData();hideM('m-addacct');tmpAcctAvatar=null;avatarCleared=false;
+    rRes();rAllTabs();if(curGid===gid&&!curAid&&g.accounts.length)curAid=g.accounts[0].id;
+  }
+  if(avatarDataRaw){
+    var targetAid=aid||uid();
+    if(aid){
+      saveAcctAvatar(aid,avatarDataRaw,function(err,ref){_finishSaveAcct(err?avatarDataRaw:ref);});
+    } else {
+      // 新账号：先生成id存图
+      var newAid=uid();
+      saveAcctAvatar(newAid,avatarDataRaw,function(err,ref){
+        var aRef=err?avatarDataRaw:ref;
+        g.accounts.push({id:newAid,name:name,note:note,desc:desc,avatarData:aRef,logs:[],tasks:[],diary:[]});
+        toast(name+' 已添加');
+        saveData();hideM('m-addacct');tmpAcctAvatar=null;avatarCleared=false;
+        rRes();rAllTabs();if(curGid===gid&&!curAid&&g.accounts.length)curAid=g.accounts[0].id;
+      });
+      return;
+    }
+  } else {
+    _finishSaveAcct(null);
+  }
+}
+function delAcct(gid,aid){
+  if(!confirm('确定删除这个账号及所有数据？'))return;
+  var g=G(gid);if(!g)return;
+  var a=g.accounts.filter(function(a){return a.id===aid;})[0];
+  if(a){
+    var idbKeys2=[];
+    if(a.avatarData&&isIdbRef(a.avatarData))idbKeys2.push(idbKey(a.avatarData));
+    var diary=a.diary||[];
+    for(var di=0;di<diary.length;di++){
+      var imgs=diary[di].images||[];
+      for(var ii=0;ii<imgs.length;ii++)if(isIdbRef(imgs[ii]))idbKeys2.push(idbKey(imgs[ii]));
+    }
+    if(idbKeys2.length)idbDelMany(idbKeys2);
+  }
+  g.accounts=g.accounts.filter(function(a){return a.id!==aid;});
+  if(curAid===aid)curAid=g.accounts.length?g.accounts[0].id:null;
+  saveData();rRes();rAllTabs();toast('已删除');
+}
+
+// ── ICON PICKERS (MODIFIED: 压缩图片) ──
+function onGameIconPick(ev){
+  var f=ev.target.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(e){
+    compressImage(e.target.result,128,function(compressed){
+      // 预览直接用dataUrl，真正存储在 doAddGame 时存IDB
+      tmpGameIcon=compressed;
+      iconCleared=false;
+      var prev=document.getElementById('game-icon-preview');
+      prev.innerHTML='<img src="'+compressed+'" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r2)">';
+    });
+  };r.readAsDataURL(f);ev.target.value='';
+}
+function onAcctAvatarPick(ev){
+  var f=ev.target.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(e){
+    compressImage(e.target.result,128,function(compressed){
+      tmpAcctAvatar=compressed;
+      avatarCleared=false;
+      var prev=document.getElementById('acct-avatar-preview');
+      prev.innerHTML='<img src="'+compressed+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    });
+  };r.readAsDataURL(f);ev.target.value='';
+}
+
+// ── TASKS ──
+function rTasks(){
+  document.getElementById('task-date').textContent=today();
+  var el=document.getElementById('tasklist'),g=G(),a=A();
+  if(!g){el.innerHTML='<div class="empty"><div class="ei">📦</div><div class="et">请先添加游戏</div></div>';return;}
+  if(!a){el.innerHTML='<div class="empty"><div class="ei">👤</div><div class="et">请先添加账号</div></div>';return;}
+  var tasks=a.tasks||[];
+  if(!tasks.length){el.innerHTML='<div class="empty"><div class="ei">✓</div><div class="et">没有任务，点右上角添加</div></div>';return;}
+  var daily=[],once=[];
+  for(var i=0;i<tasks.length;i++){if(tasks[i].isDaily)daily.push(tasks[i]);else once.push(tasks[i]);}
+  var h='';
+  if(daily.length){h+='<div class="sec-h">每日任务</div>';for(var i=0;i<daily.length;i++)h+=tH(daily[i]);}
+  if(once.length){h+='<div class="sec-h">一次性任务</div>';for(var i=0;i<once.length;i++)h+=tH(once[i]);}
+  el.innerHTML=h;
+}
+function tH(t){return '<div class="titem"><div class="tcheck'+(t.isDone?' on':'')+'" onclick="togTask(\''+t.id+'\')">'+(t.isDone?'✓':'')+'</div><div class="ttxt'+(t.isDone?' done':'')+'">'+t.text+'</div><span class="tbadge '+(t.isDaily?'tbdaily':'tbonce')+'">'+(t.isDaily?'每日':'一次')+'</span><button class="tdel" onclick="delTask(\''+t.id+'\')">×</button></div>';}
+function togTask(id){
+  var a=A();if(!a)return;var tasks=a.tasks||[];
+  for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){tasks[i].isDone=!tasks[i].isDone;break;}}
+  saveData();rTasks();var undone=0;for(var i=0;i<tasks.length;i++){if(!tasks[i].isDone)undone++;}
+  if(undone===0&&tasks.length>0){toast('全部完成！跳转记录资源');setTimeout(function(){openLogFor(curGid,curAid);},900);}
+}
+function delTask(id){var a=A();if(!a)return;a.tasks=a.tasks.filter(function(t){return t.id!==id;});saveData();rTasks();}
+function doAddTask(){
+  var a=A();if(!a){toast('请先选择账号');return;}
+  var text=document.getElementById('nt-text').value.trim();if(!text){toast('请输入任务内容');return;}
+  var isDaily=document.getElementById('nt-daily').classList.contains('on');
+  if(!a.tasks)a.tasks=[];a.tasks.push({id:uid(),text:text,isDone:false,isDaily:isDaily,lastReset:today()});
+  saveData();hideM('m-addtask');document.getElementById('nt-text').value='';rTasks();toast('任务已添加');
+}
+
+// ── LOGS ──
+function openLogFor(gid,aid){
+  curGid=gid;curAid=aid;
+  showLogM();
+}
+function showLogM(){
+  var g=G(),a=A();if(!g||!a){toast('请先选择账号');return;}
+  var res=g.resources||[];
+  if(!res.length){openManRes(curGid);return;}
+  document.getElementById('addlog-title').textContent='记录 · '+a.name;
+  document.getElementById('log-date').value=today();
+  document.getElementById('log-note').value='';document.getElementById('log-time').value='';
+  var logs=a.logs||[],last=null;
+  if(logs.length){var sl=logs.slice().sort(function(a,b){return b.date.localeCompare(a.date);});last=sl[0];}
+  var h='';
+  for(var i=0;i<res.length;i++){
+    var r=res[i],lv='';
+    if(last){for(var j=0;j<(last.entries||[]).length;j++){if(last.entries[j].resourceId===r.id){lv=last.entries[j].value;break;}}}
+    h+='<div class="fg"><label class="fl">'+r.emoji+' '+r.name+'（'+r.unit+'）</label><input class="fi" type="number" inputmode="decimal" id="li-'+r.id+'" value="'+lv+'" placeholder="0"></div>';
+  }
+  document.getElementById('log-inputs').innerHTML=h;showM('m-addlog');
+}
+function doAddLog(){
+  var g=G(),a=A();if(!g||!a)return;
+  var res=g.resources||[];
+  var date=document.getElementById('log-date').value;
+  var timeNote=document.getElementById('log-time').value.trim();
+  var note=document.getElementById('log-note').value.trim();
+  var entries=[];
+  for(var i=0;i<res.length;i++){var r=res[i],el=document.getElementById('li-'+r.id);entries.push({resourceId:r.id,value:parseFloat(el?el.value:0)||0});}
+  if(!a.logs)a.logs=[];
+  a.logs.push({id:uid(),date:date,timeNote:timeNote,note:note,entries:entries});
+  saveData();hideM('m-addlog');
+  //刷新账号详情页（如果开着）
+  if(document.getElementById('dp-acct').classList.contains('open')&&dpAcctGid===curGid&&dpAcctAid===curAid){
+    renderAcctDPBody(curGid,curAid);
+  }
+  rPage(curPage);
+  toast('记录已保存');
+}
+function rLogs(){
+  var el=document.getElementById('loglist'),g=G(),a=A();
+  if(!g||!a){el.innerHTML='<div class="empty"><div class="ei">📦</div><div class="et">请先选择账号</div></div>';return;}
+  var logs=(a.logs||[]).slice().sort(function(a,b){var dd=b.date.localeCompare(a.date);return dd!==0?dd:b.id.localeCompare(a.id);});
+  if(!logs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div><div class="et">还没有记录</div></div>';return;}
+  var res=g.resources||[];var h='';
+  for(var i=0;i<logs.length;i++){
+    var l=logs[i],chips='';
+    for(var j=0;j<(l.entries||[]).length;j++){var e=l.entries[j],r=null;for(var k=0;k<res.length;k++){if(res[k].id===e.resourceId){r=res[k];break;}}if(r)chips+='<span class="chip">'+r.emoji+' '+r.name+' '+e.value.toLocaleString()+r.unit+'</span>';}
+    var dl=l.date===today()?'今天':'';var tl=l.timeNote?' · '+l.timeNote:'';
+    h+='<div class="logitem"><div class="logdate">'+(dl||fmtD(l.date))+tl+'</div><div class="chips">'+(chips||'<span style="color:var(--text3);font-size:12px">无数据</span>')+'</div>'+(l.note?'<div class="lognote">'+l.note+'</div>':'')+'<div style="margin-top:7px"><button class="btn bd bsm" onclick="delLog(\''+l.id+'\')">删除</button></div></div>';
+  }
+  el.innerHTML=h;
+}
+function delLog(id){if(!confirm('确定删除？'))return;var a=A();if(!a)return;a.logs=a.logs.filter(function(l){return l.id!==id;});saveData();rLogs();toast('已删除');}
+
+// ══════════════════════════════════════════
+// CALENDAR (MODIFIED: 全局日历，显示所有游戏所有账号)
+// ══════════════════════════════════════════
+function calMov(d){calM+=d;if(calM>11){calM=0;calY++;}if(calM<0){calM=11;calY--;}rCal();}
+
+// MODIFIED: 收集所有游戏所有账号的日志日期
+function rCal(){
+  var logDates={};
+  for(var gi=0;gi<state.games.length;gi++){
+    var aa=state.games[gi].accounts||[];
+    for(var ai=0;ai<aa.length;ai++){
+      var ls=aa[ai].logs||[];
+      for(var li=0;li<ls.length;li++){
+        logDates[ls[li].date]=true;
+      }
+    }
+  }
+  document.getElementById('cal-title').textContent=calY+'年'+(calM+1)+'月';
+  var fd=new Date(calY,calM,1).getDay(),dim=new Date(calY,calM+1,0).getDate(),td=today();
+  var h='';var dows=['日','一','二','三','四','五','六'];
+  for(var i=0;i<7;i++)h+='<div class="cal-dow">'+dows[i]+'</div>';
+  for(var i=0;i<fd;i++)h+='<div class="cal-day other"></div>';
+  for(var d=1;d<=dim;d++){
+    var ds=calY+'-'+(calM+1<10?'0':'')+(calM+1)+'-'+(d<10?'0':'')+d;
+    var cls='cal-day';if(ds===td)cls+=' today';if(logDates[ds])cls+=' has-log';if(ds===calSel)cls+=' sel';
+    h+='<div class="'+cls+'" onclick="selCalDay(\''+ds+'\')">'+d+'</div>';
+  }
+  document.getElementById('cal-grid').innerHTML=h;
+  rCalDetail();
+}
+function selCalDay(ds){calSel=ds;rCal();}
+
+// MODIFIED: 日历详情 - 显示所有游戏所有账号的当天数据
+function rCalDetail(){
+  var el=document.getElementById('cal-detail');
+  if(!calSel){el.innerHTML='';return;}
+
+  //收集当天所有游戏/账号的日志
+  var hasAny=false;
+  var groups=[]; // [{game, accounts:[{acct, logs:[]}]}]
+  for(var gi=0;gi<state.games.length;gi++){
+    var g=state.games[gi];
+    var aa=g.accounts||[];
+    var acctBlocks=[];
+    for(var ai=0;ai<aa.length;ai++){
+      var a=aa[ai];
+      var dayLogs=(a.logs||[]).filter(function(l){return l.date===calSel;});
+      if(dayLogs.length){
+        hasAny=true;
+        acctBlocks.push({acct:a,logs:dayLogs});
+      }
+    }
+    if(acctBlocks.length){
+      groups.push({game:g,acctBlocks:acctBlocks});
+    }
+  }
+
+  if(!hasAny){
+    el.innerHTML='<div class="cal-detail"><div class="cal-detail-date">'+fmtD(calSel)+'</div><div style="color:var(--text3);font-size:13px">当天没有记录</div></div>';return;
+  }
+
+  var h='<div class="cal-detail"><div class="cal-detail-date">'+fmtD(calSel)+'</div>';
+
+  for(var gi=0;gi<groups.length;gi++){
+    var grp=groups[gi];
+    var g=grp.game;
+    var res=g.resources||[];
+    // 游戏标题
+    var gIcoH=g.iconData?imgTagH(g.iconData,'width:100%;height:100%;object-fit:cover;border-radius:5px'):'<span>'+g.emoji+'</span>';
+    h+='<div class="cal-game-group">'+'<div class="cal-game-title">'+'<div class="cal-game-ico" style="background:var(--bg2)">'+gIcoH+'</div>'
+      +'<span style="color:'+g.color+'">'+g.name+'</span>'
+      +'</div>';
+
+    for(var ai=0;ai<grp.acctBlocks.length;ai++){
+      var ab=grp.acctBlocks[ai];
+      var a=ab.acct;
+      var avH=a.avatarData?imgTagH(a.avatarData,'width:100%;height:100%;object-fit:cover;border-radius:50%'):'<span>🐭</span>';
+      h+='<div class="cal-acct-block">'
+        +'<div class="cal-acct-name"><div class="cal-acct-ava">'+avH+'</div>'+a.name+'</div>';
+
+      for(var li=0;li<ab.logs.length;li++){
+        var l=ab.logs[li],chips='';
+        for(var j=0;j<(l.entries||[]).length;j++){
+          var e=l.entries[j],r=null;
+          for(var k=0;k<res.length;k++){if(res[k].id===e.resourceId){r=res[k];break;}}
+          if(r)chips+='<span class="chip">'+r.emoji+r.name+' '+e.value.toLocaleString()+r.unit+'</span>';
+        }
+        h+='<div style="margin-bottom:5px">'
+          +(l.timeNote?'<div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:2px">'+l.timeNote+'</div>':'')
+          +'<div class="chips">'+(chips||'无数据')+'</div>'
+          +(l.note?'<div class="lognote">'+l.note+'</div>':'')+'</div>';
+      }
+      h+='</div>'; // cal-acct-block
+    }
+    h+='</div>'; // cal-game-group
+  }
+
+  h+='</div>'; // cal-detail
+  el.innerHTML=h;fillIdbImgs(el);
+}
+
+// ── CHARTS ──
+function rCharts(){
+  var el=document.getElementById('chart-content'),g=G(),a=A();
+  var res=g?g.resources||[]:[];
+  if(!g||!a||!res.length){el.innerHTML='<div class="empty"><div class="ei">📈</div><div class="et">请先选择账号并添加资源</div></div>';return;}
+  var logs=(a.logs||[]).slice().sort(function(a,b){return a.date.localeCompare(b.date);});
+  var dayMap={};for(var i=0;i<logs.length;i++){dayMap[logs[i].date]=logs[i];}
+  var days=Object.keys(dayMap).sort();
+  if(days.length<2){el.innerHTML='<div class="empty"><div class="ei">📈</div><div class="et">至少需要2天记录才能显示趋势</div></div>';return;}
+  var h='';
+  for(var ri=0;ri<res.length;ri++){
+    var r=res[ri],vals=[];
+    for(var di=0;di<days.length;di++){var es=dayMap[days[di]].entries||[];for(var j=0;j<es.length;j++){if(es[j].resourceId===r.id){vals.push({d:days[di],v:es[j].value});break;}}}
+    if(vals.length<2)continue;
+    h+=chartCardH(r,vals,g.color);
+  }
+  el.innerHTML=h||'<div class="empty"><div class="ei">📈</div><div class="et">暂无足够数据</div></div>';
+}
+function chartCardH(res,vals,color){
+  var W=300,H=90,BAR_W=Math.max(6,Math.min(24,Math.floor(W/vals.length)-5));
+  var mn=vals[0].v,mx=vals[0].v;
+  for(var i=1;i<vals.length;i++){if(vals[i].v<mn)mn=vals[i].v;if(vals[i].v>mx)mx=vals[i].v;}
+  var range=Math.max(mx-mn,1);
+  var linePts='';
+  for(var i=0;i<vals.length;i++){var x=(i/(vals.length-1))*W,y=H-((vals[i].v-mn)/range)*(H-18)-9;linePts+=x+','+y+' ';}
+  var bars='',step=W/vals.length;
+  for(var i=0;i<vals.length;i++){var bh=Math.max(4,((vals[i].v-mn)/range)*(H-18)+9),bx=i*step+step/2-BAR_W/2,by=H-bh;bars+='<rect x="'+bx+'" y="'+by+'" width="'+BAR_W+'" height="'+bh+'" rx="3" fill="'+color+'" opacity="0.18"/>';}
+  var labels='';
+  if(vals.length>=2){var d0=vals[0].d.slice(5).replace('-','/'),d1=vals[vals.length-1].d.slice(5).replace('-','/');labels='<text x="0" y="'+(H+16)+'" font-size="9" fill="var(--text3)">'+d0+'</text><text x="'+W+'" y="'+(H+16)+'" font-size="9" fill="var(--text3)" text-anchor="end">'+d1+'</text>';}
+  var lx=W,ly=H-((vals[vals.length-1].v-mn)/range)*(H-18)-9;
+  return '<div class="chart-card"><div class="chart-title"><span>'+res.emoji+'</span>'+res.name
+    +'<span style="margin-left:auto;font-variant-numeric:tabular-nums;font-size:14px;color:'+color+'">'+vals[vals.length-1].v.toLocaleString()+'<span style="font-size:11px;color:var(--text3);margin-left:2px">'+res.unit+'</span></span></div>'+'<svg style="width:100%;height:110px;overflow:visible" viewBox="0 0 '+W+' '+(H+22)+'" preserveAspectRatio="xMidYMid meet">'
+    +bars+'<polyline points="'+linePts+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+'<circle cx="'+lx+'" cy="'+ly+'" r="3" fill="'+color+'"/>'+labels+'</svg></div>';
+}
+
+// ══════════════════════════════════════════
+// 全屏详情页：日记详情
+// ══════════════════════════════════════════
+var DTAGS=['攻略','心得','吐槽','日常','其他'];
+var viewDid=null;
+
+function setDV(v){dView=v;document.getElementById('dvg').classList.toggle('on',v==='acct');document.getElementById('dva').classList.toggle('on',v==='all');rDiary();}
+function rDiary(){
+  var tf=document.getElementById('tagrow'),th='<button class="tchip'+(dTag===''?' on':'')+'" onclick="setDT(\'\')">全部</button>';
+  for(var i=0;i<DTAGS.length;i++)th+='<button class="tchip'+(dTag===DTAGS[i]?' on':'')+'" onclick="setDT(\''+DTAGS[i]+'\')">'+DTAGS[i]+'</button>';
+  tf.innerHTML=th;
+  var entries=[];
+  if(dView==='acct'){var a=A();if(a){var d=a.diary||[];for(var i=0;i<d.length;i++)entries.push(d[i]);}}
+  else{for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++)entries.push(d[k]);}}}
+  if(dTag)entries=entries.filter(function(e){return e.tag===dTag;});
+  entries.sort(function(a,b){return b.date.localeCompare(a.date);});
+  var el=document.getElementById('dlist');
+  if(!entries.length){el.innerHTML='<div class="empty"><div class="ei">📖</div><div class="et">还没有日记</div></div>';return;}
+  var h='';for(var i=0;i<entries.length;i++)h+=dCH(entries[i]);el.innerHTML=h;
+  fillIdbImgs(el);
+}
+function setDT(t){dTag=t;rDiary();}
+function dCH(e){
+  var prev=(e.content||'').slice(0,55)+((e.content||'').length>55?'…':'');
+  var thumb=e.images&&e.images.length?imgTagH(e.images[0],'','class="dthumb" alt=""'):'';
+  var gtag='';
+  if(dView==='all'){var gn='';outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){if(aa[j].id===e.acctId){gn=state.games[i].name+' · '+aa[j].name;break outer;}}}if(gn)gtag='<span class="dgtag">'+gn+'</span>';}
+  return '<div class="dcard" onclick="openDiaryDP(\''+e.id+'\')">'
+    +'<div class="dtbar b'+e.tag+'"></div><div class="dcin">'+thumb
+    +'<div class="dctop"><span class="dtbadge t'+e.tag+'">'+e.tag+'</span>'+gtag+'<span class="ddate">'+fmtD(e.date)+'</span></div>'
+    +'<div class="dtitle">'+(e.title||'（无标题）')+'</div><div class="dprev">'+prev+'</div>'
+    +(e.bindLogId?'<div style="font-size:11px;color:var(--blue);margin-top:4px">关联了资源记录</div>':'')
+    +'</div></div>';
+}
+function fDE(id){for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++){if(d[k].id===id)return d[k];}}}return null;}
+
+function openDiaryDP(id){
+  viewDid=id;var e=fDE(id);if(!e)return;
+  // 标题
+  document.getElementById('dp-diary-title').textContent=e.title||'（无标题）';
+  // 操作按钮
+  document.getElementById('dp-diary-actions').innerHTML=
+    '<button class="btn bg bsm" onclick="editCurD()" style="font-size:11px">编辑</button>'+'<button class="btn bd bsm" onclick="delCurD()" style="font-size:11px">删除</button>';
+  // 游戏/账号标签
+  var gname='';outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){if(aa[j].id===e.acctId){gname=state.games[i].name+' · '+aa[j].name;break outer;}}}
+  var h='';
+  // meta信息行
+  h+='<div class="diary-det-meta">'
+    +'<span class="dtbadge t'+e.tag+'">'+e.tag+'</span>'
+    +'<span style="font-size:12px;color:var(--text3)">'+e.date+'</span>'
+    +(gname?'<span class="dgtag">'+gname+'</span>':'')
+    +'</div>';
+  // 正文
+  h+='<div class="diary-det-body">'+e.content+'</div>';
+  // 图片
+  if(e.images&&e.images.length){
+    h+='<div class="diary-det-imgs">';
+    for(var i=0;i<e.images.length;i++)h+=imgTagH(e.images[i],'width:calc(50% - 4px);border-radius:12px;object-fit:cover','alt=""');
+    h+='</div>';
+  }
+  var diaryBodyEl=document.getElementById('dp-diary-body');
+  diaryBodyEl.innerHTML=h;
+  fillIdbImgs(diaryBodyEl);
+  document.getElementById('dp-diary').classList.add('open');
+}
+
+function closeDPDiary(){
+  document.getElementById('dp-diary').classList.remove('open');
+}
+function editCurD(){
+  closeDPDiary();
+  var e=fDE(viewDid);if(e)showDE(e);
+}
+function delCurD(){
+  if(!confirm('确定删除这篇日记？'))return;
+  outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++){if(d[k].id===viewDid){
+    // 清理IDB 图片
+    var imgs=(d[k].images||[]);
+    varks=imgs.filter(function(r){return isIdbRef(r);}).map(function(r){return idbKey(r);});
+    if(ks.length)idbDelMany(ks);
+    d.splice(k,1);break outer;
+  }}}}
+  saveData();closeDPDiary();rDiary();toast('日记已删除');
+}
+function showDE(entry){
+  document.getElementById('dm-ttl').textContent=entry?'编辑日记':'写日记';
+  document.getElementById('d-ttl').value=entry?(entry.title||''):'';
+  document.getElementById('d-cnt').value=entry?(entry.content||''):'';
+  document.getElementById('d-tag').value=entry?(entry.tag||'日常'):'日常';
+  document.getElementById('d-edit-id').value=entry?entry.id:'';
+  // 加载日记图片（IDB refs异步解析为 dataUrl供预览）
+  edImgs=[];
+  if(entry&&entry.images&&entry.images.length){
+    var rawRefs=entry.images;
+    var loadedCount=0;
+    edImgs=rawRefs.map(function(r){return{dataUrl:r,ref:r};});
+    rawRefs.forEach(function(ref,i){
+      resolveImgRef(ref,function(err,url){
+        if(url)edImgs[i].dataUrl=url;
+        loadedCount++;
+        if(loadedCount===rawRefs.length)rEdImgs();
+      });
+    });
+  }
+  var bt=document.getElementById('d-btog');bt.classList.remove('on');document.getElementById('d-bsel').style.display='none';
+  var sel=document.getElementById('d-lsel');sel.innerHTML='<option value="">（不绑定）</option>';
+  var a=A();
+  if(a){var ls=(a.logs||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);});for(var i=0;i<ls.length;i++){var o=document.createElement('option');o.value=ls[i].id;o.textContent=ls[i].date+(ls[i].timeNote?' '+ls[i].timeNote:'')+(ls[i].note?' · '+ls[i].note:'');sel.appendChild(o);}}
+  if(entry&&entry.bindLogId){bt.classList.add('on');document.getElementById('d-bsel').style.display='block';sel.value=entry.bindLogId;}
+  rEdImgs();showM('m-diary');
+}
+function togBind(){var t=document.getElementById('d-btog');t.classList.toggle('on');document.getElementById('d-bsel').style.display=t.classList.contains('on')?'block':'none';}
+
+// MODIFIED: 日记图片上传 - 压缩到800px
+function onImgPick(ev){
+  var files=Array.prototype.slice.call(ev.target.files);
+  files.forEach(function(f){
+    var r=new FileReader();
+    r.onload=function(e){
+      compressImage(e.target.result,800,function(compressed){
+        edImgs.push({dataUrl:compressed});rEdImgs();
+      });
+    };
+    r.readAsDataURL(f);
+  });ev.target.value='';
+}
+
+function rEdImgs(){var el=document.getElementById('iplist'),h='';for(var i=0;i<edImgs.length;i++)h+='<div class="ipitem"><img src="'+edImgs[i].dataUrl+'"><button class="ipdel" onclick="rmImg('+i+')">×</button></div>';el.innerHTML=h;}
+function rmImg(i){edImgs.splice(i,1);rEdImgs();}
+function doDiary(){
+  var content=document.getElementById('d-cnt').value.trim();if(!content){toast('请输入日记内容');return;}
+  var a=A(),bon=document.getElementById('d-btog').classList.contains('on'),bid=bon?document.getElementById('d-lsel').value:'';
+  var editId=document.getElementById('d-edit-id').value;
+  var entryId=editId||uid();
+  var rawImgs=edImgs.map(function(i){return i.dataUrl;});
+  // 异步存所有图片到 IDB
+  function _saveDiaryEntry(imgRefs){
+    var entry={id:entryId,date:today(),title:document.getElementById('d-ttl').value.trim(),content:content,tag:document.getElementById('d-tag').value,bindLogId:bid||'',acctId:a?a.id:'',images:imgRefs};
+    if(editId){
+      outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++){if(d[k].id===editId){d[k]=entry;break outer;}}}}} else {
+      if(a){if(!a.diary)a.diary=[];a.diary.push(entry);}
+    }
+    saveData();hideM('m-diary');rDiary();toast(editId?'日记已更新':'日记已保存');
+  }
+  if(!rawImgs.length){_saveDiaryEntry([]);return;}
+  var imgRefs=new Array(rawImgs.length).fill('');
+  var pending2=rawImgs.length;
+  rawImgs.forEach(function(dataUrl,idx){
+    if(isIdbRef(dataUrl)){imgRefs[idx]=dataUrl;pending2--;if(pending2===0)_saveDiaryEntry(imgRefs);return;}
+    saveDiaryImg(entryId,idx,dataUrl,function(err,ref){
+      imgRefs[idx]=err?dataUrl:(ref||dataUrl);
+      pending2--;if(pending2===0)_saveDiaryEntry(imgRefs);
+    });
+  });
+}
+
+
+// ═══════════════════════════════════════════════
+// 主题自定义系统
+// ═══════════════════════════════════════════════
+var THEME_PRESETS=[
+  {name:'竹叶绿',h:145,s:18,l:57},
+  {name:'樱花粉',h:345,s:55,l:72},
+  {name:'天空蓝',h:210,s:55,l:62},
+  {name:'薰衣紫',h:270,s:35,l:65},
+  {name:'暖橙黄',h:35,s:70,l:60},
+  {name:'珊瑚红',h:10,s:60,l:65},
+  {name:'碧水青',h:175,s:40,l:55},
+  {name:'浅栗棕',h:25,s:35,l:58},
+];
+
+function initThemePanel(){
+  //颜色预设点（数据管理modal里的也是这套）
+  var presets=document.getElementById('theme-color-presets');
+  if(presets){
+    var h='';
+    for(var i=0;i<THEME_PRESETS.length;i++){
+      var p=THEME_PRESETS[i];
+      var c='hsl('+p.h+','+p.s+'%,'+p.l+'%)';
+      h+='<div class="color-dot" style="background:'+c+'" title="'+p.name+'" onclick="applyThemeHSL('+p.h+','+p.s+','+p.l+')"></div>';
+    }
+    presets.innerHTML=h;
+  }
+  // 方案选择
+  var schemes=document.getElementById('theme-schemes');
+  if(schemes){
+    var h='';
+    for(var i=0;i<THEME_PRESETS.length;i++){
+      var p=THEME_PRESETS[i];
+      var c='hsl('+p.h+','+p.s+'%,'+p.l+'%)';
+      h+='<div onclick="applyThemeHSL('+p.h+','+p.s+','+p.l+')" style="padding:6px 14px;border-radius:20px;border:2px solid '+c+';background:'+c+'20;color:'+c+';font-size:12px;font-weight:700;cursor:pointer">'+p.name+'</div>';
+    }
+    schemes.innerHTML=h;
+  }
+  // 加载已保存的主题
+  try{
+    var saved=localStorage.getItem('tdr_theme_hsl');
+    if(saved){var d=JSON.parse(saved);applyThemeHSL(d.h,d.s,d.l,true);}
+    var savedOp=localStorage.getItem('tdr_card_opacity');
+    if(savedOp){applyCardOpacity(parseFloat(savedOp),true);}
+  }catch(e){}
+}
+
+function applyThemeColor(hex){
+  // hex to hsl
+  var r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+  var max=Math.max(r,g,b),min=Math.min(r,g,b),h,s,l=(max+min)/2;
+  if(max===min){h=s=0;}else{
+    var d=max-min;s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}
+    h/=6;
+  }
+  applyThemeHSL(Math.round(h*360),Math.round(s*100),Math.round(l*100));
+}
+
+function applyThemeHSL(h,s,l,silent){
+  document.documentElement.style.setProperty('--accent-h',h);
+  document.documentElement.style.setProperty('--accent-s',s+'%');
+  document.documentElement.style.setProperty('--accent-l',l+'%');
+  if(!silent){
+    try{localStorage.setItem('tdr_theme_hsl',JSON.stringify({h:h,s:s,l:l}));}catch(e){}
+    toast('主题色已更新 🎨');
+  }
+}
+
+function applyCardOpacity(val,silent){
+  val=parseFloat(val);
+  document.documentElement.style.setProperty('--card-opacity',val);
+  var el=document.getElementById('opacity-slider');if(el)el.value=val;
+  var v=document.getElementById('opacity-val');if(v)v.textContent=Math.round(val*100)+'%';
+  if(!silent){
+    try{localStorage.setItem('tdr_card_opacity',val);}catch(e){}
+  }
+}
+
+// ═══════════════════════════════════════════════
+// 每日打卡提醒（浏览器通知）
+// ═══════════════════════════════════════════════
+var notifInterval=null;
+
+function openNotifModal(){
+  updateNotifStatus();
+  try{
+    var s=JSON.parse(localStorage.getItem('tdr_notif')||'{}');
+    var tog=document.getElementById('notif-tog');
+    if(tog)tog.classList.toggle('on',!!s.enabled);
+    var t=document.getElementById('notif-time');if(t&&s.time)t.value=s.time;
+    var m=document.getElementById('notif-msg');if(m&&s.msg)m.value=s.msg;
+  }catch(e){}
+  showM('m-notif');
+}
+
+//══════════════════════════════════════════
+// ③ 修复：非安全上下文提供清晰提示
+// ══════════════════════════════════════════
+function updateNotifStatus(){
+  var el=document.getElementById('notif-status');if(!el)return;
+  // 检测安全上下文
+  var isSecure = window.isSecureContext;
+  var proto = location.protocol;
+  if(!isSecure || (proto !== 'https:' && proto !== 'http:' && location.hostname !== 'localhost')){
+    el.innerHTML='⚠️ 当前环境不支持浏览器通知<br><span style="font-size:10px;color:var(--text3);line-height:1.6">通知 API 要求 <b>https://</b> 安全环境。<br>当前协议：<code>'+proto+'</code><br>解决方案：<br>① 部署到 GitHub Pages / Vercel 等HTTPS 网站<br>② 或使用 <code>localhost</code> 本地服务器<br>③ 本地 file:// 打开时无法使用通知</span>';return;
+  }
+  if(!('Notification' in window)){el.textContent='此浏览器不支持通知功能';return;}
+  if(Notification.permission==='granted'){el.textContent='✅ 通知权限已授权';}
+  else if(Notification.permission==='denied'){el.textContent='❌ 通知权限被拒绝，请在浏览器设置中手动开启';}
+  else{el.textContent='⚠️ 尚未授权，开启提醒时会弹出授权请求';}
+}
+
+function toggleNotif(){
+  var tog=document.getElementById('notif-tog');
+  if(!tog)return;
+  // 安全上下文检查
+  if(!window.isSecureContext){
+    toast('需要 HTTPS 环境才能使用通知');
+    return;
+  }
+  var willEnable=!tog.classList.contains('on');
+  if(willEnable&&'Notification' in window&&Notification.permission!=='granted'){
+    Notification.requestPermission().then(function(p){
+      updateNotifStatus();
+      if(p==='granted'){tog.classList.add('on');saveNotifSettings();startNotifScheduler();}
+      else{toast('通知权限未授权');}
+    });
+  } else {
+    tog.classList.toggle('on');
+    saveNotifSettings();
+    if(tog.classList.contains('on'))startNotifScheduler();
+    else stopNotifScheduler();
+  }
+}
+
+function saveNotifSettings(){
+  var tog=document.getElementById('notif-tog');
+  var t=document.getElementById('notif-time');
+  var m=document.getElementById('notif-msg');
+  var s={
+    enabled:tog?tog.classList.contains('on'):false,
+    time:t?t.value:'20:00',
+    msg:m?m.value:'🐭囤囤鼠提醒你：今日还没打卡，快来记录资源吧！'
+  };
+  try{localStorage.setItem('tdr_notif',JSON.stringify(s));}catch(e){}
+}
+
+// ══════════════════════════════════════════
+// ② + ③ 修复：testNotif / sendNotif 安全上下文检查 + 去掉 SVG icon
+// ══════════════════════════════════════════
+function testNotif(){
+  if(!window.isSecureContext){
+    toast('需要 HTTPS 环境才能发送通知');
+    return;
+  }
+  if(!('Notification' in window)){toast('此浏览器不支持通知');return;}
+  if(Notification.permission!=='granted'){Notification.requestPermission().then(function(p){updateNotifStatus();if(p==='granted')sendNotif();else toast('通知权限未授权');});
+  } else {sendNotif();}
+}
+
+function sendNotif(){
+  var msg=document.getElementById('notif-msg');
+  var text=msg?msg.value:'🐭 囤囤鼠提醒你：今日还没打卡，快来记录资源吧！';
+  try{
+    var opts = {body:text};
+    //尝试发送通知，不带 icon（避免 SVG data URI 导致构造失败）
+    try{
+      new Notification('囤囤鼠来哩🐭', opts);
+    }catch(e1){
+      // 某些浏览器对 Notification 构造函数参数严格，回退
+      new Notification('囤囤鼠来哩 🐭 ' + text);
+    }
+    toast('测试通知已发送！');
+  }catch(e){toast('通知发送失败：'+e.message);}
+}
+
+function startNotifScheduler(){
+  stopNotifScheduler();
+  notifInterval=setInterval(function(){
+    try{
+      var s=JSON.parse(localStorage.getItem('tdr_notif')||'{}');
+      if(!s.enabled)return;
+      var now=bjNow(),hm=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+      if(hm===s.time&&Notification.permission==='granted'){
+        try{
+          new Notification('囤囤鼠来哩 🐭',{body:s.msg||'🐭 今日还没打卡哦！'});
+        }catch(e){}
+      }
+    }catch(e){}
+  },60000);
+}
+
+function stopNotifScheduler(){if(notifInterval){clearInterval(notifInterval);notifInterval=null;}}
+
+function initNotifScheduler(){
+  try{
+    var s=JSON.parse(localStorage.getItem('tdr_notif')||'{}');
+    if(s.enabled&&'Notification' in window&&Notification.permission==='granted'){
+      startNotifScheduler();
+    }
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════════
+// 日报图片生成（Canvas截图）
+// ═══════════════════════════════════════════════
+function openShareModal(){
+  refreshShareCard();
+  showM('m-share');
+}
+
+function openShareFor(gid,aid){
+  curGid=gid;curAid=aid;
+  openShareModal();
+}
+
+function refreshShareCard(){
+  var dateEl=document.getElementById('share-date');
+  var gridEl=document.getElementById('share-res-grid');
+  if(!dateEl||!gridEl)return;
+
+  var now=bjNow();
+  dateEl.textContent=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日 ·囤囤资源日报';
+
+  var g=G(),a=A();
+  if(!g||!a){
+    gridEl.innerHTML='<div style="color:var(--text3);font-size:12px;grid-column:1/-1;text-align:center;padding:10px">请先选择账号</div>';return;
+  }
+  var res=g.resources||[];
+  if(!res.length){
+    gridEl.innerHTML='<div style="color:var(--text3);font-size:12px;grid-column:1/-1;text-align:center;padding:10px">还没有资源数据</div>';
+    return;
+  }
+  var logs=(a.logs||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var last=logs.length?logs[0]:null;
+  var h='';
+  for(var i=0;i<res.length;i++){
+    var r=res[i],val=0;
+    if(last){for(var j=0;j<(last.entries||[]).length;j++){if(last.entries[j].resourceId===r.id){val=last.entries[j].value;break;}}}
+    h+='<div class="share-res-item"><div class="share-res-name">'+r.emoji+' '+r.name+'</div><div class="share-res-val">'+val.toLocaleString()+'<span style="font-size:10px;color:var(--text3)"> '+r.unit+'</span></div></div>';
+  }
+  gridEl.innerHTML=h;
+}
+
+function downloadShareCard(){
+  var card=document.getElementById('share-card');
+  if(!card){toast('生成失败');return;}
+  // Use html2canvas if available, otherwise prompt to screenshot
+  if(typeof html2canvas!=='undefined'){
+    toast('生成中…');
+    html2canvas(card,{scale:3,backgroundColor:null,useCORS:true}).then(function(canvas){
+      var link=document.createElement('a');
+      link.download='囤囤鼠日报_'+today()+'.png';
+      link.href=canvas.toDataURL('image/png');
+      link.click();
+      toast('图片已保存！');
+    }).catch(function(){toast('生成失败，请长按卡片截图');});
+  } else {
+    // Load html2canvas dynamically
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload=function(){downloadShareCard();};
+    s.onerror=function(){toast('请长按卡片区域截图保存 📱');};
+    document.head.appendChild(s);
+  }
+}
+
+// ── INIT ──
+window.onload=function(){
+  loadData();loadTheme();initColorPresets();
+  if(state.games.length){
+    curGid=state.games[0].id;
+    var aa=state.games[0].accounts||[];
+    if(aa.length)curAid=aa[0].id;
+  }
+  rAllTabs();rPage('task');
+  initThemePanel();
+  initNotifScheduler();
+  // 设置任务日期显示
+  document.getElementById('task-date').textContent=today();
+  // 初始化跨天检测基准
+  _dailyCheckDay=today();
+  // 迁移旧 base64 图片到 IndexedDB（仅首次需要）
+  setTimeout(migrateImagesToIDB, 1500);
+};
+</script>
+</body>
+</html>
+
+
