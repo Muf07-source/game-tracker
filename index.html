@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -35,9 +35,9 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'Helvetica 
 
 /*── NAV ── Q版气泡 */
 #nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:62px;background:var(--nav);border-top:2px solid var(--navborder);display:flex;z-index:90;transition:background 0.3s;padding:0 4px}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;font-size:9px;font-weight:700;color:var(--text3);cursor:pointer;font-family:inherit;transition:all 0.2s;letter-spacing:0.5px;border-radius:14px;margin:6px 2px}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;font-size:8px;font-weight:700;color:var(--text3);cursor:pointer;font-family:inherit;transition:all 0.2s;letter-spacing:0.3px;border-radius:12px;margin:5px 1px}
 .nb.on{color:var(--accent);background:var(--accbg)}
-.nb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 0.2s}
+.nb svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 0.2s}
 .nb.on svg{transform:scale(1.15)}
 
 /* ── PAGES ── */
@@ -387,6 +387,7 @@ select.fi{-webkit-appearance:none;appearance:none}
     <button class="nb" id="nb-cal" onclick="goPage('cal')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>日历</button>
     <button class="nb" id="nb-chart" onclick="goPage('chart')"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>图表</button>
     <button class="nb" id="nb-diary" onclick="goPage('diary')"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>日记</button>
+    <button class="nb" id="nb-collab" onclick="goPage('collab')"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>协作</button>
   </div>
 
   <!-- 任务 -->
@@ -471,6 +472,56 @@ select.fi{-webkit-appearance:none;appearance:none}
       <button class="dvbtn" id="dva" onclick="setDV('all')">全部</button></div>
     <div class="tagrow" id="tagrow"></div>
     <div class="dlist" id="dlist"></div>
+  </div>
+
+  <!-- 协作 -->
+  <div class="pg" id="pg-collab">
+    <div class="hdr">
+      <div><div class="ht">多人协作 🐭</div><div class="hs" id="collab-room-label">未加入房间</div></div>
+      <div class="hdr-right">
+        <button class="theme-btn" onclick="toggleTheme()">☾</button>
+      </div>
+    </div>
+    <!-- 未配置 Supabase 时的提示 -->
+    <div id="collab-setup-tip" style="margin:16px 20px;padding:14px;background:var(--accbg);border-radius:var(--r);border:2px solid var(--border);font-size:13px;color:var(--text2);line-height:1.8;display:none">
+      <b style="color:var(--accent)">⚙️ 需要配置 Supabase</b><br>
+      请在代码中填入你的 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_URL</code> 和 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_ANON_KEY</code>，<br>
+      然后在 Supabase SQL Editor 里执行 DEBUG_LOG.md 中的建表语句。
+    </div>
+    <!-- 未加入房间的状态 -->
+    <div id="collab-join-area" style="padding:20px">
+      <div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">🏠 创建新房间</div>
+        <div class="fg"><label class="fl">你的昵称</label><input class="fi" id="collab-nick-create" placeholder="囤囤鼠" maxlength="12"></div>
+        <button class="btn bp bfull" onclick="collabCreateRoom()">创建房间 → 获取邀请码</button>
+      </div>
+      <div style="text-align:center;color:var(--text3);font-size:12px;margin:8px 0">— 或者 —</div>
+      <div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">🔑 加入已有房间</div>
+        <div class="fg"><label class="fl">邀请码（6位）</label><input class="fi" id="collab-invite-code" placeholder="AB1C2D" maxlength="8" style="text-transform:uppercase;letter-spacing:2px;font-size:16px;font-weight:700"></div>
+        <div class="fg"><label class="fl">你的昵称</label><input class="fi" id="collab-nick-join" placeholder="囤囤鼠2号" maxlength="12"></div>
+        <button class="btn bg bfull" onclick="collabJoinRoom()">加入房间</button>
+      </div>
+    </div>
+    <!-- 已加入房间的状态 -->
+    <div id="collab-room-area" style="display:none">
+      <div style="padding:10px 20px;display:flex;gap:8px;align-items:center">
+        <div style="flex:1;background:var(--accbg);border-radius:var(--r2);padding:10px 14px;border:2px solid var(--border)">
+          <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:0.5px">邀请码（分享给朋友）</div>
+          <div id="collab-room-code-display" style="font-size:22px;font-weight:900;letter-spacing:4px;color:var(--accent);margin-top:2px">------</div>
+        </div>
+        <button class="btn bg bsm" onclick="collabCopyCode()" style="flex-shrink:0">复制</button>
+        <button class="btn bd bsm" onclick="collabLeaveRoom()" style="flex-shrink:0">退出</button>
+      </div>
+      <div style="padding:0 20px 8px;display:flex;gap:8px">
+        <button class="btn bp" style="flex:1" onclick="showM('m-collab-post')">📢 发布公告</button>
+        <button class="btn bg" style="flex:1" onclick="collabRefresh()">🔄 刷新</button>
+      </div>
+      <div class="sec-h">房间消息</div>
+      <div id="collab-msg-list" style="padding:0 20px 20px">
+        <div class="empty"><span class="ei">💬</span><div class="et">暂无消息<br>发布一条公告吧！</div></div>
+      </div>
+    </div>
   </div>
 
   <!-- ══ 全屏详情页：账号资源详情 ══ -->
@@ -779,10 +830,32 @@ select.fi{-webkit-appearance:none;appearance:none}
     </div>
   </div>
 
+  <!-- ══ 协作：发布公告 Modal ══ -->
+  <div class="mover" id="m-collab-post" onclick="bgC(event,'m-collab-post')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle">📢 发布公告</div><button class="mclose" onclick="hideM('m-collab-post')">×</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl">标题</label><input class="fi" id="collab-post-title" placeholder="例如：原神今日送100原石！"></div>
+        <div class="fg"><label class="fl">内容（选填）</label><textarea class="fi" id="collab-post-content" placeholder="详情说明…"></textarea></div>
+        <button class="btn bp bfull" onclick="collabPostAnnounce()">发布到房间</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 <div id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+// ════════════════════════════════════════════════════════
+// ▼▼▼ Supabase 配置（填入你的项目信息后上传）▼▼▼
+// 1. 登录 https://supabase.com → 你的项目 → Settings → API
+// 2. 复制 Project URL 和 anon/public key
+// ════════════════════════════════════════════════════════
+var SUPABASE_URL = 'https://kehczowgppskvdijiekq.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlaGN6b3dncHBza3ZkaWppZWtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4ODA0MzQsImV4cCI6MjA4OTQ1NjQzNH0.GAsDBNEEPTnnOkwhvIRcwK1Wx168tBBuX1-soffDdFA';
+// ════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════
 // 数据版本管理说明
 // -----------------------------------------------
@@ -1302,7 +1375,7 @@ function loadTheme(){
 // ── PAGE NAV ──
 function goPage(p){
   curPage=p;
-  var ps=['task','res','log','cal','chart','diary'];
+  var ps=['task','res','log','cal','chart','diary','collab'];
   for(var i=0;i<ps.length;i++){document.getElementById('pg-'+ps[i]).classList.toggle('on',ps[i]===p);document.getElementById('nb-'+ps[i]).classList.toggle('on',ps[i]===p);}
   rPage(p);
 }
@@ -1314,6 +1387,7 @@ function rPage(p){
   if(p==='cal'){rCal();}
   if(p==='chart'){rGTabs('chart-gtabs','chart');rATabs('chart-atabs','chart');rCharts();}
   if(p==='diary'){rDiary();}
+  if(p==='collab'){rCollabPage();}
 }
 
 // ── TABS ──
@@ -2280,7 +2354,9 @@ function saveNotifSettings(){
 }
 
 // ══════════════════════════════════════════
-// ② + ③ 修复：testNotif / sendNotif 安全上下文检查 + 去掉 SVG icon
+// ② + ③ 修复（v7）：安卓通知 → Service Worker
+// 安卓 Chrome 禁止主线程 new Notification()
+// 必须通过 registration.showNotification() 发送
 // ══════════════════════════════════════════
 function testNotif(){
   if(!window.isSecureContext){
@@ -2288,25 +2364,53 @@ function testNotif(){
     return;
   }
   if(!('Notification' in window)){toast('此浏览器不支持通知');return;}
-  if(Notification.permission!=='granted'){Notification.requestPermission().then(function(p){updateNotifStatus();if(p==='granted')sendNotif();else toast('通知权限未授权');});
-  } else {sendNotif();}
+  if(Notification.permission!=='granted'){
+    Notification.requestPermission().then(function(p){
+      updateNotifStatus();
+      if(p==='granted') _doSendNotif();
+      else toast('通知权限未授权');
+    });
+  } else {
+    _doSendNotif();
+  }
 }
 
-function sendNotif(){
+function _doSendNotif(){
   var msg=document.getElementById('notif-msg');
   var text=msg?msg.value:'🐭 囤囤鼠提醒你：今日还没打卡，快来记录资源吧！';
-  try{
-    var opts = {body:text};
-    //尝试发送通知，不带 icon（避免 SVG data URI 导致构造失败）
-    try{
-      new Notification('囤囤鼠来哩🐭', opts);
-    }catch(e1){
-      // 某些浏览器对 Notification 构造函数参数严格，回退
-      new Notification('囤囤鼠来哩 🐭 ' + text);
-    }
-    toast('测试通知已发送！');
-  }catch(e){toast('通知发送失败：'+e.message);}
+  _sendNotifCompat('囤囤鼠来哩🐭', text, function(ok){
+    toast(ok ? '测试通知已发送！' : '通知发送失败，请检查权限');
+  });
 }
+
+// 兼容 PC（new Notification）和安卓（SW showNotification）
+function _sendNotifCompat(title, body, cb){
+  // 优先用 Service Worker（安卓必须用这个，PC 也支持）
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(function(reg){
+      return reg.showNotification(title, {body: body});
+    }).then(function(){
+      if(cb) cb(true);
+    }).catch(function(e){
+      // SW 失败则回退到主线程（适用 PC）
+      _sendNotifDirect(title, body, cb);
+    });
+  } else {
+    _sendNotifDirect(title, body, cb);
+  }
+}
+
+function _sendNotifDirect(title, body, cb){
+  try{
+    new Notification(title, {body: body});
+    if(cb) cb(true);
+  }catch(e){
+    console.warn('[Notif] 主线程发送失败:', e.message);
+    if(cb) cb(false);
+  }
+}
+
+function sendNotif(){_doSendNotif();}
 
 function startNotifScheduler(){
   stopNotifScheduler();
@@ -2316,9 +2420,7 @@ function startNotifScheduler(){
       if(!s.enabled)return;
       var now=bjNow(),hm=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
       if(hm===s.time&&Notification.permission==='granted'){
-        try{
-          new Notification('囤囤鼠来哩 🐭',{body:s.msg||'🐭 今日还没打卡哦！'});
-        }catch(e){}
+        _sendNotifCompat('囤囤鼠来哩 🐭', s.msg||'🐭 今日还没打卡哦！', null);
       }
     }catch(e){}
   },60000);
@@ -2399,6 +2501,253 @@ function downloadShareCard(){
   }
 }
 
+// ══════════════════════════════════════════════════════════
+// Service Worker 注册（解决安卓通知问题）
+// ══════════════════════════════════════════════════════════
+function registerSW(){
+  if('serviceWorker' in navigator && window.isSecureContext){
+    navigator.serviceWorker.register('./sw.js').then(function(reg){
+      console.log('[SW] 注册成功，scope:', reg.scope);
+    }).catch(function(e){
+      console.warn('[SW] 注册失败:', e.message, '（本地 file:// 打开时正常，部署后自动生效）');
+    });
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// Supabase 多人协作模块
+// ══════════════════════════════════════════════════════════
+var _sb = null;            // Supabase 客户端实例
+var _sbReady = false;      // Supabase 是否配置完毕
+var _collabRoom = null;    // 当前房间码
+var _collabNick = '';      // 当前用户昵称
+var _collabChannel = null; // Realtime 订阅
+
+function initSupabase(){
+  // 检查是否已配置
+  if(SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY'){
+    _sbReady = false;
+    return;
+  }
+  try{
+    _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    _sbReady = true;
+    console.log('[Supabase] 初始化成功');
+    // 恢复上次的房间信息
+    try{
+      var saved = JSON.parse(localStorage.getItem('tdr_collab') || '{}');
+      if(saved.room && saved.nick){
+        _collabRoom = saved.room;
+        _collabNick = saved.nick;
+      }
+    }catch(e){}
+  }catch(e){
+    _sbReady = false;
+    console.warn('[Supabase] 初始化失败:', e.message);
+  }
+}
+
+function rCollabPage(){
+  var setupTip = document.getElementById('collab-setup-tip');
+  var joinArea = document.getElementById('collab-join-area');
+  var roomArea = document.getElementById('collab-room-area');
+  var label = document.getElementById('collab-room-label');
+
+  if(!_sbReady){
+    if(setupTip) setupTip.style.display = 'block';
+    if(joinArea) joinArea.style.display = 'none';
+    if(roomArea) roomArea.style.display = 'none';
+    if(label) label.textContent = '未配置 Supabase';
+    return;
+  }
+  if(setupTip) setupTip.style.display = 'none';
+
+  if(_collabRoom){
+    if(joinArea) joinArea.style.display = 'none';
+    if(roomArea) roomArea.style.display = 'block';
+    var codeEl = document.getElementById('collab-room-code-display');
+    if(codeEl) codeEl.textContent = _collabRoom;
+    if(label) label.textContent = '房间：' + _collabRoom + ' · ' + _collabNick;
+    collabLoadMsgs();
+    collabSubscribe();
+  } else {
+    if(joinArea) joinArea.style.display = 'block';
+    if(roomArea) roomArea.style.display = 'none';
+    if(label) label.textContent = '未加入房间';
+    collabUnsubscribe();
+  }
+}
+
+function _genRoomCode(){
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code = '';
+  for(var i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+async function collabCreateRoom(){
+  if(!_sbReady){ toast('请先配置 Supabase'); return; }
+  var nick = (document.getElementById('collab-nick-create').value.trim()) || '囤囤鼠';
+  var code = _genRoomCode();
+  try{
+    var res = await _sb.from('rooms').insert({ room_code: code, created_by: nick });
+    if(res.error){ toast('创建失败：' + res.error.message); return; }
+    _collabRoom = code;
+    _collabNick = nick;
+    _saveCollabLocal();
+    toast('房间已创建！邀请码：' + code);
+    rCollabPage();
+  }catch(e){ toast('创建失败：' + e.message); }
+}
+
+async function collabJoinRoom(){
+  if(!_sbReady){ toast('请先配置 Supabase'); return; }
+  var code = (document.getElementById('collab-invite-code').value.trim()).toUpperCase();
+  var nick = (document.getElementById('collab-nick-join').value.trim()) || '囤囤鼠';
+  if(code.length < 4){ toast('请输入正确的邀请码'); return; }
+  try{
+    var res = await _sb.from('rooms').select('room_code').eq('room_code', code).single();
+    if(res.error){ toast('房间不存在，请检查邀请码'); return; }
+    _collabRoom = code;
+    _collabNick = nick;
+    _saveCollabLocal();
+    toast('已加入房间 ' + code + ' 👋');
+    rCollabPage();
+  }catch(e){ toast('加入失败：' + e.message); }
+}
+
+function collabLeaveRoom(){
+  if(!confirm('确定退出当前房间？')) return;
+  collabUnsubscribe();
+  _collabRoom = null;
+  _collabNick = '';
+  try{ localStorage.removeItem('tdr_collab'); }catch(e){}
+  rCollabPage();
+  toast('已退出房间');
+}
+
+function _saveCollabLocal(){
+  try{ localStorage.setItem('tdr_collab', JSON.stringify({room: _collabRoom, nick: _collabNick})); }catch(e){}
+}
+
+function collabCopyCode(){
+  if(!_collabRoom) return;
+  var text = '囤囤鼠来哩 · 房间邀请码：' + _collabRoom + '\n链接：' + location.href;
+  if(navigator.clipboard){ navigator.clipboard.writeText(text).then(function(){ toast('邀请码已复制 ✅'); }); }
+  else { toast('邀请码：' + _collabRoom); }
+}
+
+async function collabLoadMsgs(){
+  if(!_sb || !_collabRoom) return;
+  var el = document.getElementById('collab-msg-list');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:13px;padding:20px">加载中…</div>';
+  try{
+    var res = await _sb.from('announcements')
+      .select('*')
+      .eq('room_code', _collabRoom)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if(res.error){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; return; }
+    var msgs = res.data || [];
+    if(!msgs.length){ el.innerHTML = '<div class="empty"><span class="ei">💬</span><div class="et">暂无消息<br>发布一条公告吧！</div></div>'; return; }
+    var h = '';
+    msgs.forEach(function(m){ h += _collabMsgH(m); });
+    el.innerHTML = h;
+  }catch(e){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; }
+}
+
+function _collabMsgH(m){
+  var dt = m.created_at ? new Date(m.created_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+  var isTask = m.type === 'share_task';
+  var syncBtn = isTask ? '<button class="btn bg bsm" onclick="collabSyncTask(\''+m.id+'\')" style="margin-top:8px;font-size:11px">＋ 同步到我的任务</button>' : '';
+  return '<div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+    +'<span style="font-size:11px;font-weight:700;color:var(--accent)">'+esc(m.sender_name)+'</span>'
+    +(isTask?'<span style="font-size:10px;padding:1px 7px;border-radius:8px;background:var(--accbg);color:var(--accent);font-weight:700">分享任务</span>':'')
+    +'<span style="font-size:10px;color:var(--text3);margin-left:auto">'+dt+'</span>'
+    +'</div>'
+    +'<div style="font-size:14px;font-weight:700;color:var(--text)">'+esc(m.title)+'</div>'
+    +(m.content?'<div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6">'+esc(m.content)+'</div>':'')
+    +syncBtn
+    +'</div>';
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function collabPostAnnounce(){
+  if(!_sb || !_collabRoom){ toast('请先加入房间'); return; }
+  var title = document.getElementById('collab-post-title').value.trim();
+  if(!title){ toast('请输入标题'); return; }
+  var content = document.getElementById('collab-post-content').value.trim();
+  try{
+    var res = await _sb.from('announcements').insert({
+      room_code: _collabRoom,
+      sender_name: _collabNick || '匿名',
+      title: title,
+      content: content,
+      type: 'announce'
+    });
+    if(res.error){ toast('发布失败：' + res.error.message); return; }
+    document.getElementById('collab-post-title').value = '';
+    document.getElementById('collab-post-content').value = '';
+    hideM('m-collab-post');
+    toast('公告已发布 📢');
+    collabLoadMsgs();
+  }catch(e){ toast('发布失败：' + e.message); }
+}
+
+// 将某条分享任务同步到本地当前账号
+async function collabSyncTask(msgId){
+  if(!_sb) return;
+  try{
+    var res = await _sb.from('announcements').select('*').eq('id', msgId).single();
+    if(res.error || !res.data){ toast('获取失败'); return; }
+    var m = res.data;
+    var a = A();
+    if(!a){ toast('请先选择账号'); return; }
+    if(!a.tasks) a.tasks = [];
+    var taskText = m.title + (m.content ? '：' + m.content.slice(0, 30) : '');
+    a.tasks.push({ id: uid(), text: taskText, isDaily: false, isDone: false });
+    saveData();
+    toast('任务已同步到本账号 ✅');
+    if(curPage === 'task') rTasks();
+  }catch(e){ toast('同步失败：' + e.message); }
+}
+
+function collabRefresh(){
+  collabLoadMsgs();
+  toast('已刷新');
+}
+
+function collabSubscribe(){
+  if(!_sb || !_collabRoom || _collabChannel) return;
+  _collabChannel = _sb.channel('room-' + _collabRoom)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'announcements',
+      filter: 'room_code=eq.' + _collabRoom
+    }, function(payload){
+      if(curPage === 'collab') collabLoadMsgs();
+      // 发送浏览器通知
+      if(Notification.permission === 'granted'){
+        var m = payload.new;
+        if(m && m.sender_name !== _collabNick){
+          _sendNotifCompat('囤囤鼠协作 · ' + m.sender_name, m.title, null);
+        }
+      }
+    })
+    .subscribe();
+}
+
+function collabUnsubscribe(){
+  if(_sb && _collabChannel){
+    _sb.removeChannel(_collabChannel);
+    _collabChannel = null;
+  }
+}
+
 // ── INIT ──
 window.onload=function(){
   loadData();loadTheme();initColorPresets();
@@ -2416,6 +2765,10 @@ window.onload=function(){
   _dailyCheckDay=today();
   // 迁移旧 base64 图片到 IndexedDB（仅首次需要）
   setTimeout(migrateImagesToIDB, 1500);
+  // v7：注册 Service Worker（安卓通知修复）
+  registerSW();
+  // v7：初始化 Supabase 协作模块
+  initSupabase();
 };
 </script>
 </body>
