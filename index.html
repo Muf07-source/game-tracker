@@ -2957,7 +2957,6 @@ async function checkPushStatus(){
   lines.push('📨 Push订阅: ' + (_fcmToken ? '✅ 已订阅' : '❌ 未订阅'));
   lines.push('🏠 房间: ' + (_collabRoom || '未加入'));
   el.innerHTML = lines.join('<br>');
-
   if(!_fcmToken){
     lines.push('⏳ 尝试订阅…');
     el.innerHTML = lines.join('<br>');
@@ -2969,24 +2968,18 @@ async function checkPushStatus(){
       var reg = await navigator.serviceWorker.ready;
       var sub = await reg.pushManager.getSubscription();
       if(sub){
-        lines.push('🔗 Endpoint类型: ' + (sub.endpoint.includes('/v1/') ? '✅ 新版FCM' : '⚠️ 旧版FCM'));
+        lines.push('🔗 Endpoint: ' + (sub.endpoint.includes('/v1/') ? '✅ 新版FCM' : '⚠️ 旧版FCM'));
       }
     }catch(e){ lines.push('❌ SW检测失败: '+e.message); }
   }
   el.innerHTML = lines.join('<br>');
 }
-  var tog=document.getElementById('collab-notif-tog');
+
+// 协作通知开关（已通过自动订阅实现，此函数保留兼容性）
+function toggleCollabNotif(){
+  var tog = document.getElementById('collab-notif-tog');
   if(!tog) return;
-  if(!window.isSecureContext){toast('需要HTTPS才能使用通知');return;}
-  if('Notification' in window && Notification.permission !== 'granted'){
-    Notification.requestPermission().then(function(p){
-      if(p==='granted'){tog.classList.toggle('on');_saveCollabNotif(tog);}
-      else{toast('通知权限未授权');}
-    });
-  } else {
-    tog.classList.toggle('on');
-    _saveCollabNotif(tog);
-  }
+  tog.classList.toggle('on');
 }
 function _saveCollabNotif(tog){
   var on = tog.classList.contains('on');
