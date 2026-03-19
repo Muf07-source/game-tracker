@@ -3379,48 +3379,6 @@ function _doSwSendConfig(reg){
 
 var _fcmToken = null;
 
-// 初始化推送订阅（纯原生Web Push，不加载任何SDK，不会卡顿）
-async function initFCM(){
-  if(!('serviceWorker' in navigator) || !window.isSecureContext) return;
-  if(_fcmToken) return; // 已有订阅
-  if(window._fcmInitializing) return; // 防重复
-  window._fcmInitializing = true;
-  try{
-    var permission = Notification.permission;
-    if(permission !== 'granted'){
-      permission = await Notification.requestPermission();
-    }
-    if(permission !== 'granted'){ clog('PUSH','权限被拒绝'); return; }
-
-    var reg = await navigator.serviceWorker.ready;
-    var sub = await reg.pushManager.getSubscription();
-
-    // 如果是旧版endpoint（/fcm/send/），强制重新订阅
-    if(sub && sub.endpoint.includes('/fcm/send/')){
-      clog('PUSH','检测到旧版endpoint，重新订阅');
-      await sub.unsubscribe();
-      sub = null;
-    }
-
-    if(!sub){
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: _urlBase64ToUint8Array(FIREBASE_VAPID_KEY)
-      });
-      clog('PUSH','新建订阅成功');
-    } else {
-      clog('PUSH','复用已有订阅');
-    }
-
-    _fcmToken = JSON.stringify(sub.toJSON());
-    clog('PUSH','订阅就绪');
-  }catch(e){
-    clog('PUSH','订阅失败:'+e.message);
-  } finally {
-    window._fcmInitializing = false;
-  }
-}
-
 // ══════════════════════════════════════════════════════════
 // Supabase 多人协作模块 v8
 // 功能：①通知 ②历史房间 ③编辑/删除公告 ④改昵称 ⑤存储用量 ⑥改房间名 ⑦调试日志
