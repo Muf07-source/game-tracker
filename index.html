@@ -477,7 +477,7 @@ select.fi{-webkit-appearance:none;appearance:none}
   <!-- 协作 -->
   <div class="pg" id="pg-collab">
     <div class="hdr">
-      <div><div class="ht">多人协作 🐭</div><div class="hs" id="collab-room-label">未加入房间</div></div>
+      <div><div class="ht" id="collab-room-name-display">多人协作 🐭</div><div class="hs" id="collab-room-label">未加入房间</div></div>
       <div class="hdr-right">
         <button class="theme-btn" onclick="toggleTheme()">☾</button>
       </div>
@@ -485,41 +485,66 @@ select.fi{-webkit-appearance:none;appearance:none}
     <!-- 未配置 Supabase 时的提示 -->
     <div id="collab-setup-tip" style="margin:16px 20px;padding:14px;background:var(--accbg);border-radius:var(--r);border:2px solid var(--border);font-size:13px;color:var(--text2);line-height:1.8;display:none">
       <b style="color:var(--accent)">⚙️ 需要配置 Supabase</b><br>
-      请在代码中填入你的 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_URL</code> 和 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_ANON_KEY</code>，<br>
-      然后在 Supabase SQL Editor 里执行 DEBUG_LOG.md 中的建表语句。
+      请在代码中填入你的 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_URL</code> 和 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_ANON_KEY</code>。
     </div>
-    <!-- 未加入房间的状态 -->
-    <div id="collab-join-area" style="padding:20px">
-      <div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px">🏠 创建新房间</div>
+    <!-- 未加入房间：历史房间列表 + 新建/加入 -->
+    <div id="collab-join-area" style="padding:16px 20px">
+      <!-- 历史房间 -->
+      <div id="collab-history-area" style="display:none;margin-bottom:14px">
+        <div class="sec-h" style="padding:0 0 8px">历史房间</div>
+        <div id="collab-history-list"></div>
+      </div>
+      <div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">🏠 创建新房间</div>
+        <div class="fg"><label class="fl">房间名称</label><input class="fi" id="collab-room-name-input" placeholder="例如：原神资源共享群" maxlength="16"></div>
         <div class="fg"><label class="fl">你的昵称</label><input class="fi" id="collab-nick-create" placeholder="囤囤鼠" maxlength="12"></div>
         <button class="btn bp bfull" onclick="collabCreateRoom()">创建房间 → 获取邀请码</button>
       </div>
-      <div style="text-align:center;color:var(--text3);font-size:12px;margin:8px 0">— 或者 —</div>
-      <div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px">🔑 加入已有房间</div>
-        <div class="fg"><label class="fl">邀请码（6位）</label><input class="fi" id="collab-invite-code" placeholder="AB1C2D" maxlength="8" style="text-transform:uppercase;letter-spacing:2px;font-size:16px;font-weight:700"></div>
+      <div style="text-align:center;color:var(--text3);font-size:12px;margin:8px 0">— 或者输入邀请码加入 —</div>
+      <div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:16px">
+        <div class="fg"><label class="fl">邀请码（6位）</label><input class="fi" id="collab-invite-code" placeholder="AB1C2D" maxlength="8" style="text-transform:uppercase;letter-spacing:3px;font-size:18px;font-weight:900;text-align:center"></div>
         <div class="fg"><label class="fl">你的昵称</label><input class="fi" id="collab-nick-join" placeholder="囤囤鼠2号" maxlength="12"></div>
         <button class="btn bg bfull" onclick="collabJoinRoom()">加入房间</button>
       </div>
     </div>
-    <!-- 已加入房间的状态 -->
+    <!-- 已加入房间 -->
     <div id="collab-room-area" style="display:none">
-      <div style="padding:10px 20px;display:flex;gap:8px;align-items:center">
-        <div style="flex:1;background:var(--accbg);border-radius:var(--r2);padding:10px 14px;border:2px solid var(--border)">
-          <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:0.5px">邀请码（分享给朋友）</div>
-          <div id="collab-room-code-display" style="font-size:22px;font-weight:900;letter-spacing:4px;color:var(--accent);margin-top:2px">------</div>
+      <!-- 房间信息卡 -->
+      <div style="margin:10px 20px 0;background:var(--accbg);border-radius:var(--r);border:2px solid var(--border);padding:12px 14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:0.5px;margin-bottom:2px">房间名称</div>
+            <div id="collab-room-name-card" style="font-size:15px;font-weight:900;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+          </div>
+        <button class="btn bg bsm" onclick="_onOpenCollabSettings();showM('m-collab-settings')" style="flex-shrink:0;font-size:11px">⚙ 设置</button>
         </div>
-        <button class="btn bg bsm" onclick="collabCopyCode()" style="flex-shrink:0">复制</button>
-        <button class="btn bd bsm" onclick="collabLeaveRoom()" style="flex-shrink:0">退出</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:0.5px;margin-bottom:2px">邀请码</div>
+            <div id="collab-room-code-display" style="font-size:20px;font-weight:900;letter-spacing:4px;color:var(--text);font-family:monospace">------</div>
+          </div>
+          <button class="btn bg bsm" onclick="collabCopyCode()" style="flex-shrink:0">复制邀请</button>
+          <button class="btn bd bsm" onclick="collabLeaveRoom()" style="flex-shrink:0">退出</button>
+        </div>
+        <!-- 服务器剩余空间 -->
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">
+            <span>服务器消息存储</span><span id="collab-storage-text">计算中…</span>
+          </div>
+          <div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden">
+            <div id="collab-storage-bar" style="height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width 0.3s"></div>
+          </div>
+        </div>
       </div>
-      <div style="padding:0 20px 8px;display:flex;gap:8px">
-        <button class="btn bp" style="flex:1" onclick="showM('m-collab-post')">📢 发布公告</button>
+      <!-- 操作按钮 -->
+      <div style="padding:10px 20px;display:flex;gap:8px">
+        <button class="btn bp" style="flex:1" onclick="showM('m-collab-post')">📢 发公告</button>
         <button class="btn bg" style="flex:1" onclick="collabRefresh()">🔄 刷新</button>
       </div>
+      <!-- 消息列表 -->
       <div class="sec-h">房间消息</div>
       <div id="collab-msg-list" style="padding:0 20px 20px">
-        <div class="empty"><span class="ei">💬</span><div class="et">暂无消息<br>发布一条公告吧！</div></div>
+        <div class="empty"><span class="ei">💬</span><div class="et">暂无消息</div></div>
       </div>
     </div>
   </div>
@@ -830,15 +855,37 @@ select.fi{-webkit-appearance:none;appearance:none}
     </div>
   </div>
 
-  <!-- ══ 协作：发布公告 Modal ══ -->
+  <!-- ══ 协作：发布/编辑公告 Modal ══ -->
   <div class="mover" id="m-collab-post" onclick="bgC(event,'m-collab-post')">
     <div class="mbox">
       <div class="m-handle"></div>
-      <div class="mhdr"><div class="mtitle">📢 发布公告</div><button class="mclose" onclick="hideM('m-collab-post')">×</button></div>
+      <div class="mhdr"><div class="mtitle" id="collab-post-modal-title">📢 发布公告</div><button class="mclose" onclick="hideM('m-collab-post')">×</button></div>
       <div class="mbody">
         <div class="fg"><label class="fl">标题</label><input class="fi" id="collab-post-title" placeholder="例如：原神今日送100原石！"></div>
-        <div class="fg"><label class="fl">内容（选填）</label><textarea class="fi" id="collab-post-content" placeholder="详情说明…"></textarea></div>
-        <button class="btn bp bfull" onclick="collabPostAnnounce()">发布到房间</button>
+        <div class="fg"><label class="fl">内容（选填）</label><textarea class="fi" id="collab-post-content" placeholder="详情说明…" style="min-height:80px"></textarea></div>
+        <input type="hidden" id="collab-post-edit-id">
+        <button class="btn bp bfull" onclick="collabSubmitPost()">发布到房间</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 协作：房间设置 Modal ══ -->
+  <div class="mover" id="m-collab-settings" onclick="bgC(event,'m-collab-settings')">
+    <div class="mbox">
+      <div class="m-handle"></div>
+      <div class="mhdr"><div class="mtitle">⚙ 房间设置</div><button class="mclose" onclick="hideM('m-collab-settings')">×</button></div>
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">修改房间名称</label>
+          <input class="fi" id="collab-setting-roomname" placeholder="输入新房间名称" maxlength="20">
+        </div>
+        <button class="btn bp bfull" onclick="collabRenameRoom()" style="margin-bottom:10px">更新房间名</button>
+        <div class="divider"></div>
+        <div class="fg" style="margin-top:10px">
+          <label class="fl">修改我的昵称</label>
+          <input class="fi" id="collab-setting-nick" placeholder="输入新昵称" maxlength="12">
+        </div>
+        <button class="btn bg bfull" onclick="collabRenameNick()">更新昵称</button>
       </div>
     </div>
   </div>
@@ -2515,35 +2562,46 @@ function registerSW(){
 }
 
 // ══════════════════════════════════════════════════════════
-// Supabase 多人协作模块
+// Supabase 多人协作模块 v8
+// 功能：①通知 ②历史房间 ③编辑/删除公告 ④改昵称 ⑤存储用量 ⑥改房间名 ⑦调试日志
 // ══════════════════════════════════════════════════════════
-var _sb = null;            // Supabase 客户端实例
-var _sbReady = false;      // Supabase 是否配置完毕
-var _collabRoom = null;    // 当前房间码
-var _collabNick = '';      // 当前用户昵称
-var _collabChannel = null; // Realtime 订阅
+var _sb = null;
+var _sbReady = false;
+var _collabRoom = null;   // 当前房间码
+var _collabNick = '';     // 当前昵称
+var _collabRoomName = ''; // 当前房间名
+var _collabChannel = null;
+var _collabHistory = [];  // 历史房间列表 [{code, name, nick, joinedAt}]
+
+// ── 调试日志 ──
+var _collabLog = [];
+function clog(tag, msg, data){
+  var entry = '[' + new Date().toLocaleTimeString('zh-CN') + '][' + tag + '] ' + msg + (data ? ' ' + JSON.stringify(data) : '');
+  _collabLog.push(entry);
+  if(_collabLog.length > 200) _collabLog.shift();
+  console.log(entry);
+}
 
 function initSupabase(){
-  // 检查是否已配置
   if(SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY'){
     _sbReady = false;
+    clog('SB','未配置 Supabase，跳过初始化');
     return;
   }
   try{
     _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     _sbReady = true;
-    console.log('[Supabase] 初始化成功');
-    // 恢复上次的房间信息
+    clog('SB','初始化成功');
+    // 恢复历史
     try{
       var saved = JSON.parse(localStorage.getItem('tdr_collab') || '{}');
-      if(saved.room && saved.nick){
-        _collabRoom = saved.room;
-        _collabNick = saved.nick;
-      }
-    }catch(e){}
+      if(saved.room){ _collabRoom = saved.room; _collabNick = saved.nick || ''; _collabRoomName = saved.roomName || saved.room; }
+      _collabHistory = JSON.parse(localStorage.getItem('tdr_collab_history') || '[]');
+      clog('SB','恢复本地状态', {room: _collabRoom, nick: _collabNick, historyCount: _collabHistory.length});
+    }catch(e){ clog('SB','恢复本地状态失败', e.message); }
   }catch(e){
     _sbReady = false;
-    console.warn('[Supabase] 初始化失败:', e.message);
+    clog('SB','初始化失败', e.message);
   }
 }
 
@@ -2552,6 +2610,7 @@ function rCollabPage(){
   var joinArea = document.getElementById('collab-join-area');
   var roomArea = document.getElementById('collab-room-area');
   var label = document.getElementById('collab-room-label');
+  var nameDisplay = document.getElementById('collab-room-name-display');
 
   if(!_sbReady){
     if(setupTip) setupTip.style.display = 'block';
@@ -2566,77 +2625,270 @@ function rCollabPage(){
     if(joinArea) joinArea.style.display = 'none';
     if(roomArea) roomArea.style.display = 'block';
     var codeEl = document.getElementById('collab-room-code-display');
+    var nameCard = document.getElementById('collab-room-name-card');
     if(codeEl) codeEl.textContent = _collabRoom;
-    if(label) label.textContent = '房间：' + _collabRoom + ' · ' + _collabNick;
+    if(nameCard) nameCard.textContent = _collabRoomName || _collabRoom;
+    if(nameDisplay) nameDisplay.textContent = (_collabRoomName || '多人协作') + ' 🐭';
+    if(label) label.textContent = '房间：' + (_collabRoomName || _collabRoom) + ' · ' + _collabNick;
     collabLoadMsgs();
     collabSubscribe();
+    collabUpdateStorage();
   } else {
     if(joinArea) joinArea.style.display = 'block';
     if(roomArea) roomArea.style.display = 'none';
+    if(nameDisplay) nameDisplay.textContent = '多人协作 🐭';
     if(label) label.textContent = '未加入房间';
     collabUnsubscribe();
+    rCollabHistory();
   }
 }
 
+// ── 历史房间渲染 ──
+function rCollabHistory(){
+  var area = document.getElementById('collab-history-area');
+  var list = document.getElementById('collab-history-list');
+  if(!area || !list) return;
+  if(!_collabHistory.length){ area.style.display = 'none'; return; }
+  area.style.display = 'block';
+  var h = '';
+  _collabHistory.slice().reverse().forEach(function(r){
+    h += '<div style="display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:var(--r2);padding:10px 12px;margin-bottom:8px;cursor:pointer" onclick="collabRejoin(\''+esc(r.code)+'\',\''+esc(r.nick)+'\')">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(r.name||r.code)+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">邀请码：<b style="letter-spacing:2px;font-family:monospace">'+esc(r.code)+'</b> · 昵称：'+esc(r.nick)+'</div>'
+      +'</div>'
+      +'<span style="font-size:11px;color:var(--accent);font-weight:700;flex-shrink:0">重新加入 →</span>'
+      +'</div>';
+  });
+  list.innerHTML = h;
+}
+
+// ── 快速重新加入历史房间 ──
+async function collabRejoin(code, nick){
+  if(!_sbReady){ toast('Supabase 未配置'); return; }
+  try{
+    var res = await _sb.from('rooms').select('room_code,room_name').eq('room_code', code).single();
+    if(res.error){ toast('房间不存在或已解散'); _removeHistory(code); rCollabHistory(); return; }
+    _collabRoom = code;
+    _collabNick = nick;
+    _collabRoomName = (res.data && res.data.room_name) ? res.data.room_name : code;
+    _saveCollabLocal();
+    _addHistory(code, _collabRoomName, nick);
+    clog('COLLAB','重新加入房间', {code, nick});
+    toast('已重新加入 ' + (_collabRoomName || code) + ' 👋');
+    rCollabPage();
+  }catch(e){ toast('加入失败：' + e.message); clog('COLLAB','rejoin失败', e.message); }
+}
+
+// ── 生成邀请码 ──
 function _genRoomCode(){
   var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   var code = '';
-  for(var i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  for(var i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
   return code;
 }
 
+// ── 创建房间 ──
 async function collabCreateRoom(){
   if(!_sbReady){ toast('请先配置 Supabase'); return; }
+  var roomName = (document.getElementById('collab-room-name-input').value.trim()) || '囤囤鼠的房间';
   var nick = (document.getElementById('collab-nick-create').value.trim()) || '囤囤鼠';
   var code = _genRoomCode();
+  clog('COLLAB','创建房间', {code, roomName, nick});
   try{
-    var res = await _sb.from('rooms').insert({ room_code: code, created_by: nick });
-    if(res.error){ toast('创建失败：' + res.error.message); return; }
+    var res = await _sb.from('rooms').insert({ room_code: code, created_by: nick, room_name: roomName });
+    if(res.error){ toast('创建失败：' + res.error.message); clog('COLLAB','创建失败', res.error); return; }
+    // 发系统公告
+    await _sb.from('announcements').insert({room_code:code, sender_name:'系统', title:'🎉 房间「'+roomName+'」已创建', content: nick+' 创建了这个房间，邀请码：'+code, type:'system'});
     _collabRoom = code;
     _collabNick = nick;
+    _collabRoomName = roomName;
     _saveCollabLocal();
+    _addHistory(code, roomName, nick);
+    clog('COLLAB','创建成功');
     toast('房间已创建！邀请码：' + code);
     rCollabPage();
-  }catch(e){ toast('创建失败：' + e.message); }
+  }catch(e){ toast('创建失败：' + e.message); clog('COLLAB','创建异常', e.message); }
 }
 
+// ── 加入房间 ──
 async function collabJoinRoom(){
   if(!_sbReady){ toast('请先配置 Supabase'); return; }
-  var code = (document.getElementById('collab-invite-code').value.trim()).toUpperCase();
+  var code = (document.getElementById('collab-invite-code').value.trim()).toUpperCase().replace(/\s/g,'');
   var nick = (document.getElementById('collab-nick-join').value.trim()) || '囤囤鼠';
   if(code.length < 4){ toast('请输入正确的邀请码'); return; }
+  clog('COLLAB','加入房间', {code, nick});
   try{
-    var res = await _sb.from('rooms').select('room_code').eq('room_code', code).single();
-    if(res.error){ toast('房间不存在，请检查邀请码'); return; }
+    var res = await _sb.from('rooms').select('room_code,room_name').eq('room_code', code).single();
+    if(res.error){ toast('房间不存在，请检查邀请码'); clog('COLLAB','加入失败-房间不存在'); return; }
     _collabRoom = code;
     _collabNick = nick;
+    _collabRoomName = (res.data && res.data.room_name) ? res.data.room_name : code;
     _saveCollabLocal();
-    toast('已加入房间 ' + code + ' 👋');
+    _addHistory(code, _collabRoomName, nick);
+    // 发加入公告
+    await _sb.from('announcements').insert({room_code:code, sender_name:'系统', title:'👋 '+nick+' 加入了房间', content:'', type:'system'});
+    clog('COLLAB','加入成功', {roomName: _collabRoomName});
+    toast('已加入房间 ' + (_collabRoomName||code) + ' 👋');
     rCollabPage();
-  }catch(e){ toast('加入失败：' + e.message); }
+  }catch(e){ toast('加入失败：' + e.message); clog('COLLAB','加入异常', e.message); }
 }
 
+// ── 退出房间 ──
 function collabLeaveRoom(){
-  if(!confirm('确定退出当前房间？')) return;
+  if(!confirm('确定退出当前房间？\n（退出后可通过邀请码重新加入）')) return;
+  clog('COLLAB','退出房间', {room:_collabRoom});
   collabUnsubscribe();
-  _collabRoom = null;
-  _collabNick = '';
+  _collabRoom = null; _collabNick = ''; _collabRoomName = '';
   try{ localStorage.removeItem('tdr_collab'); }catch(e){}
   rCollabPage();
   toast('已退出房间');
 }
 
-function _saveCollabLocal(){
-  try{ localStorage.setItem('tdr_collab', JSON.stringify({room: _collabRoom, nick: _collabNick})); }catch(e){}
+// ── 修改房间名 ──
+async function collabRenameRoom(){
+  if(!_sb || !_collabRoom){ toast('未加入房间'); return; }
+  var newName = document.getElementById('collab-setting-roomname').value.trim();
+  if(!newName){ toast('请输入房间名称'); return; }
+  clog('COLLAB','修改房间名', {from:_collabRoomName, to:newName});
+  try{
+    var res = await _sb.from('rooms').update({room_name: newName}).eq('room_code', _collabRoom);
+    if(res.error){ toast('修改失败：' + res.error.message); return; }
+    var oldName = _collabRoomName;
+    _collabRoomName = newName;
+    _saveCollabLocal();
+    _addHistory(_collabRoom, newName, _collabNick); // 更新历史里的名字
+    // 发系统公告
+    await _sb.from('announcements').insert({room_code:_collabRoom, sender_name:'系统', title:'✏️ '+_collabNick+' 将房间名改为「'+newName+'」', content:'原名：'+oldName, type:'system'});
+    hideM('m-collab-settings');
+    toast('房间名已更新 ✅');
+    rCollabPage();
+  }catch(e){ toast('修改失败：' + e.message); }
 }
 
+// ── 修改昵称 ──
+async function collabRenameNick(){
+  if(!_collabRoom){ toast('未加入房间'); return; }
+  var newNick = document.getElementById('collab-setting-nick').value.trim();
+  if(!newNick){ toast('请输入昵称'); return; }
+  var oldNick = _collabNick;
+  clog('COLLAB','修改昵称', {from:oldNick, to:newNick});
+  _collabNick = newNick;
+  _saveCollabLocal();
+  _addHistory(_collabRoom, _collabRoomName, newNick);
+  // 发系统公告
+  try{
+    await _sb.from('announcements').insert({room_code:_collabRoom, sender_name:'系统', title:'🏷 '+oldNick+' 改名为 '+newNick, content:'', type:'system'});
+  }catch(e){}
+  hideM('m-collab-settings');
+  toast('昵称已更新 ✅');
+  var label = document.getElementById('collab-room-label');
+  if(label) label.textContent = '房间：' + (_collabRoomName||_collabRoom) + ' · ' + _collabNick;
+}
+
+// ── 保存本地 ──
+function _saveCollabLocal(){
+  try{ localStorage.setItem('tdr_collab', JSON.stringify({room:_collabRoom, nick:_collabNick, roomName:_collabRoomName})); }catch(e){}
+}
+
+// ── 历史管理 ──
+function _addHistory(code, name, nick){
+  _collabHistory = _collabHistory.filter(function(r){ return r.code !== code; });
+  _collabHistory.push({code:code, name:name, nick:nick, joinedAt: Date.now()});
+  if(_collabHistory.length > 10) _collabHistory = _collabHistory.slice(-10);
+  try{ localStorage.setItem('tdr_collab_history', JSON.stringify(_collabHistory)); }catch(e){}
+}
+function _removeHistory(code){
+  _collabHistory = _collabHistory.filter(function(r){ return r.code !== code; });
+  try{ localStorage.setItem('tdr_collab_history', JSON.stringify(_collabHistory)); }catch(e){}
+}
+
+// ── 复制邀请码 ──
 function collabCopyCode(){
   if(!_collabRoom) return;
-  var text = '囤囤鼠来哩 · 房间邀请码：' + _collabRoom + '\n链接：' + location.href;
-  if(navigator.clipboard){ navigator.clipboard.writeText(text).then(function(){ toast('邀请码已复制 ✅'); }); }
-  else { toast('邀请码：' + _collabRoom); }
+  var text = '【'+(_collabRoomName||'囤囤鼠协作房间')+'】\n邀请码：' + _collabRoom + '\n打开链接加入：' + location.href;
+  if(navigator.clipboard){ navigator.clipboard.writeText(text).then(function(){ toast('邀请信息已复制 ✅'); }); }
+  else{ toast('邀请码：' + _collabRoom); }
 }
 
+// ── 打开发布/编辑 Modal ──
+function collabOpenPost(editId, editTitle, editContent){
+  var titleInput = document.getElementById('collab-post-title');
+  var contentInput = document.getElementById('collab-post-content');
+  var editIdInput = document.getElementById('collab-post-edit-id');
+  var modalTitle = document.getElementById('collab-post-modal-title');
+  if(editId){
+    if(modalTitle) modalTitle.textContent = '✏️ 编辑公告';
+    if(titleInput) titleInput.value = editId === '__title__' ? editTitle : editTitle;
+    if(contentInput) contentInput.value = editContent || '';
+    if(editIdInput) editIdInput.value = editId;
+  } else {
+    if(modalTitle) modalTitle.textContent = '📢 发布公告';
+    if(titleInput) titleInput.value = '';
+    if(contentInput) contentInput.value = '';
+    if(editIdInput) editIdInput.value = '';
+  }
+  showM('m-collab-post');
+}
+
+// ── 提交公告（新建或编辑）──
+async function collabSubmitPost(){
+  if(!_sb || !_collabRoom){ toast('请先加入房间'); return; }
+  var title = document.getElementById('collab-post-title').value.trim();
+  if(!title){ toast('请输入标题'); return; }
+  var content = document.getElementById('collab-post-content').value.trim();
+  var editId = document.getElementById('collab-post-edit-id').value;
+
+  if(editId){
+    // 编辑模式
+    clog('COLLAB','编辑公告', {id:editId});
+    try{
+      var res = await _sb.from('announcements').update({
+        title: title,
+        content: content,
+        edited_by: _collabNick,
+        edited_at: new Date().toISOString()
+      }).eq('id', editId);
+      if(res.error){ toast('编辑失败：' + res.error.message); return; }
+      hideM('m-collab-post');
+      toast('公告已更新 ✅');
+      collabLoadMsgs();
+    }catch(e){ toast('编辑失败：' + e.message); }
+  } else {
+    // 新建模式
+    clog('COLLAB','发布公告', {title});
+    try{
+      var res2 = await _sb.from('announcements').insert({
+        room_code: _collabRoom,
+        sender_name: _collabNick || '匿名',
+        title: title,
+        content: content,
+        type: 'announce'
+      });
+      if(res2.error){ toast('发布失败：' + res2.error.message); return; }
+      document.getElementById('collab-post-title').value = '';
+      document.getElementById('collab-post-content').value = '';
+      document.getElementById('collab-post-edit-id').value = '';
+      hideM('m-collab-post');
+      toast('公告已发布 📢');
+      collabLoadMsgs();
+    }catch(e){ toast('发布失败：' + e.message); }
+  }
+}
+
+// ── 删除公告 ──
+async function collabDeleteMsg(id){
+  if(!confirm('确定删除这条公告？')) return;
+  clog('COLLAB','删除公告', {id});
+  try{
+    var res = await _sb.from('announcements').delete().eq('id', id);
+    if(res.error){ toast('删除失败：' + res.error.message); return; }
+    toast('已删除');
+    collabLoadMsgs();
+  }catch(e){ toast('删除失败：' + e.message); }
+}
+
+// ── 加载消息列表 ──
 async function collabLoadMsgs(){
   if(!_sb || !_collabRoom) return;
   var el = document.getElementById('collab-msg-list');
@@ -2646,58 +2898,65 @@ async function collabLoadMsgs(){
     var res = await _sb.from('announcements')
       .select('*')
       .eq('room_code', _collabRoom)
-      .order('created_at', { ascending: false })
+      .order('created_at', {ascending: false})
       .limit(50);
-    if(res.error){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; return; }
+    if(res.error){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; clog('COLLAB','加载消息失败', res.error); return; }
     var msgs = res.data || [];
+    clog('COLLAB','加载消息', {count: msgs.length});
     if(!msgs.length){ el.innerHTML = '<div class="empty"><span class="ei">💬</span><div class="et">暂无消息<br>发布一条公告吧！</div></div>'; return; }
     var h = '';
     msgs.forEach(function(m){ h += _collabMsgH(m); });
     el.innerHTML = h;
-  }catch(e){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; }
+  }catch(e){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; clog('COLLAB','加载消息异常', e.message); }
 }
 
+// ── 渲染单条消息 ──
 function _collabMsgH(m){
-  var dt = m.created_at ? new Date(m.created_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+  var isSystem = m.type === 'system';
   var isTask = m.type === 'share_task';
+  var isMine = m.sender_name === _collabNick;
+
+  if(isSystem){
+    return '<div style="text-align:center;padding:6px 0;margin-bottom:6px">'
+      +'<span style="font-size:11px;color:var(--text3);background:var(--bg2);border-radius:10px;padding:3px 10px">'+esc(m.title)+'</span>'
+      +'</div>';
+  }
+
+  var dt = m.created_at ? new Date(m.created_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+  var editedInfo = '';
+  if(m.edited_by && m.edited_at){
+    var edt = new Date(m.edited_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    editedInfo = '<div style="font-size:10px;color:var(--text3);margin-top:3px">✏️ '+esc(m.edited_by)+' 修改于 '+edt+'</div>';
+  }
+
+  var actionBtns = '';
+  if(isMine){
+    actionBtns = '<div style="display:flex;gap:6px;margin-top:8px">'
+      +'<button class="btn bg bsm" onclick="collabOpenPost(\''+m.id+'\',\''+esc(m.title).replace(/'/g,"&#39;")+'\',\''+esc(m.content||'').replace(/'/g,"&#39;")+'\')">✏️ 编辑</button>'
+      +'<button class="btn bd bsm" onclick="collabDeleteMsg(\''+m.id+'\')">删除</button>'
+      +'</div>';
+  }
+
   var syncBtn = isTask ? '<button class="btn bg bsm" onclick="collabSyncTask(\''+m.id+'\')" style="margin-top:8px;font-size:11px">＋ 同步到我的任务</button>' : '';
-  return '<div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px">'
+
+  return '<div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px'+(isMine?';border-color:var(--accent)':'')+'">'
     +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
     +'<span style="font-size:11px;font-weight:700;color:var(--accent)">'+esc(m.sender_name)+'</span>'
-    +(isTask?'<span style="font-size:10px;padding:1px 7px;border-radius:8px;background:var(--accbg);color:var(--accent);font-weight:700">分享任务</span>':'')
+    +(isMine?'<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--accbg);color:var(--accent);font-weight:700">我</span>':'')
+    +(isTask?'<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--accbg);color:var(--accent);font-weight:700">分享任务</span>':'')
     +'<span style="font-size:10px;color:var(--text3);margin-left:auto">'+dt+'</span>'
     +'</div>'
     +'<div style="font-size:14px;font-weight:700;color:var(--text)">'+esc(m.title)+'</div>'
     +(m.content?'<div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6">'+esc(m.content)+'</div>':'')
+    +editedInfo
+    +actionBtns
     +syncBtn
     +'</div>';
 }
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-async function collabPostAnnounce(){
-  if(!_sb || !_collabRoom){ toast('请先加入房间'); return; }
-  var title = document.getElementById('collab-post-title').value.trim();
-  if(!title){ toast('请输入标题'); return; }
-  var content = document.getElementById('collab-post-content').value.trim();
-  try{
-    var res = await _sb.from('announcements').insert({
-      room_code: _collabRoom,
-      sender_name: _collabNick || '匿名',
-      title: title,
-      content: content,
-      type: 'announce'
-    });
-    if(res.error){ toast('发布失败：' + res.error.message); return; }
-    document.getElementById('collab-post-title').value = '';
-    document.getElementById('collab-post-content').value = '';
-    hideM('m-collab-post');
-    toast('公告已发布 📢');
-    collabLoadMsgs();
-  }catch(e){ toast('发布失败：' + e.message); }
-}
-
-// 将某条分享任务同步到本地当前账号
+// ── 同步任务 ──
 async function collabSyncTask(msgId){
   if(!_sb) return;
   try{
@@ -2707,45 +2966,93 @@ async function collabSyncTask(msgId){
     var a = A();
     if(!a){ toast('请先选择账号'); return; }
     if(!a.tasks) a.tasks = [];
-    var taskText = m.title + (m.content ? '：' + m.content.slice(0, 30) : '');
-    a.tasks.push({ id: uid(), text: taskText, isDaily: false, isDone: false });
+    var taskText = m.title + (m.content ? '：' + m.content.slice(0,30) : '');
+    a.tasks.push({id:uid(), text:taskText, isDaily:false, isDone:false});
     saveData();
     toast('任务已同步到本账号 ✅');
     if(curPage === 'task') rTasks();
+    clog('COLLAB','同步任务', {taskText});
   }catch(e){ toast('同步失败：' + e.message); }
 }
 
+// ── 刷新 ──
 function collabRefresh(){
   collabLoadMsgs();
+  collabUpdateStorage();
   toast('已刷新');
 }
 
+// ── 服务器存储用量（估算消息条数占用）──
+async function collabUpdateStorage(){
+  if(!_sb || !_collabRoom) return;
+  try{
+    var res = await _sb.from('announcements').select('id', {count:'exact',head:true}).eq('room_code', _collabRoom);
+    var count = res.count || 0;
+    var maxCount = 500; // 估算上限
+    var pct = Math.min(100, Math.round(count / maxCount * 100));
+    var textEl = document.getElementById('collab-storage-text');
+    var barEl = document.getElementById('collab-storage-bar');
+    if(textEl) textEl.textContent = count + ' 条消息 / 约 ' + maxCount + ' 条上限';
+    if(barEl){
+      barEl.style.width = pct + '%';
+      barEl.style.background = pct > 80 ? 'var(--red)' : pct > 60 ? '#D0A040' : 'var(--accent)';
+    }
+    clog('COLLAB','存储用量', {count, pct});
+  }catch(e){ clog('COLLAB','获取存储用量失败', e.message); }
+}
+
+// ── 实时订阅 ──
 function collabSubscribe(){
   if(!_sb || !_collabRoom || _collabChannel) return;
+  clog('COLLAB','订阅房间', {room: _collabRoom});
   _collabChannel = _sb.channel('room-' + _collabRoom)
     .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'announcements',
+      event: 'INSERT', schema: 'public', table: 'announcements',
       filter: 'room_code=eq.' + _collabRoom
     }, function(payload){
+      clog('COLLAB','收到新消息 INSERT', {title: payload.new && payload.new.title});
       if(curPage === 'collab') collabLoadMsgs();
-      // 发送浏览器通知
-      if(Notification.permission === 'granted'){
-        var m = payload.new;
-        if(m && m.sender_name !== _collabNick){
-          _sendNotifCompat('囤囤鼠协作 · ' + m.sender_name, m.title, null);
+      // ① 新公告 → 浏览器通知
+      var m = payload.new;
+      if(m && m.sender_name !== _collabNick && m.type !== 'system'){
+        if(Notification.permission === 'granted'){
+          _sendNotifCompat('🐭 ' + (m.sender_name||'协作成员') + ' 发布了公告', m.title, null);
         }
       }
     })
-    .subscribe();
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'announcements',
+      filter: 'room_code=eq.' + _collabRoom
+    }, function(payload){
+      clog('COLLAB','收到消息 UPDATE');
+      if(curPage === 'collab') collabLoadMsgs();
+    })
+    .on('postgres_changes', {
+      event: 'DELETE', schema: 'public', table: 'announcements',
+      filter: 'room_code=eq.' + _collabRoom
+    }, function(payload){
+      clog('COLLAB','收到消息 DELETE');
+      if(curPage === 'collab') collabLoadMsgs();
+    })
+    .subscribe(function(status){
+      clog('COLLAB','订阅状态', status);
+    });
 }
 
 function collabUnsubscribe(){
   if(_sb && _collabChannel){
     _sb.removeChannel(_collabChannel);
     _collabChannel = null;
+    clog('COLLAB','取消订阅');
   }
+}
+
+// ── 打开设置时预填当前值 ──
+function _onOpenCollabSettings(){
+  var rn = document.getElementById('collab-setting-roomname');
+  var nn = document.getElementById('collab-setting-nick');
+  if(rn) rn.value = _collabRoomName || '';
+  if(nn) nn.value = _collabNick || '';
 }
 
 // ── INIT ──
