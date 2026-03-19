@@ -893,12 +893,14 @@ select.fi{-webkit-appearance:none;appearance:none}
           <button class="btn bp bfull" onclick="saveNotifSettings()" style="margin-top:2px">💾 保存提醒设置</button>
 
           <!-- 协作消息推送说明 -->
-          <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;margin-top:4px;display:flex;align-items:center;gap:5px">📢 协作新消息通知</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;margin-top:14px;display:flex;align-items:center;gap:5px">📢 协作新消息通知</div>
           <div style="font-size:12px;color:var(--text2);background:var(--bg2);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px;line-height:1.7">
             加入协作房间后自动开启。有人发布新公告时，<b>无论 Chrome 是否打开</b>，都会推送安卓通知。
           </div>
 
           <button class="btn bp bfull" onclick="testNotif()" style="margin-top:4px">🔔 发送测试通知</button>
+          <button class="btn bg bfull" onclick="checkPushStatus()" style="margin-top:8px">🔍 检测推送状态</button>
+          <div id="push-status-result" style="font-size:11px;color:var(--text2);margin-top:8px;padding:10px;background:var(--bg2);border-radius:var(--r2);display:none;line-height:1.8;word-break:break-all"></div>
           <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.8;background:var(--bg2);padding:10px;border-radius:var(--r2)">
             <b>两种推送都走 Supabase 云服务器 → Google FCM → 安卓系统</b><br>
             关机、关 Chrome、锁屏均可收到，完全不依赖本设备 🐭
@@ -2914,15 +2916,20 @@ function saveNotifSettings(){
 async function _syncDailyNotifToServer(cfg){
   if(!_sb || !window.isSecureContext) return;
   try{
-    // 等待 FCM token 就绪（最多等5秒）
+    // 如果还没有 token，主动触发 FCM 初始化
+    if(!_fcmToken){
+      clog('PUSH','FCM token未就绪，主动初始化');
+      await initFCM();
+    }
+    // 再等最多10秒
     var waited = 0;
-    while(!_fcmToken && waited < 5000){
+    while(!_fcmToken && waited < 10000){
       await new Promise(function(r){ setTimeout(r, 500); });
       waited += 500;
     }
     if(!_fcmToken){
-      clog('PUSH','FCM token未就绪，跳过同步每日提醒');
-      toast('推送未就绪，请稍后再试');
+      clog('PUSH','FCM token获取超时');
+      toast('获取推送权限失败，请确认已授权通知权限后重试');
       return;
     }
     if(cfg.enabled){
@@ -2939,11 +2946,50 @@ async function _syncDailyNotifToServer(cfg){
       clog('PUSH','已从服务器删除每日提醒');
       toast('每日提醒已关闭');
     }
-  }catch(e){ clog('PUSH','同步每日提醒失败:'+e.message); toast('保存失败，请重试'); }
+  }catch(e){ clog('PUSH','同步每日提醒失败:'+e.message); toast('保存失败：'+e.message); }
 }
 
-// 协作通知开关
-function toggleCollabNotif(){
+// 检测推送状态（手机调试用）
+async function checkPushStatus(){
+  var el = document.getElementById('push-status-result');
+  if(!el) return;
+  el.style.display = 'block';
+  el.textContent = '检测中…';
+
+  var lines = [];
+  lines.push('🔒 HTTPS: ' + (window.isSecureContext ? '✅' : '❌'));
+  lines.push('🔔 通知权限: ' + (typeof Notification !== 'undefined' ? Notification.permission : '不支持'));
+  lines.push('⚙️ ServiceWorker: ' + ('serviceWorker' in navigator ? '✅' : '❌'));
+  lines.push('🔥 Firebase: ' + (typeof firebase !== 'undefined' ? '✅已加载' : '❌未加载'));
+  lines.push('🎫 FCM Token: ' + (_fcmToken ? '✅ ' + _fcmToken.slice(0,20)+'...' : '❌ 未获取'));
+  lines.push('🏠 房间: ' + (_collabRoom || '未加入'));
+
+  // 尝试主动获取token
+  if(!_fcmToken){
+    lines.push('⏳ 尝试获取Token…');
+    el.innerHTML = lines.join('<br>');
+    try{
+      await initFCM();
+      lines.push('🎫 重试后Token: ' + (_fcmToken ? '✅ '+_fcmToken.slice(0,20)+'...' : '❌ 仍然失败'));
+    }catch(e){
+      lines.push('❌ 获取失败: ' + e.message);
+    }
+  }
+
+  // 检查SW状态
+  if('serviceWorker' in navigator){
+    try{
+      var reg = await navigator.serviceWorker.ready;
+      lines.push('📋 SW状态: ' + (reg.active ? '✅ active' : '⚠️ 未active'));
+      var sub = await reg.pushManager.getSubscription();
+      lines.push('📨 Push订阅: ' + (sub ? '✅ ' + sub.endpoint.slice(0,30)+'...' : '❌ 无订阅'));
+    }catch(e){
+      lines.push('❌ SW检测失败: ' + e.message);
+    }
+  }
+
+  el.innerHTML = lines.join('<br>');
+}
   var tog=document.getElementById('collab-notif-tog');
   if(!tog) return;
   if(!window.isSecureContext){toast('需要HTTPS才能使用通知');return;}
