@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>囤囤鼠来哩</title>
+<link rel="manifest" href="/game-tracker/manifest.json">
+<meta name="theme-color" content="#6B9E78">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="囤囤鼠来哩">
 <style>
 :root {
   /* 主题色变量 – 支持 HSL 动态调整 */
@@ -866,7 +871,6 @@ select.fi{-webkit-appearance:none;appearance:none}
         <div id="pwa-installed-badge" style="display:none;margin-top:10px;padding:10px 14px;background:#EFF8EF;border:2px solid #8BC49A;border-radius:var(--r2)">
           <div style="font-size:12px;font-weight:700;color:#5A8A6A">✅ 已安装为 PWA，支持后台推送</div>
         </div>
-        [data-theme=dark] #pwa-installed-badge{background:#1A2A1A;border-color:#5A8A6A}
 
         <div id="notif-body" style="margin-top:12px">
           <!-- 每日打卡提醒 -->
@@ -874,12 +878,12 @@ select.fi{-webkit-appearance:none;appearance:none}
           <div class="togrow" style="background:var(--bg2);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px">
             <div>
               <div style="font-size:14px;font-weight:700">开启定时提醒</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">安装PWA后，关闭浏览器也能收到</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">由 Supabase 服务器定时推送，关机也能收到 ✅</div>
             </div>
             <button class="tog" id="notif-tog" onclick="toggleNotif()"></button>
           </div>
           <div class="fg">
-            <label class="fl">提醒时间</label>
+            <label class="fl">提醒时间（北京时间）</label>
             <input type="time" class="fi" id="notif-time" value="20:00" onchange="saveNotifSettings()">
           </div>
           <div class="fg">
@@ -887,22 +891,16 @@ select.fi{-webkit-appearance:none;appearance:none}
             <input class="fi" id="notif-msg" value="🐭 囤囤鼠提醒你：今日还没打卡，快来记录资源吧！" placeholder="自定义提醒文字">
           </div>
 
-          <!-- 协作消息推送 -->
+          <!-- 协作消息推送说明 -->
           <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;margin-top:4px;display:flex;align-items:center;gap:5px">📢 协作新消息通知</div>
-          <div class="togrow" style="background:var(--bg2);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px">
-            <div>
-              <div style="font-size:14px;font-weight:700">后台轮询新消息</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">SW每分钟检查一次房间新公告</div>
-            </div>
-            <button class="tog" id="collab-notif-tog" onclick="toggleCollabNotif()"></button>
+          <div style="font-size:12px;color:var(--text2);background:var(--bg2);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px;line-height:1.7">
+            加入协作房间后自动开启。有人发布新公告时，<b>无论 Chrome 是否打开</b>，都会推送安卓通知。
           </div>
 
           <button class="btn bp bfull" onclick="testNotif()" style="margin-top:4px">🔔 发送测试通知</button>
           <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.8;background:var(--bg2);padding:10px;border-radius:var(--r2)">
-            <b>后台推送原理：</b><br>
-            ① 将本应用安装到主屏幕（PWA）<br>
-            ② 开启通知权限<br>
-            ③ 关闭浏览器后，Service Worker 在后台运行，到点自动弹出安卓通知 🐭
+            <b>两种推送都走 Supabase 云服务器 → Google FCM → 安卓系统</b><br>
+            关机、关 Chrome、锁屏均可收到，完全不依赖本设备 🐭
           </div>
         </div>
       </div>
@@ -2903,9 +2901,38 @@ function saveNotifSettings(){
     msg:m?m.value:'🐭囤囤鼠提醒你：今日还没打卡，快来记录资源吧！'
   };
   try{localStorage.setItem('tdr_notif',JSON.stringify(s));}catch(e){}
-  // 同步配置到 Service Worker（后台推送用）
-  if(_swReg&&_swReg.active){_doSwSendConfig(_swReg);}
-  else if('serviceWorker' in navigator){navigator.serviceWorker.ready.then(function(r){_doSwSendConfig(r);});}
+  // 同步配置到 Service Worker（打卡提醒备用）
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
+  }
+  // 同步每日提醒设置到 Supabase（方案A：服务器定时推送）
+  _syncDailyNotifToServer(s);
+}
+
+// 将每日提醒设置同步到 Supabase daily_notif_subscriptions 表
+async function _syncDailyNotifToServer(cfg){
+  if(!_sb || !window.isSecureContext) return;
+  try{
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if(!sub){ clog('PUSH','尚未订阅Push，跳过同步每日提醒'); return; }
+    var endpoint = sub.endpoint;
+    if(cfg.enabled){
+      // upsert：以endpoint为唯一键
+      await _sb.from('daily_notif_subscriptions').upsert({
+        endpoint:     endpoint,
+        subscription: sub.toJSON(),
+        notif_time:   cfg.time,
+        notif_msg:    cfg.msg,
+        tz_offset:    8  // 北京时间 UTC+8
+      }, { onConflict: 'endpoint' });
+      clog('PUSH','每日提醒已同步到服务器', {time: cfg.time});
+    } else {
+      // 关闭时删除服务器记录
+      await _sb.from('daily_notif_subscriptions').delete().eq('endpoint', endpoint);
+      clog('PUSH','已从服务器删除每日提醒');
+    }
+  }catch(e){ clog('PUSH','同步每日提醒失败:'+e.message); }
 }
 
 // 协作通知开关
@@ -3079,19 +3106,19 @@ function downloadShareCard(){
   }
 }
 
-// ══════════════════════════════════════════════════════════
-// Service Worker（内嵌Blob版，无需单独sw.js文件）
-// 功能：① 后台定时打卡提醒 ② 协作新消息轮询 ③ 关闭Chrome后仍可推送
-// ══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// Service Worker 注册 + Web Push 订阅
+// ════════════════════════════════════════════════════════
 
-var _swReg = null; // 全局保存SW注册对象
-var _pwaInstallPrompt = null; // PWA安装事件
+var _swReg = null;
+var _pwaInstallPrompt = null;
+// VAPID 公钥（执行 npx web-push generate-vapid-keys 后填入）
+var VAPID_PUBLIC_KEY = 'BIeGxkrMHgJKIaQUd4WDfjR8dRByNpUpTs1D45L-N0TYEUzNnF-jh3TbUI-blknXfNq2adjE2UAdTldsc8OKe7s';
 
-// 监听PWA安装提示事件
+// PWA 安装提示
 window.addEventListener('beforeinstallprompt', function(e){
   e.preventDefault();
   _pwaInstallPrompt = e;
-  // 显示安装引导banner
   var banner = document.getElementById('pwa-install-banner');
   if(banner) banner.style.display = 'block';
   clog('PWA','可以安装PWA');
@@ -3103,261 +3130,130 @@ window.addEventListener('appinstalled', function(){
   if(banner) banner.style.display = 'none';
   var badge = document.getElementById('pwa-installed-badge');
   if(badge) badge.style.display = 'block';
-  clog('PWA','PWA已安装');
-  toast('✅ 已安装到主屏幕，后台推送已激活！');
+  toast('✅ 已安装到主屏幕！');
+  clog('PWA','已安装');
 });
 
 function triggerPWAInstall(){
   if(_pwaInstallPrompt){
     _pwaInstallPrompt.prompt();
-    _pwaInstallPrompt.userChoice.then(function(r){
-      clog('PWA','用户选择：'+r.outcome);
-      _pwaInstallPrompt = null;
-    });
+    _pwaInstallPrompt.userChoice.then(function(r){ _pwaInstallPrompt = null; });
   } else {
     toast('请用Chrome菜单 → "添加到主屏幕"');
   }
 }
 
-// 检测是否已以PWA方式运行
 function _isPWA(){
-  return window.matchMedia('(display-mode: standalone)').matches
-      || window.navigator.standalone === true;
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
-// SW代码（字符串形式，用Blob注册，不需要单独sw.js文件）
-function _buildSWCode(){
-  var supaUrl = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '';
-  var supaKey = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '';
-  return `
-var SUPABASE_URL = '${supaUrl}';
-var SUPABASE_KEY = '${supaKey}';
-var CACHE_NAME = 'tdr-sw-v1';
-
-// ── install & activate ──
-self.addEventListener('install', function(e){ self.skipWaiting(); });
-self.addEventListener('activate', function(e){ e.waitUntil(self.clients.claim()); });
-
-// ── 接收主页面发来的配置消息 ──
-self.addEventListener('message', function(e){
-  if(!e.data) return;
-  if(e.data.type === 'SET_NOTIF'){
-    // 存储打卡提醒配置
-    var cfg = e.data.cfg;
-    self._notifCfg = cfg;
-    // 如果enabled，注册周期性检测
-    if(cfg && cfg.enabled){
-      _scheduleAlarm();
-    }
-  }
-  if(e.data.type === 'SET_COLLAB'){
-    self._collabCfg = e.data.cfg;
-  }
-  if(e.data.type === 'PING'){
-    // 页面主动ping SW，顺便触发一次检测
-    _checkAndNotify();
-  }
-});
-
-// ── periodicsync（安卓Chrome支持，无需App打开） ──
-self.addEventListener('periodicsync', function(e){
-  if(e.tag === 'tdr-daily-check'){
-    e.waitUntil(_checkAndNotify());
-  }
-  if(e.tag === 'tdr-collab-check'){
-    e.waitUntil(_checkCollabMsgs());
-  }
-});
-
-// ── alarm模拟：用setInterval存在SW活跃期间轮询 ──
-var _alarmTimer = null;
-function _scheduleAlarm(){
-  if(_alarmTimer) return;
-  _alarmTimer = setInterval(function(){
-    _checkAndNotify();
-    _checkCollabMsgs();
-  }, 60000); // 每分钟检查一次
-}
-// SW激活后立即启动轮询（安卓PWA后台运行时SW持续活跃）
-_scheduleAlarm();
-
-// ── 打卡提醒检测 ──
-function _checkAndNotify(){
-  try{
-    var cfg = self._notifCfg;
-    if(!cfg || !cfg.enabled) return;
-    var now = new Date();
-    // 转北京时间
-    var bj = new Date(now.getTime() + (8*60 - now.getTimezoneOffset())*60000);
-    var hm = bj.getHours() + ':' + String(bj.getMinutes()).padStart(2,'0');
-    if(hm === cfg.time){
-      // 防重复：同一分钟只推一次
-      var todayKey = bj.toISOString().slice(0,10);
-      if(self._lastNotifDay === todayKey) return;
-      self._lastNotifDay = todayKey;
-      return self.registration.showNotification('囤囤鼠来哩 🐭', {
-        body: cfg.msg || '🐭 今日还没打卡，快来记录资源吧！',
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-        tag: 'tdr-daily',
-        renotify: false,
-        requireInteraction: false,
-        data: { url: self.location.origin }
-      });
-    }
-  }catch(err){ console.warn('[SW-CHECK]', err); }
-}
-
-// ── 协作新消息检测（轮询Supabase） ──
-var _collabLastId = 0;
-function _checkCollabMsgs(){
-  try{
-    var cfg = self._collabCfg;
-    if(!cfg || !cfg.enabled || !cfg.room || !SUPABASE_URL || SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
-    // 拉取比上次更新的新消息
-    var url = SUPABASE_URL + '/rest/v1/announcements?room_code=eq.' + cfg.room
-            + '&order=id.desc&limit=5';
-    return fetch(url, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY
-      }
-    }).then(function(r){ return r.json(); })
-    .then(function(rows){
-      if(!rows || !rows.length) return;
-      var newest = rows[0];
-      if(!_collabLastId){ _collabLastId = newest.id; return; } // 首次只记录基准
-      var newMsgs = rows.filter(function(m){
-        return m.id > _collabLastId
-            && m.sender_name !== cfg.nick  // 不推送自己发的
-            && m.type !== 'system';
-      });
-      if(!newMsgs.length) return;
-      _collabLastId = newest.id;
-      // 推送最新一条
-      var m = newMsgs[0];
-      return self.registration.showNotification('🐭 ' + (m.sender_name||'协作成员') + ' 发布了新公告', {
-        body: m.title || '点击查看详情',
-        icon: '/icon-192.png',
-        tag: 'tdr-collab-' + m.id,
-        data: { url: self.location.origin }
-      });
-    });
-  }catch(err){ console.warn('[SW-COLLAB]', err); }
-}
-
-// ── 点击通知跳转到App ──
-self.addEventListener('notificationclick', function(e){
-  e.notification.close();
-  var target = (e.notification.data && e.notification.data.url) || self.location.origin;
-  e.waitUntil(
-    self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(cls){
-      for(var i=0;i<cls.length;i++){
-        if(cls[i].url.startsWith(target) && 'focus' in cls[i]) return cls[i].focus();
-      }
-      if(self.clients.openWindow) return self.clients.openWindow(target);
-    })
-  );
-});
-
-// ── fetch（离线缓存壳，让PWA可安装） ──
-self.addEventListener('fetch', function(e){
-  // 仅缓存本页面本身，其余透传
-  if(e.request.mode === 'navigate'){
-    e.respondWith(
-      fetch(e.request).catch(function(){
-        return caches.match(e.request);
-      })
-    );
-  }
-});
-`;
-}
-
+// ── 注册 SW（使用同源 sw.js 文件）──
 function registerSW(){
   if(!('serviceWorker' in navigator) || !window.isSecureContext) return;
-
-  // 检测是否已PWA运行
   if(_isPWA()){
     var badge = document.getElementById('pwa-installed-badge');
     if(badge) badge.style.display = 'block';
   }
-
-  // 优先尝试注册外部 sw.js（部署后存在的话）
-  // 如不存在，回退到内嵌Blob SW
-  navigator.serviceWorker.register('./sw.js').then(function(reg){
-    _swReg = reg;
-    clog('SW','注册成功（外部sw.js）scope:', reg.scope);
-    _swSendConfig(reg);
-    _tryRegisterPeriodicSync(reg);
-  }).catch(function(){
-    // sw.js 不存在（本地单文件运行），用Blob内嵌
-    var code = _buildSWCode();
-    var blob = new Blob([code], {type:'application/javascript'});
-    var blobUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(blobUrl, {scope:'./'}).then(function(reg){
+  navigator.serviceWorker.register('/game-tracker/sw.js', { scope: '/game-tracker/' })
+    .then(function(reg){
       _swReg = reg;
-      clog('SW','注册成功（内嵌Blob SW）');
-      _swSendConfig(reg);
-      _tryRegisterPeriodicSync(reg);
-    }).catch(function(e2){
-      clog('SW','Blob注册也失败（scope限制）：'+e2.message);
-      // Blob SW受同源限制，file://下无法使用，给用户提示
-    });
-  });
-
-  // 监听SW消息（可扩展双向通信）
-  navigator.serviceWorker.addEventListener('message', function(e){
-    clog('SW','收到SW消息', e.data);
-  });
+      clog('SW','注册成功');
+      // 发送打卡提醒配置给SW
+      reg.active ? _doSwSendConfig(reg) : reg.addEventListener('updatefound', function(){
+        reg.installing && reg.installing.addEventListener('statechange', function(){
+          if(this.state === 'activated') _doSwSendConfig(reg);
+        });
+      });
+      navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
+    }).catch(function(e){ clog('SW','注册失败:'+e.message); });
 }
 
-// 向SW发送最新配置
-function _swSendConfig(reg){
-  if(!reg || !reg.active) {
-    // SW还没active，等ready再发
-    navigator.serviceWorker.ready.then(function(r){
-      _doSwSendConfig(r);
-    });
-    return;
-  }
-  _doSwSendConfig(reg);
-}
-
+// ── 发送打卡提醒配置到SW ──
 function _doSwSendConfig(reg){
   try{
-    // 打卡提醒配置
     var ns = JSON.parse(localStorage.getItem('tdr_notif')||'{}');
-    reg.active && reg.active.postMessage({type:'SET_NOTIF', cfg:{
-      enabled: !!ns.enabled,
-      time: ns.time||'20:00',
-      msg: ns.msg||'🐭 今日还没打卡哦！'
-    }});
-    // 协作配置
-    var cs = JSON.parse(localStorage.getItem('tdr_collab')||'{}');
-    var collabEnabled = !!localStorage.getItem('tdr_collab_notif_on');
-    reg.active && reg.active.postMessage({type:'SET_COLLAB', cfg:{
-      enabled: collabEnabled,
-      room: cs.room||'',
-      nick: cs.nick||''
-    }});
-    clog('SW','已发送配置到SW');
-  }catch(e){ clog('SW','发配置失败：'+e.message); }
+    if(reg.active){
+      reg.active.postMessage({ type:'SET_NOTIF', cfg:{
+        enabled: !!ns.enabled,
+        time: ns.time || '20:00',
+        msg:  ns.msg  || '🐭 今日还没打卡哦！'
+      }});
+    }
+    clog('SW','配置已同步');
+  }catch(e){ clog('SW','同步配置失败:'+e.message); }
 }
 
-// 尝试注册 PeriodicSync（Chrome 80+安卓支持，可在完全后台唤醒SW）
-function _tryRegisterPeriodicSync(reg){
-  if(!reg.periodicSync) return;
-  reg.periodicSync.register('tdr-daily-check',{minInterval: 60*60*1000}).then(function(){
-    clog('SW','PeriodicSync注册成功（每小时）');
-  }).catch(function(e){
-    clog('SW','PeriodicSync不支持或权限不足：'+e.message);
-  });
-  reg.periodicSync.register('tdr-collab-check',{minInterval: 60*1000}).then(function(){
-    clog('SW','PeriodicSync(collab)注册成功');
-  }).catch(function(e){
-    clog('SW','PeriodicSync(collab)失败：'+e.message);
-  });
+// ════════════════════════════════════════════════════════
+// Web Push 订阅（真正的后台推送，关闭Chrome也能收到）
+// ════════════════════════════════════════════════════════
+
+// 将 base64url 转为 Uint8Array（订阅时需要）
+function _urlBase64ToUint8Array(base64String){
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var raw = window.atob(base64);
+  var arr = new Uint8Array(raw.length);
+  for(var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+// 订阅 Web Push，并把 subscription 存入 Supabase
+async function subscribePush(roomCode, nick){
+  if(!('serviceWorker' in navigator) || !window.isSecureContext){
+    clog('PUSH','环境不支持'); return null;
+  }
+  if(VAPID_PUBLIC_KEY === 'PASTE_YOUR_VAPID_PUBLIC_KEY_HERE'){
+    clog('PUSH','VAPID公钥未配置'); return null;
+  }
+  try{
+    var reg = await navigator.serviceWorker.ready;
+    // 检查是否已订阅
+    var existing = await reg.pushManager.getSubscription();
+    var sub = existing;
+    if(!sub){
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+      clog('PUSH','新建订阅成功');
+    } else {
+      clog('PUSH','复用已有订阅');
+    }
+    // 存入 Supabase push_subscriptions 表
+    if(_sb && roomCode){
+      var subJson = sub.toJSON();
+      // 先删除本设备旧订阅（用endpoint唯一标识）
+      await _sb.from('push_subscriptions').delete().eq('endpoint', subJson.endpoint).eq('room_code', roomCode);
+      var ins = await _sb.from('push_subscriptions').insert({
+        room_code:    roomCode,
+        nick:         nick || '',
+        endpoint:     subJson.endpoint,
+        subscription: subJson
+      });
+      if(ins.error){ clog('PUSH','存储订阅失败:'+ins.error.message); }
+      else { clog('PUSH','订阅已存入Supabase', {room: roomCode}); }
+    }
+    return sub;
+  }catch(e){
+    clog('PUSH','订阅失败:'+e.message);
+    return null;
+  }
+}
+
+// 取消订阅（退出房间时调用）
+async function unsubscribePush(roomCode){
+  try{
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if(sub){
+      var endpoint = sub.endpoint;
+      await sub.unsubscribe();
+      if(_sb && roomCode){
+        await _sb.from('push_subscriptions').delete().eq('endpoint', endpoint).eq('room_code', roomCode);
+      }
+      clog('PUSH','已取消订阅');
+    }
+  }catch(e){ clog('PUSH','取消订阅失败:'+e.message); }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -3529,6 +3425,14 @@ async function collabJoinRoom(){
     await _sb.from('announcements').insert({room_code:code, sender_name:'系统', title:'👋 '+nick+' 加入了房间', content:'', type:'system'});
     clog('COLLAB','加入成功', {roomName: _collabRoomName});
     toast('已加入房间 ' + (_collabRoomName||code) + ' 👋');
+    // 自动订阅 Web Push（加入房间时订阅，关闭Chrome也能收新消息通知）
+    if('Notification' in window && Notification.permission === 'granted'){
+      subscribePush(code, nick);
+    } else if('Notification' in window && Notification.permission !== 'denied'){
+      Notification.requestPermission().then(function(p){
+        if(p === 'granted') subscribePush(code, nick);
+      });
+    }
     rCollabPage();
   }catch(e){ toast('加入失败：' + e.message); clog('COLLAB','加入异常', e.message); }
 }
@@ -3538,6 +3442,8 @@ function collabLeaveRoom(){
   if(!confirm('确定退出当前房间？\n（退出后可通过邀请码重新加入）')) return;
   clog('COLLAB','退出房间', {room:_collabRoom});
   collabUnsubscribe();
+  // 取消 Web Push 订阅
+  unsubscribePush(_collabRoom);
   _collabRoom = null; _collabNick = ''; _collabRoomName = '';
   try{ localStorage.removeItem('tdr_collab'); }catch(e){}
   rCollabPage();
@@ -3947,22 +3853,15 @@ window.onload=function(){
   _dailyCheckDay=today();
   // 迁移旧 base64 图片到 IndexedDB（仅首次需要）
   setTimeout(migrateImagesToIDB, 1500);
-  // v8：注册 Service Worker（内嵌Blob，支持后台推送）
+  // v8：注册 Service Worker（真正的Web Push版本）
   registerSW();
   // v7：初始化 Supabase 协作模块
   initSupabase();
-  // v8：SW注册成功后延迟同步配置（确保SW已active）
+  // SW注册后延迟同步打卡提醒配置
   setTimeout(function(){
-    if(_swReg && _swReg.active){ _doSwSendConfig(_swReg); }
-    else if('serviceWorker' in navigator){
+    if('serviceWorker' in navigator){
       navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
     }
-    // 定期ping SW保持活跃（页面打开时每5分钟一次）
-    setInterval(function(){
-      if('serviceWorker' in navigator && navigator.serviceWorker.controller){
-        navigator.serviceWorker.controller.postMessage({type:'PING'});
-      }
-    }, 5*60*1000);
   }, 2000);
 };
 </script>
