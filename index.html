@@ -3565,14 +3565,17 @@ function collabSubscribe(){
 
 // ⑧ 请求通知权限后发送（类比每日打卡提醒的方式）
 function _requestNotifThenSend(title, body){
-  if(!('Notification' in window)) return;
-  if(Notification.permission === 'granted'){
-    _sendNotifCompat(title, body, null);
-  } else if(Notification.permission !== 'denied'){
-    Notification.requestPermission().then(function(p){
-      if(p === 'granted') _sendNotifCompat(title, body, null);
-    });
-  }
+  if (!_ntfyTopic) return;
+  fetch(NTFY_SERVER + '/' + _ntfyTopic, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain',
+      'Title': encodeURIComponent(title),   // ✅ 编码
+      'Priority': 'default',
+      'Tags': 'hamster'
+    },
+    body: body
+  }).catch(e => console.warn('ntfy send error', e));
 }
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
