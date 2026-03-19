@@ -2994,12 +2994,17 @@ function testNtfy(){
   if(!_ntfyTopic){ toast('请先设置 ntfy 频道名'); return; }
   fetch(NTFY_SERVER + '/' + _ntfyTopic, {
     method: 'POST',
-    headers: { 'Title': '囤囤鼠来哩 🐭', 'Priority': 'default', 'Tags': 'hamster' },
+    headers: {
+      'Content-Type': 'text/plain',
+      'Title': '囤囤鼠来哩 🐭',
+      'Priority': 'default',
+      'Tags': 'hamster'
+    },
     body: '这是一条测试通知，推送成功！'
   }).then(function(r){
     if(r.ok) toast('测试通知已发送，请查看ntfy App 🔔');
-    else toast('发送失败，请检查频道名');
-  }).catch(function(){ toast('发送失败，请检查网络'); });
+    else r.text().then(function(t){ toast('发送失败：'+t); });
+  }).catch(function(e){ toast('发送失败：'+e.message); });
 }
 
 // saveNotifSettings 同步每日提醒到服务器
