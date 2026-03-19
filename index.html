@@ -3112,8 +3112,17 @@ function downloadShareCard(){
 
 var _swReg = null;
 var _pwaInstallPrompt = null;
-// VAPID 公钥（执行 npx web-push generate-vapid-keys 后填入）
-var VAPID_PUBLIC_KEY = 'BIeGxkrMHgJKIaQUd4WDfjR8dRByNpUpTs1D45L-N0TYEUzNnF-jh3TbUI-blknXfNq2adjE2UAdTldsc8OKe7s';
+
+// ── Firebase 配置 ──
+var FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDnNUPSE_fgstbSyVR_jF3VYmBWrPGQC5E",
+  authDomain:        "game-tracker-3bf3c.firebaseapp.com",
+  projectId:         "game-tracker-3bf3c",
+  storageBucket:     "game-tracker-3bf3c.firebasestorage.app",
+  messagingSenderId: "313949070131",
+  appId:             "1:313949070131:web:ee81afb7b9f9b07524d446"
+};
+var FIREBASE_VAPID_KEY = "BL5p0sXPAaSSAZXCEVpnL_GM6hpB5K5Qupb085uGVa_V2Ba7l53O9smqMADL5zfesb33WU50JHUCI0rVB61ChIE";
 
 // PWA 安装提示
 window.addEventListener('beforeinstallprompt', function(e){
@@ -3147,7 +3156,7 @@ function _isPWA(){
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
-// ── 注册 SW（使用同源 sw.js 文件）──
+// ── 注册 SW ──
 function registerSW(){
   if(!('serviceWorker' in navigator) || !window.isSecureContext) return;
   if(_isPWA()){
@@ -3158,12 +3167,6 @@ function registerSW(){
     .then(function(reg){
       _swReg = reg;
       clog('SW','注册成功');
-      // 发送打卡提醒配置给SW
-      reg.active ? _doSwSendConfig(reg) : reg.addEventListener('updatefound', function(){
-        reg.installing && reg.installing.addEventListener('statechange', function(){
-          if(this.state === 'activated') _doSwSendConfig(reg);
-        });
-      });
       navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
     }).catch(function(e){ clog('SW','注册失败:'+e.message); });
 }
@@ -3184,103 +3187,117 @@ function _doSwSendConfig(reg){
 }
 
 // ════════════════════════════════════════════════════════
-// Web Push 订阅（真正的后台推送，关闭Chrome也能收到）
+// Firebase Cloud Messaging 推送订阅
 // ════════════════════════════════════════════════════════
 
-// 将 base64url 转为 Uint8Array（订阅时需要）
-function _urlBase64ToUint8Array(base64String){
-  var padding = '='.repeat((4 - base64String.length % 4) % 4);
-  var base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  var raw = window.atob(base64);
-  var arr = new Uint8Array(raw.length);
-  for(var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-  return arr;
+var _fcmToken = null; // 当前设备的FCM token
+
+// 初始化 Firebase 并获取 FCM token
+async function initFCM(){
+  if(FIREBASE_VAPID_KEY === 'PASTE_VAPID_KEY_HERE'){
+    clog('FCM','Firebase未配置，跳过'); return;
+  }
+  if(!('serviceWorker' in navigator) || !window.isSecureContext){
+    clog('FCM','环境不支持'); return;
+  }
+  try{
+    // 动态加载 Firebase SDK
+    await _loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+    await _loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    var messaging = firebase.messaging();
+
+    // 请求通知权限
+    var permission = await Notification.requestPermission();
+    if(permission !== 'granted'){
+      clog('FCM','通知权限被拒绝'); return;
+    }
+
+    // 获取 FCM token
+    var swReg = await navigator.serviceWorker.ready;
+    var token = await messaging.getToken({
+      vapidKey: FIREBASE_VAPID_KEY,
+      serviceWorkerRegistration: swReg
+    });
+
+    if(token){
+      _fcmToken = token;
+      clog('FCM','获取token成功', {token: token.slice(0,20)+'...'});
+      // 前台收到消息时的处理
+      messaging.onMessage(function(payload){
+        clog('FCM','前台收到消息', payload);
+        // 前台时用SW显示通知
+        swReg.showNotification(payload.notification.title, {
+          body:  payload.notification.body,
+          icon:  '/game-tracker/icon-192.png',
+          badge: '/game-tracker/icon-192.png',
+          data:  { url: 'https://muf07-source.github.io/game-tracker/index.html' }
+        });
+      });
+    }
+  }catch(e){
+    clog('FCM','初始化失败:'+e.message);
+  }
 }
 
-// 统一入口：确保已订阅推送（处理权限申请+重试）
+function _loadScript(src){
+  return new Promise(function(resolve, reject){
+    if(document.querySelector('script[src="'+src+'"]')){ resolve(); return; }
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// 统一入口：确保已订阅推送
 function _ensurePushSubscribed(roomCode, nick){
-  if(!('serviceWorker' in navigator) || !window.isSecureContext){
-    clog('PUSH','环境不支持推送'); return;
-  }
-  if(VAPID_PUBLIC_KEY === 'PASTE_YOUR_VAPID_PUBLIC_KEY_HERE'){
-    clog('PUSH','VAPID公钥未配置'); return;
-  }
-  if(!('Notification' in window)){ clog('PUSH','不支持通知'); return; }
+  if(!('Notification' in window)){ clog('FCM','不支持通知'); return; }
+  if(FIREBASE_VAPID_KEY === 'PASTE_VAPID_KEY_HERE'){ clog('FCM','未配置'); return; }
 
   if(Notification.permission === 'granted'){
-    subscribePush(roomCode, nick);
+    _doFCMSubscribe(roomCode, nick);
   } else if(Notification.permission !== 'denied'){
     Notification.requestPermission().then(function(p){
-      if(p === 'granted'){
-        subscribePush(roomCode, nick);
-      } else {
-        clog('PUSH','用户拒绝通知权限');
-        toast('未授权通知，将无法收到离线推送');
-      }
+      if(p === 'granted') _doFCMSubscribe(roomCode, nick);
+      else toast('未授权通知，将无法收到离线推送');
     });
   } else {
-    clog('PUSH','通知权限已被拒绝');
-    toast('通知权限被拒绝，请在浏览器设置中手动开启');
+    toast('通知权限被拒绝，请在Chrome设置中手动开启');
   }
 }
 
-// 订阅 Web Push，并把 subscription 存入 Supabase
-async function subscribePush(roomCode, nick){
-  if(!('serviceWorker' in navigator) || !window.isSecureContext){
-    clog('PUSH','环境不支持'); return null;
-  }
-  if(VAPID_PUBLIC_KEY === 'PASTE_YOUR_VAPID_PUBLIC_KEY_HERE'){
-    clog('PUSH','VAPID公钥未配置'); return null;
-  }
+async function _doFCMSubscribe(roomCode, nick){
   try{
-    var reg = await navigator.serviceWorker.ready;
-    // 检查是否已订阅
-    var existing = await reg.pushManager.getSubscription();
-    var sub = existing;
-    if(!sub){
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: _urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
-      clog('PUSH','新建订阅成功');
-    } else {
-      clog('PUSH','复用已有订阅');
-    }
-    // 存入 Supabase push_subscriptions 表
-    if(_sb && roomCode){
-      var subJson = sub.toJSON();
-      // 先删除本设备旧订阅（用endpoint唯一标识）
-      await _sb.from('push_subscriptions').delete().eq('endpoint', subJson.endpoint).eq('room_code', roomCode);
-      var ins = await _sb.from('push_subscriptions').insert({
-        room_code:    roomCode,
-        nick:         nick || '',
-        endpoint:     subJson.endpoint,
-        subscription: subJson
-      });
-      if(ins.error){ clog('PUSH','存储订阅失败:'+ins.error.message); }
-      else { clog('PUSH','订阅已存入Supabase', {room: roomCode}); }
-    }
-    return sub;
-  }catch(e){
-    clog('PUSH','订阅失败:'+e.message);
-    return null;
-  }
+    // 如果还没有token，先初始化FCM
+    if(!_fcmToken) await initFCM();
+    if(!_fcmToken){ clog('FCM','无token，订阅失败'); return; }
+
+    if(!_sb || !roomCode){ clog('FCM','Supabase未就绪'); return; }
+
+    // 先删除本设备旧记录
+    await _sb.from('push_subscriptions').delete().eq('fcm_token', _fcmToken).eq('room_code', roomCode);
+    // 存入新记录
+    var ins = await _sb.from('push_subscriptions').insert({
+      room_code:  roomCode,
+      nick:       nick || '',
+      fcm_token:  _fcmToken
+    });
+    if(ins.error){ clog('FCM','存储token失败:'+ins.error.message); }
+    else { clog('FCM','token已存入Supabase', {room: roomCode}); toast('推送已激活 🔔'); }
+  }catch(e){ clog('FCM','订阅失败:'+e.message); }
 }
 
-// 取消订阅（退出房间时调用）
+// 退出房间时删除订阅
 async function unsubscribePush(roomCode){
   try{
-    var reg = await navigator.serviceWorker.ready;
-    var sub = await reg.pushManager.getSubscription();
-    if(sub){
-      var endpoint = sub.endpoint;
-      await sub.unsubscribe();
-      if(_sb && roomCode){
-        await _sb.from('push_subscriptions').delete().eq('endpoint', endpoint).eq('room_code', roomCode);
-      }
-      clog('PUSH','已取消订阅');
+    if(_sb && _fcmToken && roomCode){
+      await _sb.from('push_subscriptions').delete().eq('fcm_token', _fcmToken).eq('room_code', roomCode);
+      clog('FCM','已删除订阅');
     }
-  }catch(e){ clog('PUSH','取消订阅失败:'+e.message); }
+  }catch(e){ clog('FCM','取消订阅失败:'+e.message); }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -3878,21 +3895,23 @@ window.onload=function(){
   _dailyCheckDay=today();
   // 迁移旧 base64 图片到 IndexedDB（仅首次需要）
   setTimeout(migrateImagesToIDB, 1500);
-  // v8：注册 Service Worker（真正的Web Push版本）
+  // 注册 Service Worker
   registerSW();
-  // v7：初始化 Supabase 协作模块
+  // 初始化 Supabase 协作模块
   initSupabase();
-  // SW注册后延迟同步打卡提醒配置
-  // 同时：如果已经在房间里，自动补订阅推送（防止订阅丢失）
+  // 延迟初始化：SW配置同步 + FCM初始化 + 自动补订阅
   setTimeout(function(){
     if('serviceWorker' in navigator){
       navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
     }
-    // 已在房间则自动补订阅
-    if(_collabRoom && _collabNick){
-      clog('PUSH','启动时检测到已在房间，自动补订阅');
-      _ensurePushSubscribed(_collabRoom, _collabNick);
-    }
+    // 初始化 Firebase FCM
+    initFCM().then(function(){
+      // 如果已在房间，自动补订阅
+      if(_collabRoom && _collabNick){
+        clog('FCM','启动时自动补订阅');
+        _doFCMSubscribe(_collabRoom, _collabNick);
+      }
+    });
   }, 2500);
 };
 </script>
