@@ -469,7 +469,13 @@ select.fi{-webkit-appearance:none;appearance:none}
     </div>
     <div class="dvtog">
       <button class="dvbtn on" id="dvg" onclick="setDV('acct')">本账号</button>
-      <button class="dvbtn" id="dva" onclick="setDV('all')">全部</button></div>
+      <button class="dvbtn" id="dva" onclick="setDV('all')">全部</button>
+    </div>
+    <!-- 本账号视图：账号选择器 -->
+    <div id="diary-acct-bar" style="padding:8px 20px 0;display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--text3);font-weight:700;flex-shrink:0">查看账号：</span>
+      <select class="fi" id="diary-view-acct" onchange="rDiary()" style="flex:1;padding:7px 10px;font-size:13px"></select>
+    </div>
     <div class="tagrow" id="tagrow"></div>
     <div class="dlist" id="dlist"></div>
   </div>
@@ -1047,18 +1053,20 @@ function exportData(){toast('正在打包图片数据，请稍候…');
   }
   if(!idbRefs.length){
     // 没有 IDB 图片，直接导出
-    _doExportJSON(state, {});
+_doExportJSON(JSON.parse(JSON.stringify(state)), {});
     return;
   }
   // 从 IndexedDB 读取所有图片
+  // 去重，避免重复读同一张图片导致 pending 计数错误
+  var uniqueRefs = idbRefs.filter(function(v,i,a){return a.indexOf(v)===i;});
   var imgBundle = {};
-  var pending = idbRefs.length;
-  idbRefs.forEach(function(ref){
+  var pending = uniqueRefs.length;
+  uniqueRefs.forEach(function(ref){
     var key = idbKey(ref);
     idbGet(key, function(err, data){
       if(data) imgBundle[key] = data;
       pending--;
-      if(pending === 0) _doExportJSON(state, imgBundle);
+      if(pending === 0) _doExportJSON(JSON.parse(JSON.stringify(state)), imgBundle);
     });
   });
 }
@@ -2345,12 +2353,54 @@ var viewDid=null;
 
 function setDV(v){dView=v;document.getElementById('dvg').classList.toggle('on',v==='acct');document.getElementById('dva').classList.toggle('on',v==='all');rDiary();}
 function rDiary(){
+  // 本账号视图：填充并显示账号选择器
+  var acctBar = document.getElementById('diary-acct-bar');
+  var acctSel = document.getElementById('diary-view-acct');
+  if(dView === 'acct'){
+    if(acctBar) acctBar.style.display = 'flex';
+    if(acctSel){
+      // 每次重绘都重新填充（游戏/账号可能有变化），保留已选项
+      var prevVal = acctSel.value;
+      acctSel.innerHTML = '';
+      var hasSelected = false;
+      for(var gi=0;gi<state.games.length;gi++){
+        var g=state.games[gi];
+        var aa=g.accounts||[];
+        if(!aa.length) continue;
+        var grp=document.createElement('optgroup');
+        grp.label=g.name;
+        for(var ai=0;ai<aa.length;ai++){
+          var opt=document.createElement('option');
+          opt.value=aa[ai].id;
+          opt.setAttribute('data-gid',g.id);
+          opt.textContent=aa[ai].name;
+          if(aa[ai].id===prevVal||(aa[ai].id===curAid&&!hasSelected&&!prevVal)){
+            opt.selected=true; hasSelected=true;
+          }
+          grp.appendChild(opt);
+        }
+        acctSel.appendChild(grp);
+      }
+    }
+  } else {
+    if(acctBar) acctBar.style.display = 'none';
+  }
+
   var tf=document.getElementById('tagrow'),th='<button class="tchip'+(dTag===''?' on':'')+'" onclick="setDT(\'\')">全部</button>';
   for(var i=0;i<DTAGS.length;i++)th+='<button class="tchip'+(dTag===DTAGS[i]?' on':'')+'" onclick="setDT(\''+DTAGS[i]+'\')">'+DTAGS[i]+'</button>';
   tf.innerHTML=th;
+
   var entries=[];
-  if(dView==='acct'){var a=A();if(a){var d=a.diary||[];for(var i=0;i<d.length;i++)entries.push(d[i]);}}
-  else{for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++)entries.push(d[k]);}}}
+  if(dView==='acct'){
+    // 从选择器读取目标账号
+    var selOpt = acctSel&&acctSel.selectedOptions&&acctSel.selectedOptions[0];
+    var selGid = selOpt ? selOpt.getAttribute('data-gid') : null;
+    var selAid = acctSel ? acctSel.value : '';
+    var a = (selGid&&selAid) ? A(selGid,selAid) : A();
+    if(a){var d=a.diary||[];for(var i=0;i<d.length;i++)entries.push(d[i]);}
+  } else {
+    for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++)entries.push(d[k]);}}
+  }
   if(dTag)entries=entries.filter(function(e){return e.tag===dTag;});
   entries.sort(function(a,b){return b.date.localeCompare(a.date);});
   var el=document.getElementById('dlist');
