@@ -1,0 +1,26 @@
+{
+  "name": "囤囤鼠来哩",
+  "short_name": "囤囤鼠",
+  "description": "游戏资源管理 & 多人协作工具",
+  "start_url": "/game-tracker/index.html",
+  "scope": "/game-tracker/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F5F0",
+  "theme_color": "#6B9E78",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/game-tracker/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/game-tracker/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
