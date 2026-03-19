@@ -397,7 +397,7 @@ select.fi{-webkit-appearance:none;appearance:none}
       <div class="hdr-right">
         <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☾</button>
         <button class="theme-btn" onclick="showM('m-data')" title="设置" style="font-size:14px">⚙</button>
-        <button class="btn bp bsm" onclick="showM('m-addtask')">＋ 任务</button>
+        <button class="btn bp bsm" onclick="openAddTask()">＋ 任务</button>
       </div>
     </div>
     <div class="tabs" id="task-gtabs"></div>
@@ -669,19 +669,41 @@ select.fi{-webkit-appearance:none;appearance:none}
     </div>
   </div>
 
-  <!-- 添加任务 -->
+  <!-- 添加/编辑任务 -->
   <div class="mover" id="m-addtask" onclick="bgC(event,'m-addtask')">
     <div class="mbox">
       <div class="m-handle"></div>
-      <div class="mhdr"><div class="mtitle">添加任务</div><button class="mclose" onclick="hideM('m-addtask')">×</button></div>
+      <div class="mhdr"><div class="mtitle" id="addtask-title">添加任务</div><button class="mclose" onclick="hideM('m-addtask')">×</button></div>
       <div class="mbody">
         <div class="fg"><label class="fl">任务内容</label><input class="fi" id="nt-text" placeholder="例如：完成每日委托"></div>
-        <div class="togrow">
-          <div><div style="font-size:14px;font-weight:600">每日自动重置</div><div style="font-size:11px;color:var(--text3);margin-top:2px">每天打开自动重置为未完成</div></div>
-          <button class="tog on" id="nt-daily" onclick="this.classList.toggle('on')"></button>
+        <!-- 重置周期选择 -->
+        <div class="fg">
+          <label class="fl">重置周期</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px" id="nt-reset-btns">
+            <button class="btn bg bsm nt-rb on" data-reset="none" onclick="ntSelReset(this,'none')">不重置</button>
+            <button class="btn bg bsm nt-rb" data-reset="daily" onclick="ntSelReset(this,'daily')">每天</button>
+            <button class="btn bg bsm nt-rb" data-reset="weekly" onclick="ntSelReset(this,'weekly')">每周</button>
+            <button class="btn bg bsm nt-rb" data-reset="monthly" onclick="ntSelReset(this,'monthly')">每月</button>
+            <button class="btn bg bsm nt-rb" data-reset="custom" onclick="ntSelReset(this,'custom')">自定义天数</button>
+          </div>
+          <div id="nt-custom-days-row" style="display:none;margin-top:8px">
+            <input class="fi" type="number" id="nt-custom-days" placeholder="几天重置一次（如：3）" min="1" max="365" style="width:100%">
+          </div>
         </div>
-        <div style="height:10px"></div>
-        <button class="btn bp bfull" onclick="doAddTask()">添加任务</button>
+        <input type="hidden" id="nt-reset-mode" value="none">
+        <input type="hidden" id="nt-edit-id">
+        <!-- 同步到该游戏所有账号 -->
+        <div class="togrow">
+          <div><div style="font-size:13px;font-weight:600">同步到该游戏所有账号</div><div style="font-size:11px;color:var(--text3);margin-top:2px">开启后，所有账号都会添加这个任务</div></div>
+          <button class="tog" id="nt-sync-all" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <!-- 分享到协作房间 -->
+        <div class="togrow" id="nt-share-row" style="display:none">
+          <div><div style="font-size:13px;font-weight:600">分享到协作房间</div><div style="font-size:11px;color:var(--text3);margin-top:2px">房间成员可选择同步到自己的游戏</div></div>
+          <button class="tog" id="nt-share-collab" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div style="height:6px"></div>
+        <button class="btn bp bfull" onclick="doAddTask()">保存任务</button>
       </div>
     </div>
   </div>
@@ -770,11 +792,19 @@ select.fi{-webkit-appearance:none;appearance:none}
       <div class="mhdr"><div class="mtitle">🎨 主题自定义</div><button class="mclose" onclick="hideM('m-theme')">×</button></div>
       <div class="mbody">
         <div class="theme-section">
-          <div class="theme-section-title">主题色</div>
+          <div class="theme-section-title">主题色（强调色）</div>
           <div class="color-presets" id="theme-color-presets"></div>
           <div class="fg" style="margin-top:10px">
-            <label class="fl">自定义颜色</label>
+            <label class="fl">自定义强调色</label>
             <input type="color" class="fi" id="theme-custom-color" value="#8BA995" style="padding:5px;height:44px;cursor:pointer" onchange="applyThemeColor(this.value)">
+          </div>
+        </div>
+        <div class="theme-section" style="margin-top:4px">
+          <div class="theme-section-title">背景色方案</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="theme-bg-presets"></div>
+          <div class="fg">
+            <label class="fl">自定义背景色（主背景）</label>
+            <input type="color" class="fi" id="theme-custom-bg" value="#F6F5F0" style="padding:5px;height:44px;cursor:pointer" onchange="applyCustomBg(this.value)">
           </div>
         </div>
         <div class="theme-section" style="margin-top:4px">
@@ -783,11 +813,14 @@ select.fi{-webkit-appearance:none;appearance:none}
             <input type="range" class="opacity-slider" id="opacity-slider" min="0.4" max="1" step="0.05" value="1" oninput="applyCardOpacity(this.value)">
             <span class="opacity-val" id="opacity-val">100%</span>
           </div>
-          <div style="font-size:11px;color:var(--text3);margin-top:6px">降低透明度可让卡片呈现毛玻璃感（深色模式更明显）</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px">降低透明度可让卡片呈现毛玻璃感</div>
         </div>
         <div class="theme-section" style="margin-top:4px;padding-bottom:10px">
           <div class="theme-section-title">预设配色方案</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px" id="theme-schemes"></div>
+        </div>
+        <div class="theme-section" style="margin-top:4px;padding-bottom:10px">
+          <button class="btn bg bfull bsm" onclick="resetTheme()">↺ 恢复默认主题</button>
         </div>
       </div>
     </div>
@@ -1359,12 +1392,6 @@ function fmtD(d){var dt=new Date(d+'T00:00:00');return (dt.getMonth()+1)+'月'+d
 function bjNow(){return bjDate();}
 function G(gid){var id=gid||curGid;for(var i=0;i<state.games.length;i++)if(state.games[i].id===id)return state.games[i];return null;}
 function A(gid,aid){var g=G(gid);if(!g)return null;var aa=g.accounts||[];for(var i=0;i<aa.length;i++)if(aa[i].id===(aid||curAid))return aa[i];return null;}
-function resetDaily(){
-  var t=today();
-  var changed=false;
-  for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var ts=aa[j].tasks||[];for(var k=0;k<ts.length;k++){if(ts[k].isDaily&&ts[k].lastReset!==t){ts[k].isDone=false;ts[k].lastReset=t;changed=true;}}}}
-  if(changed){saveData();if(curPage==='task')rTasks();}
-}
 // ── 跨天自动检测（每分钟检查一次）──
 var _dailyCheckDay='';
 setInterval(function(){
@@ -1873,38 +1900,239 @@ function onAcctAvatarPick(ev){
   };r.readAsDataURL(f);ev.target.value='';
 }
 
-// ── TASKS ──
+// ── TASKS v9 ──
+// resetMode: 'none'|'daily'|'weekly'|'monthly'|'custom'
+// customDays: number (用于custom模式)
+// lastReset: 'YYYY-MM-DD' 上次重置日期
+function _taskNeedsReset(t){
+  var mode=t.resetMode||( t.isDaily?'daily':'none' );
+  if(mode==='none') return false;
+  var lr=t.lastReset||'';
+  var td=today();
+  if(!lr||lr===td) return false;
+  if(mode==='daily') return true;
+  if(mode==='weekly'){
+    var a=new Date(lr+'T00:00:00'),b=new Date(td+'T00:00:00');
+    var diff=Math.round((b-a)/86400000);
+    return diff>=7;
+  }
+  if(mode==='monthly'){
+    var a2=new Date(lr+'T00:00:00'),b2=new Date(td+'T00:00:00');
+    return b2.getMonth()!==a2.getMonth()||b2.getFullYear()!==a2.getFullYear();
+  }
+  if(mode==='custom'){
+    var days=parseInt(t.customDays)||1;
+    var a3=new Date(lr+'T00:00:00'),b3=new Date(td+'T00:00:00');
+    var diff2=Math.round((b3-a3)/86400000);
+    return diff2>=days;
+  }
+  return false;
+}
+
+function resetDaily(){
+  var changed=false;
+  for(var i=0;i<state.games.length;i++){
+    var aa=state.games[i].accounts||[];
+    for(var j=0;j<aa.length;j++){
+      var ts=aa[j].tasks||[];
+      for(var k=0;k<ts.length;k++){
+        if(_taskNeedsReset(ts[k])){
+          ts[k].isDone=false;ts[k].lastReset=today();changed=true;
+        }
+      }
+    }
+  }
+  if(changed){saveData();if(curPage==='task')rTasks();}
+}
+
+function _resetLabel(t){
+  var mode=t.resetMode||(t.isDaily?'daily':'none');
+  if(mode==='none') return '一次';
+  if(mode==='daily') return '每天';
+  if(mode==='weekly') return '每周';
+  if(mode==='monthly') return '每月';
+  if(mode==='custom') return (t.customDays||'?')+'天';
+  return '一次';
+}
+
 function rTasks(){
   document.getElementById('task-date').textContent=today();
   var el=document.getElementById('tasklist'),g=G(),a=A();
   if(!g){el.innerHTML='<div class="empty"><div class="ei">📦</div><div class="et">请先添加游戏</div></div>';return;}
   if(!a){el.innerHTML='<div class="empty"><div class="ei">👤</div><div class="et">请先添加账号</div></div>';return;}
   var tasks=a.tasks||[];
-  if(!tasks.length){el.innerHTML='<div class="empty"><div class="ei">✓</div><div class="et">没有任务，点右上角添加</div></div>';return;}
-  var daily=[],once=[];
-  for(var i=0;i<tasks.length;i++){if(tasks[i].isDaily)daily.push(tasks[i]);else once.push(tasks[i]);}
+  if(!tasks.length){el.innerHTML='<div class="empty"><div class="ei">✓</div><div class="et">没有任务<br><span style="font-size:12px">点右上角 ＋任务 添加</span></div></div>';return;}
+  // 分组：有重置周期的 vs 一次性
+  var cycled=[],once=[];
+  for(var i=0;i<tasks.length;i++){
+    var mode=tasks[i].resetMode||(tasks[i].isDaily?'daily':'none');
+    if(mode!=='none') cycled.push(tasks[i]); else once.push(tasks[i]);
+  }
   var h='';
-  if(daily.length){h+='<div class="sec-h">每日任务</div>';for(var i=0;i<daily.length;i++)h+=tH(daily[i]);}
+  if(cycled.length){h+='<div class="sec-h">循环任务</div>';for(var i=0;i<cycled.length;i++)h+=tH(cycled[i]);}
   if(once.length){h+='<div class="sec-h">一次性任务</div>';for(var i=0;i<once.length;i++)h+=tH(once[i]);}
   el.innerHTML=h;
 }
-function tH(t){return '<div class="titem"><div class="tcheck'+(t.isDone?' on':'')+'" onclick="togTask(\''+t.id+'\')">'+(t.isDone?'✓':'')+'</div><div class="ttxt'+(t.isDone?' done':'')+'">'+t.text+'</div><span class="tbadge '+(t.isDaily?'tbdaily':'tbonce')+'">'+(t.isDaily?'每日':'一次')+'</span><button class="tdel" onclick="delTask(\''+t.id+'\')">×</button></div>';}
+
+function tH(t){
+  var label=_resetLabel(t);
+  var badgeClass=(label==='一次')?'tbonce':'tbdaily';
+  return '<div class="titem">'
+    +'<div class="tcheck'+(t.isDone?' on':'')+'" onclick="togTask(\''+t.id+'\')">'+(t.isDone?'✓':'')+'</div>'
+    +'<div class="ttxt'+(t.isDone?' done':'')+'" onclick="openEditTask(\''+t.id+'\')">'+t.text+'</div>'
+    +'<span class="tbadge '+badgeClass+'">'+label+'</span>'
+    +'<button class="tdel" onclick="delTask(\''+t.id+'\')">×</button>'
+    +'</div>';
+}
+
 function togTask(id){
   var a=A();if(!a)return;var tasks=a.tasks||[];
   for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){tasks[i].isDone=!tasks[i].isDone;break;}}
-  saveData();rTasks();var undone=0;for(var i=0;i<tasks.length;i++){if(!tasks[i].isDone)undone++;}
-  if(undone===0&&tasks.length>0){toast('全部完成！跳转记录资源');setTimeout(function(){openLogFor(curGid,curAid);},900);}
-}
-function delTask(id){var a=A();if(!a)return;a.tasks=a.tasks.filter(function(t){return t.id!==id;});saveData();rTasks();}
-function doAddTask(){
-  var a=A();if(!a){toast('请先选择账号');return;}
-  var text=document.getElementById('nt-text').value.trim();if(!text){toast('请输入任务内容');return;}
-  var isDaily=document.getElementById('nt-daily').classList.contains('on');
-  if(!a.tasks)a.tasks=[];a.tasks.push({id:uid(),text:text,isDone:false,isDaily:isDaily,lastReset:today()});
-  saveData();hideM('m-addtask');document.getElementById('nt-text').value='';rTasks();toast('任务已添加');
+  saveData();rTasks();
+  var undone=0;for(var i=0;i<tasks.length;i++){if(!tasks[i].isDone)undone++;}
+  if(undone===0&&tasks.length>0){toast('全部完成！');setTimeout(function(){openLogFor(curGid,curAid);},900);}
 }
 
-// ── LOGS ──
+function delTask(id){
+  var a=A();if(!a)return;
+  a.tasks=a.tasks.filter(function(t){return t.id!==id;});
+  saveData();rTasks();toast('已删除');
+}
+
+// 重置周期按钮选择
+function ntSelReset(btn, mode){
+  document.querySelectorAll('.nt-rb').forEach(function(b){b.classList.remove('on','bp');b.classList.add('bg');});
+  btn.classList.add('on','bp');btn.classList.remove('bg');
+  document.getElementById('nt-reset-mode').value=mode;
+  document.getElementById('nt-custom-days-row').style.display=(mode==='custom')?'block':'none';
+}
+
+// 打开添加任务Modal
+function openAddTask(){
+  document.getElementById('addtask-title').textContent='添加任务';
+  document.getElementById('nt-text').value='';
+  document.getElementById('nt-edit-id').value='';
+  document.getElementById('nt-custom-days').value='';
+  document.getElementById('nt-custom-days-row').style.display='none';
+  document.getElementById('nt-sync-all').classList.remove('on');
+  document.getElementById('nt-share-collab').classList.remove('on');
+  // 默认选择"每天"
+  document.querySelectorAll('.nt-rb').forEach(function(b){b.classList.remove('on','bp');b.classList.add('bg');});
+  var dailyBtn=document.querySelector('[data-reset="daily"]');
+  if(dailyBtn){dailyBtn.classList.add('on','bp');dailyBtn.classList.remove('bg');}
+  document.getElementById('nt-reset-mode').value='daily';
+  // 如果已加入协作房间则显示分享选项
+  document.getElementById('nt-share-row').style.display=(_sbReady&&_collabRoom)?'flex':'none';
+  showM('m-addtask');
+}
+
+// 打开编辑任务Modal
+function openEditTask(id){
+  var a=A();if(!a)return;
+  var t=null;for(var i=0;i<(a.tasks||[]).length;i++){if(a.tasks[i].id===id){t=a.tasks[i];break;}}
+  if(!t)return;
+  document.getElementById('addtask-title').textContent='编辑任务';
+  document.getElementById('nt-text').value=t.text;
+  document.getElementById('nt-edit-id').value=t.id;
+  var mode=t.resetMode||(t.isDaily?'daily':'none');
+  document.getElementById('nt-reset-mode').value=mode;
+  document.querySelectorAll('.nt-rb').forEach(function(b){b.classList.remove('on','bp');b.classList.add('bg');});
+  var selBtn=document.querySelector('[data-reset="'+mode+'"]');
+  if(selBtn){selBtn.classList.add('on','bp');selBtn.classList.remove('bg');}
+  document.getElementById('nt-custom-days-row').style.display=(mode==='custom')?'block':'none';
+  document.getElementById('nt-custom-days').value=t.customDays||'';
+  document.getElementById('nt-sync-all').classList.remove('on');
+  document.getElementById('nt-share-collab').classList.remove('on');
+  document.getElementById('nt-share-row').style.display=(_sbReady&&_collabRoom)?'flex':'none';
+  showM('m-addtask');
+}
+
+function doAddTask(){
+  var g=G(),a=A();if(!a){toast('请先选择账号');return;}
+  var text=document.getElementById('nt-text').value.trim();if(!text){toast('请输入任务内容');return;}
+  var mode=document.getElementById('nt-reset-mode').value||'none';
+  var customDays=parseInt(document.getElementById('nt-custom-days').value)||0;
+  var syncAll=document.getElementById('nt-sync-all').classList.contains('on');
+  var shareCollab=document.getElementById('nt-share-collab').classList.contains('on');
+  var editId=document.getElementById('nt-edit-id').value;
+
+  var taskObj={
+    id: editId||uid(),
+    text: text,
+    isDone: false,
+    resetMode: mode,
+    isDaily: mode==='daily', // 兼容旧字段
+    customDays: mode==='custom'?customDays:undefined,
+    lastReset: today()
+  };
+
+  if(editId){
+    // 编辑模式：只更新当前账号的该任务
+    var tasks=a.tasks||[];
+    for(var i=0;i<tasks.length;i++){
+      if(tasks[i].id===editId){
+        tasks[i].text=taskObj.text;
+        tasks[i].resetMode=taskObj.resetMode;
+        tasks[i].isDaily=taskObj.isDaily;
+        tasks[i].customDays=taskObj.customDays;
+        break;
+      }
+    }
+    if(syncAll&&g){
+      // 同步到所有账号（更新同id的任务）
+      var aa=g.accounts||[];
+      for(var j=0;j<aa.length;j++){
+        if(aa[j].id===a.id) continue;
+        var at=aa[j].tasks||[];
+        for(var k=0;k<at.length;k++){
+          if(at[k].id===editId){
+            at[k].text=taskObj.text;at[k].resetMode=taskObj.resetMode;
+            at[k].isDaily=taskObj.isDaily;at[k].customDays=taskObj.customDays;
+          }
+        }
+      }
+    }
+    toast('任务已更新');
+  } else {
+    // 新建模式
+    if(!a.tasks)a.tasks=[];
+    a.tasks.push(taskObj);
+    if(syncAll&&g){
+      var aa2=g.accounts||[];
+      for(var j2=0;j2<aa2.length;j2++){
+        if(aa2[j2].id===a.id) continue;
+        if(!aa2[j2].tasks)aa2[j2].tasks=[];
+        aa2[j2].tasks.push(Object.assign({},taskObj,{id:uid()}));
+      }
+      toast('任务已添加（已同步'+g.accounts.length+'个账号）');
+    } else {
+      toast('任务已添加');
+    }
+  }
+
+  saveData();hideM('m-addtask');rTasks();
+
+  // 分享到协作房间
+  if(shareCollab&&_sbReady&&_collabRoom&&_sb){
+    _sb.from('announcements').insert({
+      room_code:_collabRoom,
+      sender_name:_collabNick||'匿名',
+      title:'📋 分享任务：'+text,
+      content:'重置周期：'+_resetLabelFromMode(mode,customDays)+(syncAll?'（已同步'+g.accounts.length+'个账号）':''),
+      type:'share_task',
+      extra_json:{taskText:text,resetMode:mode,customDays:customDays}
+    }).then(function(r){ if(!r.error) toast('任务已分享到协作房间 📢'); });
+  }
+}
+
+function _resetLabelFromMode(mode,customDays){
+  if(mode==='none') return '不重置';
+  if(mode==='daily') return '每天';
+  if(mode==='weekly') return '每周';
+  if(mode==='monthly') return '每月';
+  if(mode==='custom') return (customDays||'?')+'天一次';
+  return '不重置';
+}
 function openLogFor(gid,aid){
   curGid=gid;curAid=aid;
   showLogM();
@@ -2121,8 +2349,11 @@ function setDT(t){dTag=t;rDiary();}
 function dCH(e){
   var prev=(e.content||'').slice(0,55)+((e.content||'').length>55?'…':'');
   var thumb=e.images&&e.images.length?imgTagH(e.images[0],'','class="dthumb" alt=""'):'';
+  // 始终显示所属游戏+账号标签
   var gtag='';
-  if(dView==='all'){var gn='';outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){if(aa[j].id===e.acctId){gn=state.games[i].name+' · '+aa[j].name;break outer;}}}if(gn)gtag='<span class="dgtag">'+gn+'</span>';}
+  var gn='';
+  outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){if(aa[j].id===e.acctId){gn=state.games[i].name+' · '+aa[j].name;break outer;}}}
+  if(gn) gtag='<span class="dgtag">'+gn+'</span>';
   return '<div class="dcard" onclick="openDiaryDP(\''+e.id+'\')">'
     +'<div class="dtbar b'+e.tag+'"></div><div class="dcin">'+thumb
     +'<div class="dctop"><span class="dtbadge t'+e.tag+'">'+e.tag+'</span>'+gtag+'<span class="ddate">'+fmtD(e.date)+'</span></div>'
@@ -2254,7 +2485,7 @@ function doDiary(){
 
 
 // ═══════════════════════════════════════════════
-// 主题自定义系统
+// 主题自定义系统 v9（新增背景色自定义）
 // ═══════════════════════════════════════════════
 var THEME_PRESETS=[
   {name:'竹叶绿',h:145,s:18,l:57},
@@ -2267,8 +2498,20 @@ var THEME_PRESETS=[
   {name:'浅栗棕',h:25,s:35,l:58},
 ];
 
+// 背景色预设：[显示名, 亮色bg, 亮色bg2, 亮色bg3, 亮色card, 亮色border, 亮色nav]
+var BG_PRESETS=[
+  {name:'米白（默认）', bg:'#F6F5F0',bg2:'#EDEBE4',bg3:'#E1DED6',card:'255,255,255',border:'#DDD9D0',nav:'#FFFFFF'},
+  {name:'暖米黄',      bg:'#FAF7F0',bg2:'#F2EDE0',bg3:'#E8E0CC',card:'255,252,245',border:'#E0D8C8',nav:'#FAF7F0'},
+  {name:'淡樱粉',      bg:'#FDF4F7',bg2:'#F7E8EE',bg3:'#EDD5E0',card:'255,248,251',border:'#E8D0DC',nav:'#FDF4F7'},
+  {name:'浅天蓝',      bg:'#F2F6FC',bg2:'#E6EEFA',bg3:'#D5E2F5',card:'246,250,255',border:'#D0DCEE',nav:'#F2F6FC'},
+  {name:'嫩草绿',      bg:'#F2F8F3',bg2:'#E3F0E5',bg3:'#CDE3D0',card:'246,252,247',border:'#CAE0CC',nav:'#F2F8F3'},
+  {name:'薰衣紫',      bg:'#F5F3FA',bg2:'#EDE8F7',bg3:'#DDD4F0',card:'250,248,255',border:'#D8D0EE',nav:'#F5F3FA'},
+  {name:'暖石灰',      bg:'#F5F4F2',bg2:'#ECEAE6',bg3:'#E0DDD8',card:'255,254,252',border:'#DCDAD4',nav:'#F5F4F2'},
+  {name:'珊瑚橙',      bg:'#FDF5F2',bg2:'#F5E8E2',bg3:'#EAD4C8',card:'255,250,248',border:'#E8D2C8',nav:'#FDF5F2'},
+];
+
 function initThemePanel(){
-  //颜色预设点（数据管理modal里的也是这套）
+  // 强调色预设点
   var presets=document.getElementById('theme-color-presets');
   if(presets){
     var h='';
@@ -2279,16 +2522,26 @@ function initThemePanel(){
     }
     presets.innerHTML=h;
   }
-  // 方案选择
+  // 背景色预设
+  var bgPresets=document.getElementById('theme-bg-presets');
+  if(bgPresets){
+    var h2='';
+    for(var i=0;i<BG_PRESETS.length;i++){
+      var bp=BG_PRESETS[i];
+      h2+='<div onclick="applyBgPreset('+i+')" style="padding:5px 12px;border-radius:16px;border:2px solid '+bp.border+';background:'+bp.bg+';color:#5A5650;font-size:12px;font-weight:700;cursor:pointer">'+bp.name+'</div>';
+    }
+    bgPresets.innerHTML=h2;
+  }
+  // 预设配色方案（强调色+名称）
   var schemes=document.getElementById('theme-schemes');
   if(schemes){
-    var h='';
+    var h3='';
     for(var i=0;i<THEME_PRESETS.length;i++){
       var p=THEME_PRESETS[i];
       var c='hsl('+p.h+','+p.s+'%,'+p.l+'%)';
-      h+='<div onclick="applyThemeHSL('+p.h+','+p.s+','+p.l+')" style="padding:6px 14px;border-radius:20px;border:2px solid '+c+';background:'+c+'20;color:'+c+';font-size:12px;font-weight:700;cursor:pointer">'+p.name+'</div>';
+      h3+='<div onclick="applyThemeHSL('+p.h+','+p.s+','+p.l+')" style="padding:6px 14px;border-radius:20px;border:2px solid '+c+';background:'+c+'20;color:'+c+';font-size:12px;font-weight:700;cursor:pointer">'+p.name+'</div>';
     }
-    schemes.innerHTML=h;
+    schemes.innerHTML=h3;
   }
   // 加载已保存的主题
   try{
@@ -2296,11 +2549,12 @@ function initThemePanel(){
     if(saved){var d=JSON.parse(saved);applyThemeHSL(d.h,d.s,d.l,true);}
     var savedOp=localStorage.getItem('tdr_card_opacity');
     if(savedOp){applyCardOpacity(parseFloat(savedOp),true);}
+    var savedBg=localStorage.getItem('tdr_theme_bg');
+    if(savedBg){var bgd=JSON.parse(savedBg);_applyBgVars(bgd,true);}
   }catch(e){}
 }
 
 function applyThemeColor(hex){
-  // hex to hsl
   var r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
   var max=Math.max(r,g,b),min=Math.min(r,g,b),h,s,l=(max+min)/2;
   if(max===min){h=s=0;}else{
@@ -2326,9 +2580,66 @@ function applyCardOpacity(val,silent){
   document.documentElement.style.setProperty('--card-opacity',val);
   var el=document.getElementById('opacity-slider');if(el)el.value=val;
   var v=document.getElementById('opacity-val');if(v)v.textContent=Math.round(val*100)+'%';
-  if(!silent){
-    try{localStorage.setItem('tdr_card_opacity',val);}catch(e){}
+  if(!silent){try{localStorage.setItem('tdr_card_opacity',val);}catch(e){}}
+}
+
+function applyBgPreset(idx){
+  var bp=BG_PRESETS[idx];if(!bp)return;
+  _applyBgVars(bp);
+  try{localStorage.setItem('tdr_theme_bg',JSON.stringify(bp));}catch(e){}
+  toast('背景色已更新 🎨');
+}
+
+function applyCustomBg(hex){
+  // 自动推算 bg2/bg3（加深5%、10%）
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  function darken(r,g,b,pct){
+    return '#'+[r,g,b].map(function(c){return Math.max(0,Math.round(c*(1-pct))).toString(16).padStart(2,'0');}).join('');
   }
+  var bp={
+    bg:hex,
+    bg2:darken(r,g,b,0.05),
+    bg3:darken(r,g,b,0.12),
+    card:r+','+g+','+b,
+    border:darken(r,g,b,0.1),
+    nav:hex
+  };
+  _applyBgVars(bp);
+  try{localStorage.setItem('tdr_theme_bg',JSON.stringify(bp));}catch(e){}
+  toast('背景色已更新 🎨');
+}
+
+function _applyBgVars(bp,silent){
+  if(!bp)return;
+  var root=document.documentElement;
+  root.style.setProperty('--bg',bp.bg);
+  root.style.setProperty('--bg2',bp.bg2);
+  root.style.setProperty('--bg3',bp.bg3);
+  root.style.setProperty('--border',bp.border);
+  root.style.setProperty('--nav',bp.nav||bp.bg);
+  root.style.setProperty('--navborder',bp.border);
+  // card 用带透明度变量的形式
+  if(bp.card){
+    document.documentElement.style.setProperty('--card','rgba('+bp.card+',var(--card-opacity))');
+  }
+}
+
+function resetTheme(){
+  document.documentElement.style.removeProperty('--bg');
+  document.documentElement.style.removeProperty('--bg2');
+  document.documentElement.style.removeProperty('--bg3');
+  document.documentElement.style.removeProperty('--border');
+  document.documentElement.style.removeProperty('--nav');
+  document.documentElement.style.removeProperty('--navborder');
+  document.documentElement.style.removeProperty('--card');
+  document.documentElement.style.removeProperty('--accent-h');
+  document.documentElement.style.removeProperty('--accent-s');
+  document.documentElement.style.removeProperty('--accent-l');
+  document.documentElement.style.removeProperty('--card-opacity');
+  try{localStorage.removeItem('tdr_theme_hsl');localStorage.removeItem('tdr_theme_bg');localStorage.removeItem('tdr_card_opacity');}catch(e){}
+  var btns=document.querySelectorAll('.theme-btn');for(var i=0;i<btns.length;i++)btns[i].textContent=isDark?'☀':'☾';
+  toast('已恢复默认主题');
+  initThemePanel();
 }
 
 // ═══════════════════════════════════════════════
@@ -2910,11 +3221,10 @@ async function collabLoadMsgs(){
   }catch(e){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; clog('COLLAB','加载消息异常', e.message); }
 }
 
-// ── 渲染单条消息 ──
+// ── 渲染单条消息（⑦所有人可编辑删除）──
 function _collabMsgH(m){
   var isSystem = m.type === 'system';
   var isTask = m.type === 'share_task';
-  var isMine = m.sender_name === _collabNick;
 
   if(isSystem){
     return '<div style="text-align:center;padding:6px 0;margin-bottom:6px">'
@@ -2929,17 +3239,18 @@ function _collabMsgH(m){
     editedInfo = '<div style="font-size:10px;color:var(--text3);margin-top:3px">✏️ '+esc(m.edited_by)+' 修改于 '+edt+'</div>';
   }
 
-  var actionBtns = '';
-  if(isMine){
-    actionBtns = '<div style="display:flex;gap:6px;margin-top:8px">'
-      +'<button class="btn bg bsm" onclick="collabOpenPost(\''+m.id+'\',\''+esc(m.title).replace(/'/g,"&#39;")+'\',\''+esc(m.content||'').replace(/'/g,"&#39;")+'\')">✏️ 编辑</button>'
-      +'<button class="btn bd bsm" onclick="collabDeleteMsg(\''+m.id+'\')">删除</button>'
-      +'</div>';
-  }
+  // ⑦ 所有人都可以编辑/删除，不限制 isMine
+  var editTitleEsc = esc(m.title).replace(/'/g,'&#39;');
+  var editContentEsc = esc(m.content||'').replace(/'/g,'&#39;');
+  var actionBtns = '<div style="display:flex;gap:6px;margin-top:8px">'
+    +'<button class="btn bg bsm" onclick="collabOpenPost(\''+m.id+'\',\''+editTitleEsc+'\',\''+editContentEsc+'\')">✏️ 编辑</button>'
+    +'<button class="btn bd bsm" onclick="collabDeleteMsg(\''+m.id+'\',\''+esc(m.sender_name)+'\')">删除</button>'
+    +'</div>';
 
   var syncBtn = isTask ? '<button class="btn bg bsm" onclick="collabSyncTask(\''+m.id+'\')" style="margin-top:8px;font-size:11px">＋ 同步到我的任务</button>' : '';
+  var isMine = m.sender_name === _collabNick;
 
-  return '<div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px'+(isMine?';border-color:var(--accent)':'')+'">'
+  return '<div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px'+(isMine?';border-left:3px solid var(--accent)':'')+'">'
     +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
     +'<span style="font-size:11px;font-weight:700;color:var(--accent)">'+esc(m.sender_name)+'</span>'
     +(isMine?'<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--accbg);color:var(--accent);font-weight:700">我</span>':'')
@@ -2954,24 +3265,143 @@ function _collabMsgH(m){
     +'</div>';
 }
 
+// ── 删除公告（⑦附带提示谁删的）──
+async function collabDeleteMsg(id, senderName){
+  if(!confirm('确定删除「'+senderName+'」的这条公告？')) return;
+  clog('COLLAB','删除公告', {id, senderName, operator:_collabNick});
+  try{
+    var res = await _sb.from('announcements').delete().eq('id', id);
+    if(res.error){ toast('删除失败：' + res.error.message); return; }
+    // 发系统公告：谁删除了谁的公告
+    await _sb.from('announcements').insert({room_code:_collabRoom, sender_name:'系统',
+      title:'🗑 '+_collabNick+' 删除了 '+senderName+' 的公告', content:'', type:'system'});
+    toast('已删除');
+    collabLoadMsgs();
+    collabUpdateStorage(); // ⑨ 立即刷新存储
+  }catch(e){ toast('删除失败：' + e.message); }
+}
+
+// ── ⑨ 存储用量（实时，每次操作后刷新）──
+async function collabUpdateStorage(){
+  if(!_sb || !_collabRoom) return;
+  try{
+    var res = await _sb.from('announcements').select('id', {count:'exact',head:true}).eq('room_code', _collabRoom);
+    var count = res.count || 0;
+    var maxCount = 500;
+    var pct = Math.min(100, Math.round(count / maxCount * 100));
+    var textEl = document.getElementById('collab-storage-text');
+    var barEl = document.getElementById('collab-storage-bar');
+    if(textEl) textEl.textContent = count + ' 条消息（上限约 ' + maxCount + ' 条）';
+    if(barEl){
+      barEl.style.width = pct + '%';
+      barEl.style.background = pct > 80 ? 'var(--red)' : pct > 60 ? '#D0A040' : 'var(--accent)';
+    }
+    clog('COLLAB','存储用量刷新', {count, pct});
+  }catch(e){ clog('COLLAB','获取存储用量失败', e.message); }
+}
+
+// ── ⑩ 提交公告（移除"每人只能一条"限制，支持多条）──
+async function collabSubmitPost(){
+  if(!_sb || !_collabRoom){ toast('请先加入房间'); return; }
+  var title = document.getElementById('collab-post-title').value.trim();
+  if(!title){ toast('请输入标题'); return; }
+  var content = document.getElementById('collab-post-content').value.trim();
+  var editId = document.getElementById('collab-post-edit-id').value;
+
+  if(editId){
+    clog('COLLAB','编辑公告', {id:editId});
+    try{
+      var res = await _sb.from('announcements').update({
+        title: title, content: content,
+        edited_by: _collabNick, edited_at: new Date().toISOString()
+      }).eq('id', editId);
+      if(res.error){ toast('编辑失败：' + res.error.message); return; }
+      hideM('m-collab-post');
+      toast('公告已更新 ✅');
+      collabLoadMsgs();
+      collabUpdateStorage(); // ⑨
+    }catch(e){ toast('编辑失败：' + e.message); }
+  } else {
+    // ⑩ 直接新增，不检查是否已有公告
+    clog('COLLAB','发布新公告', {title});
+    try{
+      var res2 = await _sb.from('announcements').insert({
+        room_code: _collabRoom,
+        sender_name: _collabNick || '匿名',
+        title: title, content: content, type: 'announce'
+      });
+      if(res2.error){ toast('发布失败：' + res2.error.message); return; }
+      document.getElementById('collab-post-title').value = '';
+      document.getElementById('collab-post-content').value = '';
+      document.getElementById('collab-post-edit-id').value = '';
+      hideM('m-collab-post');
+      toast('公告已发布 📢');
+      collabLoadMsgs();
+      collabUpdateStorage(); // ⑨
+    }catch(e){ toast('发布失败：' + e.message); }
+  }
+}
+
+// ── ⑧ 实时订阅（安卓通知修复：确保走SW）──
+function collabSubscribe(){
+  if(!_sb || !_collabRoom || _collabChannel) return;
+  clog('COLLAB','订阅房间', {room: _collabRoom});
+  _collabChannel = _sb.channel('room-' + _collabRoom)
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'announcements', filter:'room_code=eq.'+_collabRoom}, function(payload){
+      clog('COLLAB','收到新消息', {title: payload.new && payload.new.title});
+      if(curPage === 'collab') collabLoadMsgs();
+      collabUpdateStorage(); // ⑨ 实时更新存储
+      // ⑧ 通知：非本人发的非系统消息，走SW通知（安卓有效）
+      var m = payload.new;
+      if(m && m.sender_name !== _collabNick && m.type !== 'system'){
+        _requestNotifThenSend('🐭 ' + (m.sender_name||'协作成员'), m.title || '发布了新公告');
+      }
+    })
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'announcements', filter:'room_code=eq.'+_collabRoom}, function(){
+      clog('COLLAB','消息已更新');
+      if(curPage === 'collab') collabLoadMsgs();
+    })
+    .on('postgres_changes', {event:'DELETE', schema:'public', table:'announcements', filter:'room_code=eq.'+_collabRoom}, function(){
+      clog('COLLAB','消息已删除');
+      if(curPage === 'collab') collabLoadMsgs();
+      collabUpdateStorage(); // ⑨
+    })
+    .subscribe(function(status){ clog('COLLAB','订阅状态', status); });
+}
+
+// ⑧ 请求通知权限后发送（类比每日打卡提醒的方式）
+function _requestNotifThenSend(title, body){
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'granted'){
+    _sendNotifCompat(title, body, null);
+  } else if(Notification.permission !== 'denied'){
+    Notification.requestPermission().then(function(p){
+      if(p === 'granted') _sendNotifCompat(title, body, null);
+    });
+  }
+}
+
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// ── 同步任务 ──
+// ── 同步协作任务到本地 ──
 async function collabSyncTask(msgId){
   if(!_sb) return;
   try{
     var res = await _sb.from('announcements').select('*').eq('id', msgId).single();
     if(res.error || !res.data){ toast('获取失败'); return; }
     var m = res.data;
+    var extra = m.extra_json || {};
+    var taskText = m.title.replace(/^📋\s*分享任务：/,'') || m.title;
+    var resetMode = extra.resetMode || 'none';
+    var customDays = extra.customDays || 0;
     var a = A();
-    if(!a){ toast('请先选择账号'); return; }
+    if(!a){ toast('请先在任务页选择账号'); return; }
     if(!a.tasks) a.tasks = [];
-    var taskText = m.title + (m.content ? '：' + m.content.slice(0,30) : '');
-    a.tasks.push({id:uid(), text:taskText, isDaily:false, isDone:false});
+    a.tasks.push({id:uid(), text:taskText, isDone:false, resetMode:resetMode, isDaily:resetMode==='daily', customDays:customDays, lastReset:today()});
     saveData();
-    toast('任务已同步到本账号 ✅');
+    toast('任务已同步 ✅（'+_resetLabelFromMode(resetMode,customDays)+'重置）');
     if(curPage === 'task') rTasks();
-    clog('COLLAB','同步任务', {taskText});
+    clog('COLLAB','同步任务', {taskText, resetMode});
   }catch(e){ toast('同步失败：' + e.message); }
 }
 
@@ -2982,63 +3412,6 @@ function collabRefresh(){
   toast('已刷新');
 }
 
-// ── 服务器存储用量（估算消息条数占用）──
-async function collabUpdateStorage(){
-  if(!_sb || !_collabRoom) return;
-  try{
-    var res = await _sb.from('announcements').select('id', {count:'exact',head:true}).eq('room_code', _collabRoom);
-    var count = res.count || 0;
-    var maxCount = 500; // 估算上限
-    var pct = Math.min(100, Math.round(count / maxCount * 100));
-    var textEl = document.getElementById('collab-storage-text');
-    var barEl = document.getElementById('collab-storage-bar');
-    if(textEl) textEl.textContent = count + ' 条消息 / 约 ' + maxCount + ' 条上限';
-    if(barEl){
-      barEl.style.width = pct + '%';
-      barEl.style.background = pct > 80 ? 'var(--red)' : pct > 60 ? '#D0A040' : 'var(--accent)';
-    }
-    clog('COLLAB','存储用量', {count, pct});
-  }catch(e){ clog('COLLAB','获取存储用量失败', e.message); }
-}
-
-// ── 实时订阅 ──
-function collabSubscribe(){
-  if(!_sb || !_collabRoom || _collabChannel) return;
-  clog('COLLAB','订阅房间', {room: _collabRoom});
-  _collabChannel = _sb.channel('room-' + _collabRoom)
-    .on('postgres_changes', {
-      event: 'INSERT', schema: 'public', table: 'announcements',
-      filter: 'room_code=eq.' + _collabRoom
-    }, function(payload){
-      clog('COLLAB','收到新消息 INSERT', {title: payload.new && payload.new.title});
-      if(curPage === 'collab') collabLoadMsgs();
-      // ① 新公告 → 浏览器通知
-      var m = payload.new;
-      if(m && m.sender_name !== _collabNick && m.type !== 'system'){
-        if(Notification.permission === 'granted'){
-          _sendNotifCompat('🐭 ' + (m.sender_name||'协作成员') + ' 发布了公告', m.title, null);
-        }
-      }
-    })
-    .on('postgres_changes', {
-      event: 'UPDATE', schema: 'public', table: 'announcements',
-      filter: 'room_code=eq.' + _collabRoom
-    }, function(payload){
-      clog('COLLAB','收到消息 UPDATE');
-      if(curPage === 'collab') collabLoadMsgs();
-    })
-    .on('postgres_changes', {
-      event: 'DELETE', schema: 'public', table: 'announcements',
-      filter: 'room_code=eq.' + _collabRoom
-    }, function(payload){
-      clog('COLLAB','收到消息 DELETE');
-      if(curPage === 'collab') collabLoadMsgs();
-    })
-    .subscribe(function(status){
-      clog('COLLAB','订阅状态', status);
-    });
-}
-
 function collabUnsubscribe(){
   if(_sb && _collabChannel){
     _sb.removeChannel(_collabChannel);
@@ -3047,7 +3420,6 @@ function collabUnsubscribe(){
   }
 }
 
-// ── 打开设置时预填当前值 ──
 function _onOpenCollabSettings(){
   var rn = document.getElementById('collab-setting-roomname');
   var nn = document.getElementById('collab-setting-nick');
@@ -3055,7 +3427,6 @@ function _onOpenCollabSettings(){
   if(nn) nn.value = _collabNick || '';
 }
 
-// ── INIT ──
 window.onload=function(){
   loadData();loadTheme();initColorPresets();
   if(state.games.length){
