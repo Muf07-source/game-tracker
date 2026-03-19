@@ -30,7 +30,7 @@
   --nav:#1C1B19;--navborder:#2E2C27;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);font-family:-apple-system,'Helvetica Neue','PingFang SC','Noto Sans SC',sans-serif;color:var(--text);overflow:hidden;transition:background0.3s,color 0.3s}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,'Helvetica Neue','PingFang SC','Noto Sans SC',sans-serif;color:var(--text);overflow:hidden;transition:background 0.3s,color 0.3s}
 #app{height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
 
 /*── NAV ── Q版气泡 */
@@ -105,7 +105,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'Helvetica 
 .spark{width:100%;height:26px;overflow:visible;margin-top:6px}
 
 /* ── LOG── */
-.logitem{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.logitem{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
 .logdate{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
 .chip{background:var(--accbg);border-radius:10px;padding:3px 10px;font-size:12px;color:var(--accent);font-weight:600;border:1.5px solid hsla(var(--accent-h),40%,60%,0.2)}
@@ -381,7 +381,7 @@ select.fi{-webkit-appearance:none;appearance:none}
 <body>
 <div id="app">
   <div id="nav">
-    <button class="nb on" id="nb-task" onclick="goPage('task')"><svg viewBox="0 0 24 24"><path d="M9 11l33L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>任务</button>
+    <button class="nb on" id="nb-task" onclick="goPage('task')"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>任务</button>
     <button class="nb" id="nb-res" onclick="goPage('res')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>资源</button><button class="nb" id="nb-log" onclick="goPage('log')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>日志</button>
     <!-- MODIFIED: 修复SVG rxry缺少空格-->
     <button class="nb" id="nb-cal" onclick="goPage('cal')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>日历</button>
@@ -2468,7 +2468,7 @@ function delCurD(){
   outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++){if(d[k].id===viewDid){
     // 清理IDB 图片
     var imgs=(d[k].images||[]);
-    varks=imgs.filter(function(r){return isIdbRef(r);}).map(function(r){return idbKey(r);});
+    var ks=imgs.filter(function(r){return isIdbRef(r);}).map(function(r){return idbKey(r);});
     if(ks.length)idbDelMany(ks);
     d.splice(k,1);break outer;
   }}}}
