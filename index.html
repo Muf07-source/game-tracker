@@ -2996,7 +2996,7 @@ function testNtfy(){
     method: 'POST',
     headers: {
       'Content-Type': 'text/plain',
-      'Title': '囤囤鼠来哩 🐭',
+      'Title': encodeURIComponent('囤囤鼠来哩 🐭'),
       'Priority': 'default',
       'Tags': 'hamster'
     },
