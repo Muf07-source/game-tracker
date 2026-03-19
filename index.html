@@ -714,6 +714,11 @@ select.fi{-webkit-appearance:none;appearance:none}
       <div class="m-handle"></div>
       <div class="mhdr"><div class="mtitle" id="dm-ttl">写日记</div><button class="mclose" onclick="hideM('m-diary')">×</button></div>
       <div class="mbody">
+        <!-- ① 新增：选择归属账号 -->
+        <div class="fg" id="d-acct-row">
+          <label class="fl">归属账号</label>
+          <select class="fi" id="d-acct-sel" onchange="onDiaryAcctChange()"></select>
+        </div>
         <div class="fg"><label class="fl">标题（可选）</label><input class="fi" id="d-ttl" placeholder="给这篇日记起个标题…"></div>
         <div class="fg"><label class="fl">正文</label><textarea class="fi" id="d-cnt" placeholder="记录今天的游戏时光…"></textarea></div>
         <div class="fg"><label class="fl">标签</label>
@@ -730,6 +735,7 @@ select.fi{-webkit-appearance:none;appearance:none}
           <div class="iplist" id="iplist"></div>
         </div>
         <input type="hidden" id="d-edit-id">
+        <input type="hidden" id="d-acct-override">
         <button class="btn bp bfull" onclick="doDiary()">保存日记</button>
       </div>
     </div>
@@ -919,6 +925,13 @@ select.fi{-webkit-appearance:none;appearance:none}
           <input class="fi" id="collab-setting-nick" placeholder="输入新昵称" maxlength="12">
         </div>
         <button class="btn bg bfull" onclick="collabRenameNick()">更新昵称</button>
+        <div class="divider" style="margin-top:14px"></div>
+        <!-- ② 新增：清空所有消息 -->
+        <div style="margin-top:12px;padding:12px;background:var(--bg2);border-radius:var(--r2);border:2px solid var(--border)">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">🗑 清空房间所有消息</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">删除服务器上该房间的全部公告和系统消息，释放存储空间。房间本身保留，成员不会被踢出。</div>
+          <button class="btn bd bfull" onclick="collabClearAllMsgs()">清空所有消息</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2417,7 +2430,38 @@ function showDE(entry){
   document.getElementById('d-cnt').value=entry?(entry.content||''):'';
   document.getElementById('d-tag').value=entry?(entry.tag||'日常'):'日常';
   document.getElementById('d-edit-id').value=entry?entry.id:'';
-  // 加载日记图片（IDB refs异步解析为 dataUrl供预览）
+  document.getElementById('d-acct-override').value='';
+
+  // ① 填充账号选择器：遍历所有游戏+账号，格式"游戏名 · 账号名"
+  var sel=document.getElementById('d-acct-sel');
+  sel.innerHTML='';
+  var targetAcctId=entry?entry.acctId:(curAid||'');
+  var firstOpt=null;
+  for(var gi=0;gi<state.games.length;gi++){
+    var g=state.games[gi];
+    var aa=g.accounts||[];
+    if(!aa.length) continue;
+    var grp=document.createElement('optgroup');
+    grp.label=g.name;
+    for(var ai=0;ai<aa.length;ai++){
+      var opt=document.createElement('option');
+      opt.value=aa[ai].id;
+      opt.textContent=aa[ai].name;
+      opt.setAttribute('data-gid',g.id);
+      if(aa[ai].id===targetAcctId) opt.selected=true;
+      grp.appendChild(opt);
+      if(!firstOpt) firstOpt=opt;
+    }
+    sel.appendChild(grp);
+  }
+  // 没有任何游戏/账号时隐藏选择器
+  var acctRow=document.getElementById('d-acct-row');
+  if(acctRow) acctRow.style.display=sel.options.length?'block':'none';
+
+  // 编辑模式：锁定账号（只能看不能改）
+  sel.disabled=!!entry;
+
+  // 加载日记图片
   edImgs=[];
   if(entry&&entry.images&&entry.images.length){
     var rawRefs=entry.images;
@@ -2431,13 +2475,44 @@ function showDE(entry){
       });
     });
   }
+
+  // 绑定资源记录（根据所选账号加载日志）
   var bt=document.getElementById('d-btog');bt.classList.remove('on');document.getElementById('d-bsel').style.display='none';
-  var sel=document.getElementById('d-lsel');sel.innerHTML='<option value="">（不绑定）</option>';
-  var a=A();
-  if(a){var ls=(a.logs||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);});for(var i=0;i<ls.length;i++){var o=document.createElement('option');o.value=ls[i].id;o.textContent=ls[i].date+(ls[i].timeNote?' '+ls[i].timeNote:'')+(ls[i].note?' · '+ls[i].note:'');sel.appendChild(o);}}
-  if(entry&&entry.bindLogId){bt.classList.add('on');document.getElementById('d-bsel').style.display='block';sel.value=entry.bindLogId;}
+  _loadDiaryLogSel();
+  if(entry&&entry.bindLogId){bt.classList.add('on');document.getElementById('d-bsel').style.display='block';document.getElementById('d-lsel').value=entry.bindLogId;}
   rEdImgs();showM('m-diary');
 }
+
+// ① 切换账号时刷新"绑定资源记录"下拉
+function onDiaryAcctChange(){
+  _loadDiaryLogSel();
+  var bt=document.getElementById('d-btog');
+  bt.classList.remove('on');
+  document.getElementById('d-bsel').style.display='none';
+}
+
+// ① 根据当前选中账号加载日志选项
+function _loadDiaryLogSel(){
+  var sel=document.getElementById('d-lsel');
+  sel.innerHTML='<option value="">（不绑定）</option>';
+  var acctSel=document.getElementById('d-acct-sel');
+  var selOpt=acctSel&&acctSel.selectedOptions&&acctSel.selectedOptions[0];
+  var selGid=selOpt?selOpt.getAttribute('data-gid'):null;
+  var selAid=acctSel?acctSel.value:'';
+  if(!selGid||!selAid) return;
+  var g=G(selGid);if(!g) return;
+  var aa=g.accounts||[];
+  var a=null;for(var i=0;i<aa.length;i++){if(aa[i].id===selAid){a=aa[i];break;}}
+  if(!a) return;
+  var ls=(a.logs||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  for(var i=0;i<ls.length;i++){
+    var o=document.createElement('option');
+    o.value=ls[i].id;
+    o.textContent=ls[i].date+(ls[i].timeNote?' '+ls[i].timeNote:'')+(ls[i].note?' · '+ls[i].note:'');
+    sel.appendChild(o);
+  }
+}
+
 function togBind(){var t=document.getElementById('d-btog');t.classList.toggle('on');document.getElementById('d-bsel').style.display=t.classList.contains('on')?'block':'none';}
 
 // MODIFIED: 日记图片上传 - 压缩到800px
@@ -2458,16 +2533,23 @@ function rEdImgs(){var el=document.getElementById('iplist'),h='';for(var i=0;i<e
 function rmImg(i){edImgs.splice(i,1);rEdImgs();}
 function doDiary(){
   var content=document.getElementById('d-cnt').value.trim();if(!content){toast('请输入日记内容');return;}
-  var a=A(),bon=document.getElementById('d-btog').classList.contains('on'),bid=bon?document.getElementById('d-lsel').value:'';
+  // ① 使用选择器里选定的账号，而不是当前 curAid
+  var acctSel=document.getElementById('d-acct-sel');
+  var selOpt=acctSel&&acctSel.selectedOptions&&acctSel.selectedOptions[0];
+  var selGid=selOpt?selOpt.getAttribute('data-gid'):null;
+  var selAid=acctSel?acctSel.value:'';
+  var a=(selGid&&selAid)?A(selGid,selAid):A();
+  if(!a){toast('请先选择归属账号');return;}
+  var bon=document.getElementById('d-btog').classList.contains('on'),bid=bon?document.getElementById('d-lsel').value:'';
   var editId=document.getElementById('d-edit-id').value;
   var entryId=editId||uid();
   var rawImgs=edImgs.map(function(i){return i.dataUrl;});
-  // 异步存所有图片到 IDB
   function _saveDiaryEntry(imgRefs){
-    var entry={id:entryId,date:today(),title:document.getElementById('d-ttl').value.trim(),content:content,tag:document.getElementById('d-tag').value,bindLogId:bid||'',acctId:a?a.id:'',images:imgRefs};
+    var entry={id:entryId,date:today(),title:document.getElementById('d-ttl').value.trim(),content:content,tag:document.getElementById('d-tag').value,bindLogId:bid||'',acctId:a.id,images:imgRefs};
     if(editId){
-      outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++){if(d[k].id===editId){d[k]=entry;break outer;}}}}} else {
-      if(a){if(!a.diary)a.diary=[];a.diary.push(entry);}
+      outer:for(var i=0;i<state.games.length;i++){var aa=state.games[i].accounts||[];for(var j=0;j<aa.length;j++){var d=aa[j].diary||[];for(var k=0;k<d.length;k++){if(d[k].id===editId){d[k]=entry;break outer;}}}}
+    } else {
+      if(!a.diary)a.diary=[];a.diary.push(entry);
     }
     saveData();hideM('m-diary');rDiary();toast(editId?'日记已更新':'日记已保存');
   }
@@ -3418,6 +3500,22 @@ function collabUnsubscribe(){
     _collabChannel = null;
     clog('COLLAB','取消订阅');
   }
+}
+
+// ② 清空房间所有消息
+async function collabClearAllMsgs(){
+  if(!_sb || !_collabRoom){ toast('未加入房间'); return; }
+  if(!confirm('确定清空该房间的所有消息？\n此操作不可恢复，服务器上的记录将全部删除。')) return;
+  clog('COLLAB','清空房间消息', {room:_collabRoom, operator:_collabNick});
+  try{
+    var res = await _sb.from('announcements').delete().eq('room_code', _collabRoom);
+    if(res.error){ toast('清空失败：' + res.error.message); clog('COLLAB','清空失败', res.error); return; }
+    hideM('m-collab-settings');
+    toast('已清空所有消息 🗑');
+    collabLoadMsgs();
+    collabUpdateStorage();
+    clog('COLLAB','清空成功');
+  }catch(e){ toast('清空失败：' + e.message); clog('COLLAB','清空异常', e.message); }
 }
 
 function _onOpenCollabSettings(){
