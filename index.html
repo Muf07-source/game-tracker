@@ -3197,6 +3197,33 @@ function _urlBase64ToUint8Array(base64String){
   return arr;
 }
 
+// 统一入口：确保已订阅推送（处理权限申请+重试）
+function _ensurePushSubscribed(roomCode, nick){
+  if(!('serviceWorker' in navigator) || !window.isSecureContext){
+    clog('PUSH','环境不支持推送'); return;
+  }
+  if(VAPID_PUBLIC_KEY === 'PASTE_YOUR_VAPID_PUBLIC_KEY_HERE'){
+    clog('PUSH','VAPID公钥未配置'); return;
+  }
+  if(!('Notification' in window)){ clog('PUSH','不支持通知'); return; }
+
+  if(Notification.permission === 'granted'){
+    subscribePush(roomCode, nick);
+  } else if(Notification.permission !== 'denied'){
+    Notification.requestPermission().then(function(p){
+      if(p === 'granted'){
+        subscribePush(roomCode, nick);
+      } else {
+        clog('PUSH','用户拒绝通知权限');
+        toast('未授权通知，将无法收到离线推送');
+      }
+    });
+  } else {
+    clog('PUSH','通知权限已被拒绝');
+    toast('通知权限被拒绝，请在浏览器设置中手动开启');
+  }
+}
+
 // 订阅 Web Push，并把 subscription 存入 Supabase
 async function subscribePush(roomCode, nick){
   if(!('serviceWorker' in navigator) || !window.isSecureContext){
@@ -3371,6 +3398,8 @@ async function collabRejoin(code, nick){
     _addHistory(code, _collabRoomName, nick);
     clog('COLLAB','重新加入房间', {code, nick});
     toast('已重新加入 ' + (_collabRoomName || code) + ' 👋');
+    // 重新加入时也确保订阅
+    _ensurePushSubscribed(code, nick);
     rCollabPage();
   }catch(e){ toast('加入失败：' + e.message); clog('COLLAB','rejoin失败', e.message); }
 }
@@ -3402,6 +3431,8 @@ async function collabCreateRoom(){
     _addHistory(code, roomName, nick);
     clog('COLLAB','创建成功');
     toast('房间已创建！邀请码：' + code);
+    // 创建房间后也订阅推送
+    _ensurePushSubscribed(code, nick);
     rCollabPage();
   }catch(e){ toast('创建失败：' + e.message); clog('COLLAB','创建异常', e.message); }
 }
@@ -3425,14 +3456,8 @@ async function collabJoinRoom(){
     await _sb.from('announcements').insert({room_code:code, sender_name:'系统', title:'👋 '+nick+' 加入了房间', content:'', type:'system'});
     clog('COLLAB','加入成功', {roomName: _collabRoomName});
     toast('已加入房间 ' + (_collabRoomName||code) + ' 👋');
-    // 自动订阅 Web Push（加入房间时订阅，关闭Chrome也能收新消息通知）
-    if('Notification' in window && Notification.permission === 'granted'){
-      subscribePush(code, nick);
-    } else if('Notification' in window && Notification.permission !== 'denied'){
-      Notification.requestPermission().then(function(p){
-        if(p === 'granted') subscribePush(code, nick);
-      });
-    }
+    // 订阅 Web Push
+    _ensurePushSubscribed(code, nick);
     rCollabPage();
   }catch(e){ toast('加入失败：' + e.message); clog('COLLAB','加入异常', e.message); }
 }
@@ -3858,11 +3883,17 @@ window.onload=function(){
   // v7：初始化 Supabase 协作模块
   initSupabase();
   // SW注册后延迟同步打卡提醒配置
+  // 同时：如果已经在房间里，自动补订阅推送（防止订阅丢失）
   setTimeout(function(){
     if('serviceWorker' in navigator){
       navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
     }
-  }, 2000);
+    // 已在房间则自动补订阅
+    if(_collabRoom && _collabNick){
+      clog('PUSH','启动时检测到已在房间，自动补订阅');
+      _ensurePushSubscribed(_collabRoom, _collabNick);
+    }
+  }, 2500);
 };
 </script>
 </body>
