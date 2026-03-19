@@ -849,62 +849,62 @@ select.fi{-webkit-appearance:none;appearance:none}
       <div class="m-handle"></div>
       <div class="mhdr"><div class="mtitle">🔔 推送提醒设置</div><button class="mclose" onclick="hideM('m-notif')">×</button></div>
       <div class="mbody">
-        <!-- 状态卡片 -->
+
+        <!-- ntfy 配置卡片 -->
         <div class="notif-card">
-          <div class="notif-icon" id="notif-icon-main">🔔</div>
+          <div class="notif-icon" id="notif-icon-main">📲</div>
           <div class="notif-info">
-            <div class="notif-title" id="notif-status-title">检测中…</div>
-            <div class="notif-sub" id="notif-status">检测权限中…</div>
+            <div class="notif-title">ntfy 推送通知</div>
+            <div class="notif-sub" id="notif-status">关闭Chrome也能收到通知</div>
           </div>
         </div>
 
-        <!-- PWA 安装引导（未安装时显示） -->
-        <div id="pwa-install-banner" style="display:none;margin-top:10px;padding:12px 14px;background:var(--accbg);border:2px solid hsla(var(--accent-h),40%,60%,0.3);border-radius:var(--r2)">
-          <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px">📲 第一步：添加到主屏幕</div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.7">关闭浏览器后收到通知，需要先将本应用安装到主屏幕（PWA）。<br>
-          <b>安卓 Chrome：</b>点右上角菜单 → "添加到主屏幕"<br>
-          <b>Samsung Internet：</b>菜单 → "安装页面"</div>
-          <button class="btn bp bfull bsm" onclick="triggerPWAInstall()" style="margin-top:8px" id="pwa-install-btn">安装到主屏幕</button>
+        <!-- ntfy Topic 配置 -->
+        <div class="fg" style="margin-top:12px">
+          <label class="fl">ntfy 频道名（Topic）</label>
+          <input class="fi" id="ntfy-topic" placeholder="例如：tuntunshulai_我的专属频道" maxlength="50">
+          <div style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.7">
+            随意填一个只有你知道的名字，越独特越好。<br>
+            然后在 ntfy App 里订阅同一个名字就能收到通知。
+          </div>
+        </div>
+        <button class="btn bp bfull" onclick="saveNtfyTopic()" style="margin-top:2px">💾 保存频道设置</button>
+
+        <div class="divider"></div>
+
+        <!-- 每日打卡提醒 -->
+        <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:5px">⏰ 每日打卡提醒</div>
+        <div class="togrow" style="background:var(--bg2);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px">
+          <div>
+            <div style="font-size:14px;font-weight:700">开启定时提醒</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">由服务器定时推送，关机也能收到 ✅</div>
+          </div>
+          <button class="tog" id="notif-tog" onclick="toggleNotif()"></button>
+        </div>
+        <div class="fg">
+          <label class="fl">提醒时间（北京时间）</label>
+          <input type="time" class="fi" id="notif-time" value="20:00">
+        </div>
+        <div class="fg">
+          <label class="fl">提醒内容</label>
+          <input class="fi" id="notif-msg" value="🐭 囤囤鼠提醒你：今日还没打卡，快来记录资源吧！" placeholder="自定义提醒文字">
+        </div>
+        <button class="btn bp bfull" onclick="saveNotifSettings()" style="margin-top:2px">💾 保存提醒设置</button>
+
+        <!-- 协作消息说明 -->
+        <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;margin-top:14px;display:flex;align-items:center;gap:5px">📢 协作新消息通知</div>
+        <div style="font-size:12px;color:var(--text2);background:var(--bg2);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px;line-height:1.7">
+          加入协作房间后自动开启。有人发布新公告时推送到你的 ntfy App，<b>无论 Chrome 是否打开</b>都能收到。
         </div>
 
-        <!-- 已安装 PWA 的成功提示 -->
-        <div id="pwa-installed-badge" style="display:none;margin-top:10px;padding:10px 14px;background:#EFF8EF;border:2px solid #8BC49A;border-radius:var(--r2)">
-          <div style="font-size:12px;font-weight:700;color:#5A8A6A">✅ 已安装为 PWA，支持后台推送</div>
-        </div>
+        <button class="btn bp bfull" onclick="testNtfy()" style="margin-top:4px">🔔 发送测试通知</button>
 
-        <div id="notif-body" style="margin-top:12px">
-          <!-- 每日打卡提醒 -->
-          <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:5px">⏰ 每日打卡提醒</div>
-          <div class="togrow" style="background:var(--bg2);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px">
-            <div>
-              <div style="font-size:14px;font-weight:700">开启定时提醒</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">由 Supabase 服务器定时推送，关机也能收到 ✅</div>
-            </div>
-            <button class="tog" id="notif-tog" onclick="toggleNotif()"></button>
-          </div>
-          <div class="fg">
-            <label class="fl">提醒时间（北京时间）</label>
-            <input type="time" class="fi" id="notif-time" value="20:00">
-          </div>
-          <div class="fg">
-            <label class="fl">提醒内容</label>
-            <input class="fi" id="notif-msg" value="🐭 囤囤鼠提醒你：今日还没打卡，快来记录资源吧！" placeholder="自定义提醒文字">
-          </div>
-          <button class="btn bp bfull" onclick="saveNotifSettings()" style="margin-top:2px">💾 保存提醒设置</button>
-
-          <!-- 协作消息推送说明 -->
-          <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;margin-top:14px;display:flex;align-items:center;gap:5px">📢 协作新消息通知</div>
-          <div style="font-size:12px;color:var(--text2);background:var(--bg2);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px;line-height:1.7">
-            加入协作房间后自动开启。有人发布新公告时，<b>无论 Chrome 是否打开</b>，都会推送安卓通知。
-          </div>
-
-          <button class="btn bp bfull" onclick="testNotif()" style="margin-top:4px">🔔 发送测试通知</button>
-          <button class="btn bg bfull" onclick="checkPushStatus()" style="margin-top:8px">🔍 检测推送状态</button>
-          <div id="push-status-result" style="font-size:11px;color:var(--text2);margin-top:8px;padding:10px;background:var(--bg2);border-radius:var(--r2);display:none;line-height:1.8;word-break:break-all"></div>
-          <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.8;background:var(--bg2);padding:10px;border-radius:var(--r2)">
-            <b>两种推送都走 Supabase 云服务器 → Google FCM → 安卓系统</b><br>
-            关机、关 Chrome、锁屏均可收到，完全不依赖本设备 🐭
-          </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.8;background:var(--bg2);padding:10px;border-radius:var(--r2)">
+          <b>使用步骤：</b><br>
+          ① 手机安装 ntfy App（Play 商店搜 ntfy）<br>
+          ② 在上方填入一个频道名并保存<br>
+          ③ 打开 ntfy App → 右下角 + → 输入同样的频道名订阅<br>
+          ④ 关闭 Chrome，照样收到通知 🐭
         </div>
       </div>
     </div>
@@ -2814,265 +2814,6 @@ function resetTheme(){
 // ═══════════════════════════════════════════════
 var notifInterval=null;
 
-function openNotifModal(){
-  updateNotifStatus();
-  try{
-    var s=JSON.parse(localStorage.getItem('tdr_notif')||'{}');
-    var tog=document.getElementById('notif-tog');
-    if(tog)tog.classList.toggle('on',!!s.enabled);
-    var t=document.getElementById('notif-time');if(t&&s.time)t.value=s.time;
-    var m=document.getElementById('notif-msg');if(m&&s.msg)m.value=s.msg;
-    // 恢复协作通知开关
-    var ctog=document.getElementById('collab-notif-tog');
-    if(ctog) ctog.classList.toggle('on',!!localStorage.getItem('tdr_collab_notif_on'));
-    // 显示PWA安装状态
-    if(_isPWA()){
-      var badge=document.getElementById('pwa-installed-badge');if(badge)badge.style.display='block';
-      var banner=document.getElementById('pwa-install-banner');if(banner)banner.style.display='none';
-    } else if(_pwaInstallPrompt){
-      var banner=document.getElementById('pwa-install-banner');if(banner)banner.style.display='block';
-    }
-  }catch(e){}
-  showM('m-notif');
-}
-
-//══════════════════════════════════════════
-// 通知状态检测（含PWA/SW/权限综合状态）
-// ══════════════════════════════════════════
-function updateNotifStatus(){
-  var el=document.getElementById('notif-status');
-  var titleEl=document.getElementById('notif-status-title');
-  var iconEl=document.getElementById('notif-icon-main');
-  if(!el)return;
-  var isSecure = window.isSecureContext;
-  var proto = location.protocol;
-  if(!isSecure || (proto !== 'https:' && proto !== 'http:' && location.hostname !== 'localhost')){
-    if(titleEl) titleEl.textContent='需要HTTPS环境';
-    if(iconEl) iconEl.textContent='⚠️';
-    el.innerHTML='通知API要求https://安全环境。部署到GitHub Pages/Vercel等后即可使用。';return;
-  }
-  if(!('Notification' in window)){
-    if(titleEl) titleEl.textContent='浏览器不支持通知';
-    el.textContent='请使用Chrome浏览器';return;
-  }
-  var swOk = 'serviceWorker' in navigator;
-  var pwa = _isPWA();
-  if(Notification.permission==='granted'){
-    if(titleEl) titleEl.textContent = pwa ? '✅ 后台推送已就绪' : '✅ 通知已授权（建议安装PWA）';
-    if(iconEl) iconEl.textContent = pwa ? '🐭' : '🔔';
-    el.textContent = pwa ? 'PWA+SW模式，关闭浏览器也能收到提醒' : '已授权，安装到主屏幕可启用关屏推送';
-  } else if(Notification.permission==='denied'){
-    if(titleEl) titleEl.textContent='❌ 通知权限被拒绝';
-    if(iconEl) iconEl.textContent='🚫';
-    el.textContent='请在Chrome设置→网站权限中手动开启通知';
-  } else {
-    if(titleEl) titleEl.textContent='⚠️ 尚未授权通知';
-    el.textContent='点击下方开关，授权通知权限';
-  }
-}
-
-function toggleNotif(){
-  var tog=document.getElementById('notif-tog');
-  if(!tog)return;
-  // 安全上下文检查
-  if(!window.isSecureContext){
-    toast('需要 HTTPS 环境才能使用通知');
-    return;
-  }
-  var willEnable=!tog.classList.contains('on');
-  if(willEnable&&'Notification' in window&&Notification.permission!=='granted'){
-    Notification.requestPermission().then(function(p){
-      updateNotifStatus();
-      if(p==='granted'){tog.classList.add('on');saveNotifSettings();startNotifScheduler();}
-      else{toast('通知权限未授权');}
-    });
-  } else {
-    tog.classList.toggle('on');
-    saveNotifSettings();
-    if(tog.classList.contains('on'))startNotifScheduler();
-    else stopNotifScheduler();
-  }
-}
-
-function saveNotifSettings(){
-  var tog=document.getElementById('notif-tog');
-  var t=document.getElementById('notif-time');
-  var m=document.getElementById('notif-msg');
-  var s={
-    enabled:tog?tog.classList.contains('on'):false,
-    time:t?t.value:'20:00',
-    msg:m?m.value:'🐭囤囤鼠提醒你：今日还没打卡，快来记录资源吧！'
-  };
-  try{localStorage.setItem('tdr_notif',JSON.stringify(s));}catch(e){}
-  // 同步配置到 Service Worker（打卡提醒备用）
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
-  }
-  // 同步每日提醒设置到 Supabase（方案A：服务器定时推送）
-  _syncDailyNotifToServer(s);
-}
-
-// 将每日提醒设置同步到 Supabase daily_notif_subscriptions 表
-async function _syncDailyNotifToServer(cfg){
-  if(!_sb || !window.isSecureContext) return;
-  try{
-    if(!_fcmToken) await initFCM();
-    var waited = 0;
-    while(!_fcmToken && waited < 10000){
-      await new Promise(function(r){ setTimeout(r, 500); });
-      waited += 500;
-    }
-    if(!_fcmToken){
-      toast('获取推送权限失败，请确认已授权通知权限后重试');
-      return;
-    }
-    var subObj = JSON.parse(_fcmToken);
-    if(cfg.enabled){
-      var res = await _sb.from('daily_notif_subscriptions').upsert({
-        endpoint:     subObj.endpoint,
-        fcm_token:    _fcmToken,
-        notif_time:   cfg.time,
-        notif_msg:    cfg.msg,
-        tz_offset:    8
-      }, { onConflict: 'endpoint' });
-      if(res.error){ toast('保存失败：'+res.error.message); }
-      else { toast('提醒设置已保存 ✅ 每天'+cfg.time+'准时推送'); }
-    } else {
-      await _sb.from('daily_notif_subscriptions').delete().eq('endpoint', subObj.endpoint);
-      toast('每日提醒已关闭');
-    }
-  }catch(e){ toast('保存失败：'+e.message); }
-}
-
-// 检测推送状态（手机调试用）
-async function checkPushStatus(){
-  var el = document.getElementById('push-status-result');
-  if(!el) return;
-  el.style.display = 'block';
-  el.textContent = '检测中…';
-  var lines = [];
-  lines.push('🔒 HTTPS: ' + (window.isSecureContext ? '✅' : '❌'));
-  lines.push('🔔 通知权限: ' + (typeof Notification !== 'undefined' ? Notification.permission : '不支持'));
-  lines.push('⚙️ ServiceWorker: ' + ('serviceWorker' in navigator ? '✅' : '❌'));
-  lines.push('📨 Push订阅: ' + (_fcmToken ? '✅ 已订阅' : '❌ 未订阅'));
-  lines.push('🏠 房间: ' + (_collabRoom || '未加入'));
-  el.innerHTML = lines.join('<br>');
-  if(!_fcmToken){
-    lines.push('⏳ 尝试订阅…');
-    el.innerHTML = lines.join('<br>');
-    await initFCM();
-    lines.push('📨 重试结果: ' + (_fcmToken ? '✅ 订阅成功' : '❌ 仍然失败'));
-  }
-  if('serviceWorker' in navigator){
-    try{
-      var reg = await navigator.serviceWorker.ready;
-      var sub = await reg.pushManager.getSubscription();
-      if(sub){
-        lines.push('🔗 Endpoint: ' + (sub.endpoint.includes('/v1/') ? '✅ 新版FCM' : '⚠️ 旧版FCM'));
-      }
-    }catch(e){ lines.push('❌ SW检测失败: '+e.message); }
-  }
-  el.innerHTML = lines.join('<br>');
-}
-
-// 协作通知开关（已通过自动订阅实现，此函数保留兼容性）
-function toggleCollabNotif(){
-  var tog = document.getElementById('collab-notif-tog');
-  if(!tog) return;
-  tog.classList.toggle('on');
-}
-function _saveCollabNotif(tog){
-  var on = tog.classList.contains('on');
-  try{localStorage.setItem('tdr_collab_notif_on', on?'1':'');}catch(e){}
-  if(_swReg&&_swReg.active){_doSwSendConfig(_swReg);}
-  else if('serviceWorker' in navigator){navigator.serviceWorker.ready.then(function(r){_doSwSendConfig(r);});}
-  toast(on ? '协作消息后台推送已开启 📢' : '协作消息推送已关闭');
-}
-
-// ══════════════════════════════════════════
-// ② + ③ 修复（v7）：安卓通知 → Service Worker
-// 安卓 Chrome 禁止主线程 new Notification()
-// 必须通过 registration.showNotification() 发送
-// ══════════════════════════════════════════
-function testNotif(){
-  if(!window.isSecureContext){
-    toast('需要 HTTPS 环境才能发送通知');
-    return;
-  }
-  if(!('Notification' in window)){toast('此浏览器不支持通知');return;}
-  if(Notification.permission!=='granted'){
-    Notification.requestPermission().then(function(p){
-      updateNotifStatus();
-      if(p==='granted') _doSendNotif();
-      else toast('通知权限未授权');
-    });
-  } else {
-    _doSendNotif();
-  }
-}
-
-function _doSendNotif(){
-  var msg=document.getElementById('notif-msg');
-  var text=msg?msg.value:'🐭 囤囤鼠提醒你：今日还没打卡，快来记录资源吧！';
-  _sendNotifCompat('囤囤鼠来哩🐭', text, function(ok){
-    toast(ok ? '测试通知已发送！' : '通知发送失败，请检查权限');
-  });
-}
-
-// 兼容 PC（new Notification）和安卓（SW showNotification）
-function _sendNotifCompat(title, body, cb){
-  // 优先用 Service Worker（安卓必须用这个，PC 也支持）
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.ready.then(function(reg){
-      return reg.showNotification(title, {body: body});
-    }).then(function(){
-      if(cb) cb(true);
-    }).catch(function(e){
-      // SW 失败则回退到主线程（适用 PC）
-      _sendNotifDirect(title, body, cb);
-    });
-  } else {
-    _sendNotifDirect(title, body, cb);
-  }
-}
-
-function _sendNotifDirect(title, body, cb){
-  try{
-    new Notification(title, {body: body});
-    if(cb) cb(true);
-  }catch(e){
-    console.warn('[Notif] 主线程发送失败:', e.message);
-    if(cb) cb(false);
-  }
-}
-
-function sendNotif(){_doSendNotif();}
-
-function startNotifScheduler(){
-  stopNotifScheduler();
-  notifInterval=setInterval(function(){
-    try{
-      var s=JSON.parse(localStorage.getItem('tdr_notif')||'{}');
-      if(!s.enabled)return;
-      var now=bjNow(),hm=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
-      if(hm===s.time&&Notification.permission==='granted'){
-        _sendNotifCompat('囤囤鼠来哩 🐭', s.msg||'🐭 今日还没打卡哦！', null);
-      }
-    }catch(e){}
-  },60000);
-}
-
-function stopNotifScheduler(){if(notifInterval){clearInterval(notifInterval);notifInterval=null;}}
-
-function initNotifScheduler(){
-  try{
-    var s=JSON.parse(localStorage.getItem('tdr_notif')||'{}');
-    if(s.enabled&&'Notification' in window&&Notification.permission==='granted'){
-      startNotifScheduler();
-    }
-  }catch(e){}
-}
-
 // ═══════════════════════════════════════════════
 // 日报图片生成（Canvas截图）
 // ═══════════════════════════════════════════════
@@ -3142,62 +2883,15 @@ function downloadShareCard(){
 // ════════════════════════════════════════════════════════
 
 var _swReg = null;
-var _pwaInstallPrompt = null;
-var _fcmToken = null; // 存储 push subscription
 
-// Firebase VAPID 公钥（用于生成新版FCM endpoint）
-var FIREBASE_VAPID_KEY = "BL5p0sXPAaSSAZXCEVpnL_GM6hpB5K5Qupb085uGVa_V2Ba7l53O9smqMADL5zfesb33WU50JHUCI0rVB61ChIE";
-// Firebase 项目ID（Edge Function 推送时需要）
-var FIREBASE_PROJECT_ID = "game-tracker-3bf3c";
+// ntfy 频道名（用户自定义，存在 localStorage）
+var _ntfyTopic = localStorage.getItem('tdr_ntfy_topic') || '';
+// ntfy 服务地址（免费公共服务器）
+var NTFY_SERVER = 'https://ntfy.sh';
 
-// PWA 安装提示
-window.addEventListener('beforeinstallprompt', function(e){
-  e.preventDefault();
-  _pwaInstallPrompt = e;
-  var banner = document.getElementById('pwa-install-banner');
-  if(banner) banner.style.display = 'block';
-  clog('PWA','可以安装PWA');
-});
-
-window.addEventListener('appinstalled', function(){
-  _pwaInstallPrompt = null;
-  var banner = document.getElementById('pwa-install-banner');
-  if(banner) banner.style.display = 'none';
-  var badge = document.getElementById('pwa-installed-badge');
-  if(badge) badge.style.display = 'block';
-  toast('✅ 已安装到主屏幕！');
-  clog('PWA','已安装');
-});
-
-function triggerPWAInstall(){
-  if(_pwaInstallPrompt){
-    _pwaInstallPrompt.prompt();
-    _pwaInstallPrompt.userChoice.then(function(r){ _pwaInstallPrompt = null; });
-  } else {
-    toast('请用Chrome菜单 → "添加到主屏幕"');
-  }
-}
-
-function _isPWA(){
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-
-function _urlBase64ToUint8Array(base64String){
-  var padding = '='.repeat((4 - base64String.length % 4) % 4);
-  var base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  var raw = window.atob(base64);
-  var arr = new Uint8Array(raw.length);
-  for(var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-  return arr;
-}
-
-// ── 注册 SW ──
+// ── 注册 SW（仅用于PWA离线壳，不再用于推送）──
 function registerSW(){
   if(!('serviceWorker' in navigator) || !window.isSecureContext) return;
-  if(_isPWA()){
-    var badge = document.getElementById('pwa-installed-badge');
-    if(badge) badge.style.display = 'block';
-  }
   navigator.serviceWorker.register('/game-tracker/sw.js', { scope: '/game-tracker/' })
     .then(function(reg){
       _swReg = reg;
@@ -3206,7 +2900,6 @@ function registerSW(){
     }).catch(function(e){ clog('SW','注册失败:'+e.message); });
 }
 
-// ── 发送打卡提醒配置到SW ──
 function _doSwSendConfig(reg){
   try{
     var ns = JSON.parse(localStorage.getItem('tdr_notif')||'{}');
@@ -3221,157 +2914,145 @@ function _doSwSendConfig(reg){
 }
 
 // ════════════════════════════════════════════════════════
-// 原生 Web Push 订阅（不依赖Firebase SDK，轻量无卡顿）
-// 用 Firebase VAPID key 确保生成新版 FCM endpoint
+// ntfy 推送（无需Google服务，VPN环境完美支持）
 // ════════════════════════════════════════════════════════
 
-// 初始化推送订阅（轻量，不加载任何SDK）
-async function initFCM(){
-  if(!('serviceWorker' in navigator) || !window.isSecureContext) return;
-  if(_fcmToken){ clog('PUSH','已有订阅，跳过'); return; }
-  try{
-    var permission = Notification.permission;
-    if(permission !== 'granted'){
-      permission = await Notification.requestPermission();
-    }
-    if(permission !== 'granted'){ clog('PUSH','权限被拒绝'); return; }
-
-    var reg = await navigator.serviceWorker.ready;
-    // 先检查是否已有订阅
-    var sub = await reg.pushManager.getSubscription();
-    // 如果已有订阅但用的是旧版key，先取消重新订阅
-    if(sub && sub.endpoint.includes('/fcm/send/')){
-      clog('PUSH','检测到旧版endpoint，重新订阅');
-      await sub.unsubscribe();
-      sub = null;
-    }
-    if(!sub){
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: _urlBase64ToUint8Array(FIREBASE_VAPID_KEY)
-      });
-      clog('PUSH','新建订阅成功');
-    }
-    // 把整个 subscription 对象存为 token（Edge Function 用原生Web Push发送）
-    _fcmToken = JSON.stringify(sub.toJSON());
-    clog('PUSH','订阅就绪 endpoint:'+sub.endpoint.slice(0,40));
-  }catch(e){
-    clog('PUSH','订阅失败:'+e.message);
-  }
+// 保存 ntfy Topic
+function saveNtfyTopic(){
+  var el = document.getElementById('ntfy-topic');
+  if(!el) return;
+  var topic = el.value.trim();
+  if(!topic){ toast('请输入频道名'); return; }
+  _ntfyTopic = topic;
+  try{ localStorage.setItem('tdr_ntfy_topic', topic); }catch(e){}
+  clog('NTFY','频道已保存:'+topic);
+  toast('频道设置已保存 ✅');
+  // 如果已在房间，同步到服务器
+  if(_collabRoom && _sb) _saveNtfyToServer(_collabRoom, _collabNick);
 }
 
-// 统一入口：确保已订阅
-function _ensurePushSubscribed(roomCode, nick){
-  if(!('Notification' in window)){ clog('PUSH','不支持通知'); return; }
-  if(Notification.permission === 'granted'){
-    _doPushSubscribe(roomCode, nick);
-  } else if(Notification.permission !== 'denied'){
-    Notification.requestPermission().then(function(p){
-      if(p === 'granted') _doPushSubscribe(roomCode, nick);
-      else toast('未授权通知，将无法收到离线推送');
-    });
+// 打开通知弹窗时恢复Topic
+function openNotifModal(){
+  updateNotifStatus();
+  try{
+    var s = JSON.parse(localStorage.getItem('tdr_notif')||'{}');
+    var tog = document.getElementById('notif-tog');
+    if(tog) tog.classList.toggle('on', !!s.enabled);
+    var t = document.getElementById('notif-time'); if(t && s.time) t.value = s.time;
+    var m = document.getElementById('notif-msg'); if(m && s.msg) m.value = s.msg;
+    var topicEl = document.getElementById('ntfy-topic');
+    if(topicEl) topicEl.value = _ntfyTopic || '';
+  }catch(e){}
+  showM('m-notif');
+}
+
+function updateNotifStatus(){
+  var el = document.getElementById('notif-status');
+  if(!el) return;
+  if(_ntfyTopic){
+    el.textContent = '频道：' + _ntfyTopic + ' ✅';
   } else {
-    toast('通知权限被拒绝，请在Chrome设置中手动开启');
+    el.textContent = '请先设置 ntfy 频道名';
   }
 }
 
-async function _doPushSubscribe(roomCode, nick){
+// 保存 ntfy Topic 到 Supabase（协作消息推送用）
+async function _saveNtfyToServer(roomCode, nick){
+  if(!_sb || !roomCode || !_ntfyTopic) return;
   try{
-    if(!_fcmToken) await initFCM();
-    if(!_fcmToken){ clog('PUSH','无订阅，失败'); return; }
-    if(!_sb || !roomCode) return;
-
-    var subObj = JSON.parse(_fcmToken);
-    await _sb.from('push_subscriptions').delete().eq('endpoint', subObj.endpoint).eq('room_code', roomCode);
-    var ins = await _sb.from('push_subscriptions').insert({
-      room_code:    roomCode,
-      nick:         nick || '',
-      endpoint:     subObj.endpoint,
-      fcm_token:    _fcmToken
-    });
-    if(ins.error){ clog('PUSH','存储失败:'+ins.error.message); }
-    else { clog('PUSH','订阅已存入Supabase'); toast('推送已激活 🔔'); }
-  }catch(e){ clog('PUSH','订阅失败:'+e.message); }
+    await _sb.from('push_subscriptions').upsert({
+      room_code:  roomCode,
+      nick:       nick || '',
+      ntfy_topic: _ntfyTopic,
+      endpoint:   _ntfyTopic  // 复用endpoint字段存topic
+    }, { onConflict: 'endpoint' });
+    clog('NTFY','Topic已同步到Supabase', {room: roomCode});
+  }catch(e){ clog('NTFY','同步失败:'+e.message); }
 }
 
-// 退出房间时删除订阅
+// 加入/创建房间时调用
+function _ensurePushSubscribed(roomCode, nick){
+  if(!_ntfyTopic){
+    toast('请在推送提醒设置里填写 ntfy 频道名 🔔');
+    return;
+  }
+  _saveNtfyToServer(roomCode, nick);
+  toast('协作推送已激活 🔔');
+}
+
+// 退出房间时删除
 async function unsubscribePush(roomCode){
   try{
-    if(_sb && _fcmToken && roomCode){
-      var subObj = JSON.parse(_fcmToken);
-      await _sb.from('push_subscriptions').delete().eq('endpoint', subObj.endpoint).eq('room_code', roomCode);
+    if(_sb && _ntfyTopic && roomCode){
+      await _sb.from('push_subscriptions').delete().eq('ntfy_topic', _ntfyTopic).eq('room_code', roomCode);
     }
-  }catch(e){ clog('PUSH','取消失败:'+e.message); }
+  }catch(e){}
 }
+
+// 测试通知
+function testNtfy(){
+  if(!_ntfyTopic){ toast('请先设置 ntfy 频道名'); return; }
+  fetch(NTFY_SERVER + '/' + _ntfyTopic, {
+    method: 'POST',
+    headers: { 'Title': '囤囤鼠来哩 🐭', 'Priority': 'default', 'Tags': 'hamster' },
+    body: '这是一条测试通知，推送成功！'
+  }).then(function(r){
+    if(r.ok) toast('测试通知已发送，请查看ntfy App 🔔');
+    else toast('发送失败，请检查频道名');
+  }).catch(function(){ toast('发送失败，请检查网络'); });
+}
+
+// saveNotifSettings 同步每日提醒到服务器
+function saveNotifSettings(){
+  var tog = document.getElementById('notif-tog');
+  var t   = document.getElementById('notif-time');
+  var m   = document.getElementById('notif-msg');
+  var s = {
+    enabled: tog ? tog.classList.contains('on') : false,
+    time:    t ? t.value : '20:00',
+    msg:     m ? m.value : '🐭囤囤鼠提醒你：今日还没打卡，快来记录资源吧！'
+  };
+  try{ localStorage.setItem('tdr_notif', JSON.stringify(s)); }catch(e){}
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
+  }
+  _syncDailyNotifToServer(s);
+}
+
+async function _syncDailyNotifToServer(cfg){
+  if(!_sb || !_ntfyTopic) return;
+  try{
+    if(cfg.enabled){
+      await _sb.from('daily_notif_subscriptions').upsert({
+        endpoint:   _ntfyTopic,
+        ntfy_topic: _ntfyTopic,
+        notif_time: cfg.time,
+        notif_msg:  cfg.msg,
+        tz_offset:  8
+      }, { onConflict: 'endpoint' });
+      toast('提醒设置已保存 ✅ 每天' + cfg.time + '推送到ntfy');
+    } else {
+      await _sb.from('daily_notif_subscriptions').delete().eq('ntfy_topic', _ntfyTopic);
+      toast('每日提醒已关闭');
+    }
+    clog('NTFY','每日提醒已同步', {time: cfg.time});
+  }catch(e){ toast('保存失败：'+e.message); }
+}
+
+// toggleNotif 保持不变
+function toggleNotif(){
+  var tog = document.getElementById('notif-tog');
+  if(!tog) return;
+  if(!window.isSecureContext){ toast('需要HTTPS环境'); return; }
+  tog.classList.toggle('on');
+  saveNotifSettings();
+}
+
+// 兼容旧调用
+function toggleCollabNotif(){}
+function testNotif(){ testNtfy(); }
 
 // PWA 安装提示
-window.addEventListener('beforeinstallprompt', function(e){
-  e.preventDefault();
-  _pwaInstallPrompt = e;
-  var banner = document.getElementById('pwa-install-banner');
-  if(banner) banner.style.display = 'block';
-  clog('PWA','可以安装PWA');
-});
-
-window.addEventListener('appinstalled', function(){
-  _pwaInstallPrompt = null;
-  var banner = document.getElementById('pwa-install-banner');
-  if(banner) banner.style.display = 'none';
-  var badge = document.getElementById('pwa-installed-badge');
-  if(badge) badge.style.display = 'block';
-  toast('✅ 已安装到主屏幕！');
-  clog('PWA','已安装');
-});
-
-function triggerPWAInstall(){
-  if(_pwaInstallPrompt){
-    _pwaInstallPrompt.prompt();
-    _pwaInstallPrompt.userChoice.then(function(r){ _pwaInstallPrompt = null; });
-  } else {
-    toast('请用Chrome菜单 → "添加到主屏幕"');
-  }
-}
-
-function _isPWA(){
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-
-// ── 注册 SW ──
-function registerSW(){
-  if(!('serviceWorker' in navigator) || !window.isSecureContext) return;
-  if(_isPWA()){
-    var badge = document.getElementById('pwa-installed-badge');
-    if(badge) badge.style.display = 'block';
-  }
-  navigator.serviceWorker.register('/game-tracker/sw.js', { scope: '/game-tracker/' })
-    .then(function(reg){
-      _swReg = reg;
-      clog('SW','注册成功');
-      navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
-    }).catch(function(e){ clog('SW','注册失败:'+e.message); });
-}
-
-// ── 发送打卡提醒配置到SW ──
-function _doSwSendConfig(reg){
-  try{
-    var ns = JSON.parse(localStorage.getItem('tdr_notif')||'{}');
-    if(reg.active){
-      reg.active.postMessage({ type:'SET_NOTIF', cfg:{
-        enabled: !!ns.enabled,
-        time: ns.time || '20:00',
-        msg:  ns.msg  || '🐭 今日还没打卡哦！'
-      }});
-    }
-    clog('SW','配置已同步');
-  }catch(e){ clog('SW','同步配置失败:'+e.message); }
-}
-
-// ════════════════════════════════════════════════════════
-// Firebase Cloud Messaging 推送订阅
-// ════════════════════════════════════════════════════════
-
-var _fcmToken = null;
-
 // ══════════════════════════════════════════════════════════
 // Supabase 多人协作模块 v8
 // 功能：①通知 ②历史房间 ③编辑/删除公告 ④改昵称 ⑤存储用量 ⑥改房间名 ⑦调试日志
@@ -3960,25 +3641,16 @@ window.onload=function(){
   }
   rAllTabs();rPage('task');
   initThemePanel();
-  initNotifScheduler();
   // 设置任务日期显示
   document.getElementById('task-date').textContent=today();
   // 初始化跨天检测基准
   _dailyCheckDay=today();
   // 迁移旧 base64 图片到 IndexedDB（仅首次需要）
   setTimeout(migrateImagesToIDB, 1500);
-  // 注册 Service Worker
+  // 注册 Service Worker（PWA离线壳）
   registerSW();
   // 初始化 Supabase 协作模块
   initSupabase();
-  // 延迟初始化：SW配置同步
-  setTimeout(function(){
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.ready.then(function(r){ _doSwSendConfig(r); });
-    }
-    // FCM 不在启动时加载，避免卡顿
-    // 在加入房间 或 点击保存提醒 时才按需初始化
-  }, 2500);
 };
 </script>
 </body>
