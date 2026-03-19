@@ -3377,81 +3377,48 @@ function _doSwSendConfig(reg){
 // Firebase Cloud Messaging 推送订阅
 // ════════════════════════════════════════════════════════
 
-var _fcmToken = null; // 当前设备的FCM token
+var _fcmToken = null;
 
-// 初始化 Firebase 并获取 FCM token
+// 初始化推送订阅（纯原生Web Push，不加载任何SDK，不会卡顿）
 async function initFCM(){
-  if(FIREBASE_VAPID_KEY === 'PASTE_VAPID_KEY_HERE'){
-    clog('FCM','Firebase未配置，跳过'); return;
-  }
-  if(!('serviceWorker' in navigator) || !window.isSecureContext){
-    clog('FCM','环境不支持'); return;
-  }
-  // 防止重复初始化
-  if(window._fcmInitializing) return;
+  if(!('serviceWorker' in navigator) || !window.isSecureContext) return;
+  if(_fcmToken) return; // 已有订阅
+  if(window._fcmInitializing) return; // 防重复
   window._fcmInitializing = true;
   try{
-    clog('FCM','开始加载SDK…');
-    // 加载SDK，设置10秒超时
-    await Promise.race([
-      Promise.all([
-        _loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js'),
-        _loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js')
-      ]),
-      new Promise(function(_,reject){ setTimeout(function(){ reject(new Error('SDK加载超时')); }, 10000); })
-    ]);
-    clog('FCM','SDK加载完成');
-
-    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    var messaging = firebase.messaging();
-
-    // 请求通知权限
     var permission = Notification.permission;
     if(permission !== 'granted'){
       permission = await Notification.requestPermission();
     }
-    if(permission !== 'granted'){
-      clog('FCM','通知权限被拒绝'); return;
+    if(permission !== 'granted'){ clog('PUSH','权限被拒绝'); return; }
+
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+
+    // 如果是旧版endpoint（/fcm/send/），强制重新订阅
+    if(sub && sub.endpoint.includes('/fcm/send/')){
+      clog('PUSH','检测到旧版endpoint，重新订阅');
+      await sub.unsubscribe();
+      sub = null;
     }
 
-    // 获取 FCM token
-    var swReg = await navigator.serviceWorker.ready;
-    var token = await messaging.getToken({
-      vapidKey: FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: swReg
-    });
-
-    if(token){
-      _fcmToken = token;
-      clog('FCM','获取token成功', {token: token.slice(0,20)+'...'});
-      messaging.onMessage(function(payload){
-        clog('FCM','前台收到消息', payload);
-        swReg.showNotification(payload.notification.title, {
-          body:  payload.notification.body,
-          icon:  '/game-tracker/icon-192.png',
-          badge: '/game-tracker/icon-192.png',
-          data:  { url: 'https://muf07-source.github.io/game-tracker/index.html' }
-        });
+    if(!sub){
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _urlBase64ToUint8Array(FIREBASE_VAPID_KEY)
       });
+      clog('PUSH','新建订阅成功');
     } else {
-      clog('FCM','token为空');
+      clog('PUSH','复用已有订阅');
     }
+
+    _fcmToken = JSON.stringify(sub.toJSON());
+    clog('PUSH','订阅就绪');
   }catch(e){
-    clog('FCM','初始化失败:'+e.message);
+    clog('PUSH','订阅失败:'+e.message);
   } finally {
     window._fcmInitializing = false;
   }
-}
-
-function _loadScript(src){
-  return new Promise(function(resolve, reject){
-    if(document.querySelector('script[src="'+src+'"]')){ resolve(); return; }
-    var s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
 }
 
 // ══════════════════════════════════════════════════════════
