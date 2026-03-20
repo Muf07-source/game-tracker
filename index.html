@@ -625,7 +625,7 @@ select.fi{-webkit-appearance:none;appearance:none}
       </div>
       <!-- 操作按钮 -->
       <div style="padding:10px 20px;display:flex;gap:8px">
-        <button class="btn bp" style="flex:1" onclick="showM('m-collab-post')">📢 发公告</button>
+        <button class="btn bp" style="flex:1" onclick="collabOpenPost(null,'','')">📢 发公告</button>
         <button class="btn bg" style="flex:1" onclick="collabRefresh()">🔄 刷新</button>
       </div>
       <!-- NEW: 公告分类过滤栏 -->
@@ -788,19 +788,57 @@ select.fi{-webkit-appearance:none;appearance:none}
         <div class="fg"><label class="fl">任务内容</label><input class="fi" id="nt-text" placeholder="例如：完成每日委托"></div>
         <!-- 重置周期选择 -->
         <div class="fg">
-          <label class="fl">重置周期</label>
+          <label class="fl">任务类型 / 重置周期</label>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px" id="nt-reset-btns">
-            <button class="btn bg bsm nt-rb on" data-reset="none" onclick="ntSelReset(this,'none')">不重置</button>
-            <button class="btn bg bsm nt-rb" data-reset="daily" onclick="ntSelReset(this,'daily')">每天</button>
+            <button class="btn bg bsm nt-rb" data-reset="none" onclick="ntSelReset(this,'none')">不重置</button>
+            <button class="btn bg bsm nt-rb on" data-reset="daily" onclick="ntSelReset(this,'daily')">每天</button>
             <button class="btn bg bsm nt-rb" data-reset="weekly" onclick="ntSelReset(this,'weekly')">每周</button>
             <button class="btn bg bsm nt-rb" data-reset="monthly" onclick="ntSelReset(this,'monthly')">每月</button>
             <button class="btn bg bsm nt-rb" data-reset="custom" onclick="ntSelReset(this,'custom')">自定义天数</button>
+            <button class="btn bg bsm nt-rb" data-reset="timed" onclick="ntSelReset(this,'timed')" style="background:var(--accbg);color:var(--accent);border-color:var(--accent)">⏳ 限时活动</button>
           </div>
+          <!-- 每天：自定义重置时间 -->
+          <div id="nt-daily-time-row" style="display:none;margin-top:8px">
+            <label class="fl" style="margin-bottom:4px">每日重置时间（北京时间）</label>
+            <input class="fi" type="time" id="nt-daily-time" value="04:00" style="width:140px">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">留空则跨日即重置（默认04:00）</div>
+          </div>
+          <!-- 每周：选择星期几 -->
+          <div id="nt-weekly-day-row" style="display:none;margin-top:8px">
+            <label class="fl" style="margin-bottom:4px">每周重置日</label>
+            <div style="display:flex;gap:5px;flex-wrap:wrap" id="nt-weekday-btns">
+              <button class="btn bg bsm nt-wdb" data-wd="1" onclick="ntSelWeekday(this,1)">周一</button>
+              <button class="btn bg bsm nt-wdb" data-wd="2" onclick="ntSelWeekday(this,2)">周二</button>
+              <button class="btn bg bsm nt-wdb" data-wd="3" onclick="ntSelWeekday(this,3)">周三</button>
+              <button class="btn bg bsm nt-wdb" data-wd="4" onclick="ntSelWeekday(this,4)">周四</button>
+              <button class="btn bg bsm nt-wdb" data-wd="5" onclick="ntSelWeekday(this,5)">周五</button>
+              <button class="btn bg bsm nt-wdb" data-wd="6" onclick="ntSelWeekday(this,6)">周六</button>
+              <button class="btn bg bsm nt-wdb" data-wd="0" onclick="ntSelWeekday(this,0)">周日</button>
+            </div>
+          </div>
+          <!-- 每月：选择几号 -->
+          <div id="nt-monthly-day-row" style="display:none;margin-top:8px">
+            <label class="fl" style="margin-bottom:4px">每月重置日</label>
+            <input class="fi" type="number" id="nt-monthly-day" placeholder="几号（1-31）" min="1" max="31" style="width:140px">
+          </div>
+          <!-- 自定义天数 -->
           <div id="nt-custom-days-row" style="display:none;margin-top:8px">
             <input class="fi" type="number" id="nt-custom-days" placeholder="几天重置一次（如：3）" min="1" max="365" style="width:100%">
           </div>
+          <!-- 限时活动：开始/结束日期 -->
+          <div id="nt-timed-row" style="display:none;margin-top:8px">
+            <div style="background:var(--accbg);border-radius:var(--r2);padding:10px 12px;border:1.5px solid hsla(var(--accent-h),40%,60%,0.2)">
+              <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:8px">⏳ 限时活动设置</div>
+              <div class="frow">
+                <div class="fg"><label class="fl">活动开始日期</label><input type="date" class="fi" id="nt-timed-start"></div>
+                <div class="fg"><label class="fl">活动结束日期</label><input type="date" class="fi" id="nt-timed-end"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.5">限时任务会在日历上高亮显示，活动期间每天可完成一次</div>
+            </div>
+          </div>
         </div>
-        <input type="hidden" id="nt-reset-mode" value="none">
+        <input type="hidden" id="nt-reset-mode" value="daily">
+        <input type="hidden" id="nt-weekly-day" value="1">
         <input type="hidden" id="nt-edit-id">
         <!-- 同步到该游戏所有账号 -->
         <div class="togrow">
@@ -2119,20 +2157,50 @@ function onAcctAvatarPick(ev){
 // customDays: number (用于custom模式)
 // lastReset: 'YYYY-MM-DD' 上次重置日期
 function _taskNeedsReset(t){
-  var mode=t.resetMode||( t.isDaily?'daily':'none' );
+  var mode=t.resetMode||(t.isDaily?'daily':'none');
   if(mode==='none') return false;
+  // 限时任务：永不自动重置（活动期内每天可手动完成）
+  if(mode==='timed') return _timedTaskNeedsReset(t);
   var lr=t.lastReset||'';
   var td=today();
   if(!lr||lr===td) return false;
-  if(mode==='daily') return true;
+  if(mode==='daily'){
+    // ① 按设定时间判断（北京时间）
+    var resetTime=t.dailyResetTime||'04:00';
+    var parts=resetTime.split(':');
+    var resetH=parseInt(parts[0])||4, resetM=parseInt(parts[1])||0;
+    var bjNowD=bjDate();
+    var nowMins=bjNowD.getHours()*60+bjNowD.getMinutes();
+    var resetMins=resetH*60+resetM;
+    // 如果今天还没到重置时间，且lastReset是今天，则不重置
+    if(lr===td && nowMins < resetMins) return false;
+    // lastReset不是今天则重置
+    return lr!==td;
+  }
   if(mode==='weekly'){
-    var a=new Date(lr+'T00:00:00'),b=new Date(td+'T00:00:00');
-    var diff=Math.round((b-a)/86400000);
-    return diff>=7;
+    // ① 按设定星期几重置
+    var targetWd=t.weeklyDay!==undefined?parseInt(t.weeklyDay):1; // 默认周一
+    var tdDate=new Date(td+'T00:00:00');
+    var lrDate=new Date(lr+'T00:00:00');
+    var tdWd=tdDate.getDay(); // 0=周日
+    var diff=Math.round((tdDate-lrDate)/86400000);
+    // 已超过7天 OR 跨过了目标星期几
+    if(diff>=7) return true;
+    // 检查是否已经过了本周的重置日
+    // 找到lastReset后最近一个targetWd
+    var daysToNext=((targetWd - lrDate.getDay())+7)%7||7;
+    return diff>=daysToNext && lr!==td;
   }
   if(mode==='monthly'){
-    var a2=new Date(lr+'T00:00:00'),b2=new Date(td+'T00:00:00');
-    return b2.getMonth()!==a2.getMonth()||b2.getFullYear()!==a2.getFullYear();
+    // ① 按设定几号重置
+    var targetMd=parseInt(t.monthlyDay)||1;
+    var tdD=new Date(td+'T00:00:00');
+    var lrD=new Date(lr+'T00:00:00');
+    // 月份不同，且当前日期>=目标日
+    if(tdD.getMonth()!==lrD.getMonth()||tdD.getFullYear()!==lrD.getFullYear()){
+      return tdD.getDate()>=targetMd;
+    }
+    return false;
   }
   if(mode==='custom'){
     var days=parseInt(t.customDays)||1;
@@ -2141,6 +2209,25 @@ function _taskNeedsReset(t){
     return diff2>=days;
   }
   return false;
+}
+
+// 限时任务：在活动期内每天重置
+function _timedTaskNeedsReset(t){
+  var td=today();
+  var start=t.timedStart||'';
+  var end=t.timedEnd||'';
+  if(!start||!end) return false;
+  // 不在活动期内
+  if(td<start||td>end) return false;
+  // 在活动期内，lastReset不是今天则重置
+  return (t.lastReset||'')!==td;
+}
+
+// 限时任务是否在活动期内且今天可完成
+function _isTimedTaskActive(t){
+  if(t.resetMode!=='timed') return false;
+  var td=today();
+  return !!(t.timedStart&&t.timedEnd&&td>=t.timedStart&&td<=t.timedEnd);
 }
 
 function resetDaily(){
@@ -2152,6 +2239,7 @@ function resetDaily(){
       for(var k=0;k<ts.length;k++){
         if(_taskNeedsReset(ts[k])){
           ts[k].isDone=false;ts[k].lastReset=today();changed=true;
+          clog('TASK','重置任务',{text:ts[k].text,mode:ts[k].resetMode});
         }
       }
     }
@@ -2162,10 +2250,22 @@ function resetDaily(){
 function _resetLabel(t){
   var mode=t.resetMode||(t.isDaily?'daily':'none');
   if(mode==='none') return '一次';
-  if(mode==='daily') return '每天';
-  if(mode==='weekly') return '每周';
-  if(mode==='monthly') return '每月';
+  if(mode==='daily'){
+    var rt=t.dailyResetTime;
+    return rt&&rt!=='04:00'?('每天'+rt):'每天';
+  }
+  if(mode==='weekly'){
+    var wds=['日','一','二','三','四','五','六'];
+    var wd=t.weeklyDay!==undefined?parseInt(t.weeklyDay):1;
+    return '每周'+wds[wd];
+  }
+  if(mode==='monthly') return '每月'+(t.monthlyDay||'')+'号';
   if(mode==='custom') return (t.customDays||'?')+'天';
+  if(mode==='timed'){
+    var s=t.timedStart?t.timedStart.slice(5).replace('-','/'):'?';
+    var e=t.timedEnd?t.timedEnd.slice(5).replace('-','/'):'?';
+    return '⏳'+s+'~'+e;
+  }
   return '一次';
 }
 
@@ -2176,31 +2276,50 @@ function rTasks(){
   if(!a){el.innerHTML='<div class="empty"><div class="ei">👤</div><div class="et">请先添加账号</div></div>';return;}
   var tasks=a.tasks||[];
   if(!tasks.length){el.innerHTML='<div class="empty"><div class="ei">✓</div><div class="et">没有任务<br><span style="font-size:12px">点右上角 ＋任务 添加</span></div></div>';return;}
-  // 分组：有重置周期的 vs 一次性
-  var cycled=[],once=[];
+  var timed_active=[],timed_expired=[],cycled=[],once=[];
+  var td=today();
   for(var i=0;i<tasks.length;i++){
     var mode=tasks[i].resetMode||(tasks[i].isDaily?'daily':'none');
-    if(mode!=='none') cycled.push(tasks[i]); else once.push(tasks[i]);
+    if(mode==='timed'){
+      var ts2=tasks[i].timedStart||'',te2=tasks[i].timedEnd||'';
+      if(te2&&td>te2) timed_expired.push(tasks[i]);
+      else timed_active.push(tasks[i]);
+    } else if(mode!=='none') cycled.push(tasks[i]);
+    else once.push(tasks[i]);
   }
   var h='';
+  if(timed_active.length){h+='<div class="sec-h" style="color:var(--accent)">⏳ 限时活动</div>';for(var i=0;i<timed_active.length;i++)h+=tH(timed_active[i]);}
   if(cycled.length){h+='<div class="sec-h">循环任务</div>';for(var i=0;i<cycled.length;i++)h+=tH(cycled[i]);}
   if(once.length){h+='<div class="sec-h">一次性任务</div>';for(var i=0;i<once.length;i++)h+=tH(once[i]);}
+  if(timed_expired.length){h+='<div class="sec-h" style="color:var(--text3)">已结束的活动</div>';for(var i=0;i<timed_expired.length;i++)h+=tH(timed_expired[i]);}
   el.innerHTML=h;
 }
 
 function tH(t){
   var label=_resetLabel(t);
-  var badgeClass=(label==='一次')?'tbonce':'tbdaily';
+  var mode=t.resetMode||(t.isDaily?'daily':'none');
+  var badgeClass=(mode==='none')?'tbonce':(mode==='timed'?'tbonce':'tbdaily');
   var colorDot=t.color?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+t.color+';margin-right:5px;flex-shrink:0;vertical-align:middle"></span>':'';
   var resHint='';
   if(t.resUpdateMode&&t.resUpdateMode!=='none'&&t.resEntries&&t.resEntries.length){
-    resHint='<div style="font-size:10px;color:var(--accent);margin-top:2px">'+
-      (t.resUpdateMode==='add'?'＋':'＝')+' 完成时更新资源</div>';
+    resHint='<div style="font-size:10px;color:var(--accent);margin-top:2px">'+(t.resUpdateMode==='add'?'＋':'＝')+' 完成时更新资源</div>';
   }
-  return '<div class="titem">'
-    +'<div class="tcheck'+(t.isDone?' on':'')+'" onclick="togTask(\''+t.id+'\')">'+(t.isDone?'✓':'')+'</div>'
-    +'<div style="flex:1;min-width:0"><div class="ttxt'+(t.isDone?' done':'')+'" onclick="openEditTask(\''+t.id+'\')">'+colorDot+t.text+'</div>'+resHint+'</div>'
-    +'<span class="tbadge '+badgeClass+'">'+label+'</span>'
+  // 限时任务：判断是否在活动期
+  var isExpired=false,isNotStarted=false;
+  if(mode==='timed'){
+    var td2=today();
+    if(t.timedEnd&&td2>t.timedEnd) isExpired=true;
+    if(t.timedStart&&td2<t.timedStart) isNotStarted=true;
+    badgeClass='tbonce';
+  }
+  var checkable=!isExpired&&!isNotStarted;
+  var badgeStyle=mode==='timed'?(isExpired?'background:var(--bg3);color:var(--text3);border-color:var(--border)':isNotStarted?'background:#EFF5EF;color:#5A8A6A;border-color:#8BA995':'background:var(--accbg);color:var(--accent);border-color:hsla(var(--accent-h),40%,60%,0.3)'):'';
+  return '<div class="titem"'+(isExpired?' style="opacity:0.5"':'')+' >'
+    +'<div class="tcheck'+(t.isDone?' on':'')+'" onclick="'+(checkable?'togTask(\''+t.id+'\')':'')+'" style="'+(checkable?'':'cursor:default;opacity:0.4')+'">'+(t.isDone?'✓':'')+'</div>'
+    +'<div style="flex:1;min-width:0"><div class="ttxt'+(t.isDone?' done':'')+'" onclick="openEditTask(\''+t.id+'\')">'+colorDot+t.text+'</div>'+resHint
+    +(mode==='timed'&&(t.timedStart||t.timedEnd)?'<div style="font-size:10px;color:var(--text3);margin-top:2px">'+(t.timedStart?t.timedStart.slice(5).replace('-','/'):'?')+'→'+(t.timedEnd?t.timedEnd.slice(5).replace('-','/'):'?')+(isExpired?' 已结束':isNotStarted?' 未开始':' 进行中')+'</div>':'')
+    +'</div>'
+    +'<span class="tbadge '+badgeClass+'" style="'+badgeStyle+'">'+label+'</span>'
     +'<button class="tdel" onclick="delTask(\''+t.id+'\')">×</button>'
     +'</div>';
 }
@@ -2288,7 +2407,17 @@ function ntSelReset(btn, mode){
   document.querySelectorAll('.nt-rb').forEach(function(b){b.classList.remove('on','bp');b.classList.add('bg');});
   btn.classList.add('on','bp');btn.classList.remove('bg');
   document.getElementById('nt-reset-mode').value=mode;
+  // 显示/隐藏对应子设置
   document.getElementById('nt-custom-days-row').style.display=(mode==='custom')?'block':'none';
+  document.getElementById('nt-timed-row').style.display=(mode==='timed')?'block':'none';
+  document.getElementById('nt-weekly-day-row').style.display=(mode==='weekly')?'block':'none';
+  document.getElementById('nt-monthly-day-row').style.display=(mode==='monthly')?'block':'none';
+  document.getElementById('nt-daily-time-row').style.display=(mode==='daily')?'block':'none';
+}
+function ntSelWeekday(btn, wd){
+  document.querySelectorAll('.nt-wdb').forEach(function(b){b.classList.remove('on','bp');b.classList.add('bg');});
+  btn.classList.add('on','bp');btn.classList.remove('bg');
+  document.getElementById('nt-weekly-day').value=wd;
 }
 
 // 打开添加任务Modal
@@ -2298,6 +2427,14 @@ function openAddTask(){
   document.getElementById('nt-edit-id').value='';
   document.getElementById('nt-custom-days').value='';
   document.getElementById('nt-custom-days-row').style.display='none';
+  document.getElementById('nt-timed-row').style.display='none';
+  document.getElementById('nt-weekly-day-row').style.display='none';
+  document.getElementById('nt-monthly-day-row').style.display='none';
+  document.getElementById('nt-daily-time-row').style.display='block';
+  document.getElementById('nt-daily-time').value='04:00';
+  document.getElementById('nt-monthly-day').value='';
+  document.getElementById('nt-timed-start').value='';
+  document.getElementById('nt-timed-end').value='';
   document.getElementById('nt-sync-all').classList.remove('on');
   document.getElementById('nt-share-collab').classList.remove('on');
   // 默认选择"每天"
@@ -2305,13 +2442,16 @@ function openAddTask(){
   var dailyBtn=document.querySelector('[data-reset="daily"]');
   if(dailyBtn){dailyBtn.classList.add('on','bp');dailyBtn.classList.remove('bg');}
   document.getElementById('nt-reset-mode').value='daily';
+  // 默认周一
+  document.querySelectorAll('.nt-wdb').forEach(function(b){b.classList.remove('on','bp');b.classList.add('bg');});
+  var monBtn=document.querySelector('[data-wd="1"]');
+  if(monBtn){monBtn.classList.add('on','bp');monBtn.classList.remove('bg');}
+  document.getElementById('nt-weekly-day').value='1';
   // ① 重置资源配置
   _taskResEntries=[];_taskResModeVal='none';
   setTaskResMode('none');
   _initTaskColorRow('');
-  // 如果已加入协作房间则显示分享选项
   document.getElementById('nt-share-row').style.display=(_sbReady&&_collabRoom)?'flex':'none';
-  // 显示资源选项（仅在有资源时）
   var g=G();
   document.getElementById('nt-res-mode-btns').style.display=(g&&(g.resources||[]).length)?'flex':'none';
   showM('m-addtask');
@@ -2330,16 +2470,40 @@ function openEditTask(id){
   document.querySelectorAll('.nt-rb').forEach(function(b){b.classList.remove('on','bp');b.classList.add('bg');});
   var selBtn=document.querySelector('[data-reset="'+mode+'"]');
   if(selBtn){selBtn.classList.add('on','bp');selBtn.classList.remove('bg');}
-  document.getElementById('nt-custom-days-row').style.display=(mode==='custom')?'block':'none';
-  document.getElementById('nt-custom-days').value=t.customDays||'';
+  // 隐藏所有子设置
+  document.getElementById('nt-custom-days-row').style.display='none';
+  document.getElementById('nt-timed-row').style.display='none';
+  document.getElementById('nt-weekly-day-row').style.display='none';
+  document.getElementById('nt-monthly-day-row').style.display='none';
+  document.getElementById('nt-daily-time-row').style.display='none';
+  // 显示对应子设置并回填
+  if(mode==='custom'){
+    document.getElementById('nt-custom-days-row').style.display='block';
+    document.getElementById('nt-custom-days').value=t.customDays||'';
+  } else if(mode==='timed'){
+    document.getElementById('nt-timed-row').style.display='block';
+    document.getElementById('nt-timed-start').value=t.timedStart||'';
+    document.getElementById('nt-timed-end').value=t.timedEnd||'';
+  } else if(mode==='weekly'){
+    document.getElementById('nt-weekly-day-row').style.display='block';
+    var wd=t.weeklyDay!==undefined?t.weeklyDay:1;
+    document.getElementById('nt-weekly-day').value=wd;
+    document.querySelectorAll('.nt-wdb').forEach(function(b){b.classList.remove('on','bp');b.classList.add('bg');});
+    var wdBtn=document.querySelector('[data-wd="'+wd+'"]');
+    if(wdBtn){wdBtn.classList.add('on','bp');wdBtn.classList.remove('bg');}
+  } else if(mode==='monthly'){
+    document.getElementById('nt-monthly-day-row').style.display='block';
+    document.getElementById('nt-monthly-day').value=t.monthlyDay||'';
+  } else if(mode==='daily'){
+    document.getElementById('nt-daily-time-row').style.display='block';
+    document.getElementById('nt-daily-time').value=t.dailyResetTime||'04:00';
+  }
   document.getElementById('nt-sync-all').classList.remove('on');
   document.getElementById('nt-share-collab').classList.remove('on');
   document.getElementById('nt-share-row').style.display=(_sbReady&&_collabRoom)?'flex':'none';
-  // ① 加载资源配置
   _taskResModeVal=t.resUpdateMode||'none';
   _taskResEntries=(t.resEntries||[]).map(function(e){return{resId:e.resId,value:e.value};});
   setTaskResMode(_taskResModeVal);
-  // ⑦ 加载颜色
   _initTaskColorRow(t.color||'');
   var g=G();
   document.getElementById('nt-res-mode-btns').style.display=(g&&(g.resources||[]).length)?'flex':'none';
@@ -2355,6 +2519,17 @@ function doAddTask(){
   var shareCollab=document.getElementById('nt-share-collab').classList.contains('on');
   var editId=document.getElementById('nt-edit-id').value;
   var taskColor=document.getElementById('nt-task-color').value||'';
+  // ① 新增字段
+  var timedStart=document.getElementById('nt-timed-start').value||'';
+  var timedEnd=document.getElementById('nt-timed-end').value||'';
+  var weeklyDay=parseInt(document.getElementById('nt-weekly-day').value)||1;
+  var monthlyDay=parseInt(document.getElementById('nt-monthly-day').value)||1;
+  var dailyResetTime=document.getElementById('nt-daily-time').value||'04:00';
+  // 限时任务校验
+  if(mode==='timed'){
+    if(!timedStart||!timedEnd){toast('请设置活动开始和结束日期');return;}
+    if(timedStart>timedEnd){toast('结束日期不能早于开始日期');return;}
+  }
 
   var taskObj={
     id: editId||uid(),
@@ -2365,18 +2540,20 @@ function doAddTask(){
     customDays: mode==='custom'?customDays:undefined,
     lastReset: today(),
     color: taskColor,
-    // ① 资源配置
     resUpdateMode: _taskResModeVal||'none',
-    resEntries: _taskResEntries.length?_taskResEntries.map(function(e){return{resId:e.resId,value:parseFloat(e.value)||0};}):[]
+    resEntries: _taskResEntries.length?_taskResEntries.map(function(e){return{resId:e.resId,value:parseFloat(e.value)||0};}): [],
+    // ① 新增
+    timedStart: mode==='timed'?timedStart:undefined,
+    timedEnd: mode==='timed'?timedEnd:undefined,
+    weeklyDay: mode==='weekly'?weeklyDay:undefined,
+    monthlyDay: mode==='monthly'?monthlyDay:undefined,
+    dailyResetTime: mode==='daily'?dailyResetTime:undefined
   };
 
   if(editId){
     var tasks=a.tasks||[];
     for(var i=0;i<tasks.length;i++){
-      if(tasks[i].id===editId){
-        Object.assign(tasks[i],taskObj);
-        break;
-      }
+      if(tasks[i].id===editId){ Object.assign(tasks[i],taskObj); break; }
     }
     if(syncAll&&g){
       var aa=g.accounts||[];
@@ -2384,7 +2561,7 @@ function doAddTask(){
         if(aa[j].id===a.id) continue;
         var at=aa[j].tasks||[];
         for(var k=0;k<at.length;k++){
-          if(at[k].id===editId) Object.assign(at[k],{text:taskObj.text,resetMode:taskObj.resetMode,isDaily:taskObj.isDaily,customDays:taskObj.customDays,color:taskObj.color,resUpdateMode:taskObj.resUpdateMode,resEntries:taskObj.resEntries});
+          if(at[k].id===editId) Object.assign(at[k],{text:taskObj.text,resetMode:taskObj.resetMode,isDaily:taskObj.isDaily,customDays:taskObj.customDays,color:taskObj.color,resUpdateMode:taskObj.resUpdateMode,resEntries:taskObj.resEntries,timedStart:taskObj.timedStart,timedEnd:taskObj.timedEnd,weeklyDay:taskObj.weeklyDay,monthlyDay:taskObj.monthlyDay,dailyResetTime:taskObj.dailyResetTime});
         }
       }
     }
@@ -2400,31 +2577,29 @@ function doAddTask(){
         aa2[j2].tasks.push(Object.assign({},taskObj,{id:uid()}));
       }
       toast('任务已添加（已同步'+g.accounts.length+'个账号）');
-    } else {
-      toast('任务已添加');
-    }
+    } else { toast('任务已添加'); }
   }
 
   saveData();hideM('m-addtask');rTasks();
 
   if(shareCollab&&_sbReady&&_collabRoom&&_sb){
     _sb.from('announcements').insert({
-      room_code:_collabRoom,
-      sender_name:_collabNick||'匿名',
+      room_code:_collabRoom, sender_name:_collabNick||'匿名',
       title:'📋 分享任务：'+text,
-      content:'重置周期：'+_resetLabelFromMode(mode,customDays)+(syncAll?'（已同步'+g.accounts.length+'个账号）':''),
+      content:'重置周期：'+_resetLabelFromMode(mode,customDays,timedStart,timedEnd)+(syncAll?'（已同步'+g.accounts.length+'个账号）':''),
       type:'share_task',
-      extra_json:{taskText:text,resetMode:mode,customDays:customDays}
+      extra_json:{taskText:text,resetMode:mode,customDays:customDays,timedStart:timedStart,timedEnd:timedEnd}
     }).then(function(r){ if(!r.error) toast('任务已分享到协作房间 📢'); });
   }
 }
 
-function _resetLabelFromMode(mode,customDays){
+function _resetLabelFromMode(mode,customDays,timedStart,timedEnd){
   if(mode==='none') return '不重置';
   if(mode==='daily') return '每天';
   if(mode==='weekly') return '每周';
   if(mode==='monthly') return '每月';
   if(mode==='custom') return (customDays||'?')+'天一次';
+  if(mode==='timed') return '限时'+(timedStart?timedStart.slice(5).replace('-','/'):'?')+'~'+(timedEnd?timedEnd.slice(5).replace('-','/'):'?');
   return '不重置';
 }
 
@@ -2589,129 +2764,219 @@ function rCal(){
     var aa=state.games[gi].accounts||[];
     for(var ai=0;ai<aa.length;ai++){
       var ls=aa[ai].logs||[];
-      for(var li=0;li<ls.length;li++){
-        logDates[ls[li].date]=true;
-      }
+      for(var li=0;li<ls.length;li++) logDates[ls[li].date]=true;
     }
   }
-  // ⑦ 收集有颜色的周期任务及其日期范围
-  var taskColorDates={}; // date -> [color, ...]
+
+  // 收集有颜色的周期任务 + 限时任务日期范围
+  var taskColorDates={};   // date -> [{color, taskId, taskText, gameName, mode}]
   for(var gi2=0;gi2<state.games.length;gi2++){
-    var aa2=state.games[gi2].accounts||[];
+    var g2=state.games[gi2];
+    var aa2=g2.accounts||[];
     for(var ai2=0;ai2<aa2.length;ai2++){
       var ts=aa2[ai2].tasks||[];
       for(var ti=0;ti<ts.length;ti++){
         var t=ts[ti];
         var tColor=t.color||'';
         var tMode=t.resetMode||(t.isDaily?'daily':'none');
+        // ② 限时任务：即使没设颜色也标注（用橙色默认）
+        if(tMode==='timed'){
+          var tStart=t.timedStart,tEnd=t.timedEnd;
+          if(!tStart||!tEnd) continue;
+          var markColor=tColor||'#D0A040';
+          var cur=new Date(tStart+'T00:00:00');
+          var endD=new Date(tEnd+'T00:00:00');
+          while(cur<=endD){
+            var ds=cur.toISOString().slice(0,10);
+            if(!taskColorDates[ds]) taskColorDates[ds]=[];
+            taskColorDates[ds].push({color:markColor,taskId:t.id,taskText:t.text,gameName:g2.name,mode:'timed',timedStart:tStart,timedEnd:tEnd});
+            cur.setDate(cur.getDate()+1);
+          }
+          continue;
+        }
         if(!tColor||tMode==='none') continue;
-        // 从lastReset往前推算周期范围
+        // 周期任务：标注当前周期范围
         var startDate=t.lastReset||today();
         var endDate=today();
-        if(tMode==='weekly'){var e=new Date(startDate+'T00:00:00');e.setDate(e.getDate()+6);endDate=e.toISOString().slice(0,10);}
-        else if(tMode==='monthly'){var e2=new Date(startDate+'T00:00:00');e2.setMonth(e2.getMonth()+1);e2.setDate(e2.getDate()-1);endDate=e2.toISOString().slice(0,10);}
-        else if(tMode==='custom'&&t.customDays){var e3=new Date(startDate+'T00:00:00');e3.setDate(e3.getDate()+(parseInt(t.customDays)||1)-1);endDate=e3.toISOString().slice(0,10);}
-        // 标记范围内每天
-        var cur=new Date(startDate+'T00:00:00');
-        var end=new Date(endDate+'T00:00:00');
-        while(cur<=end){
-          var ds=cur.toISOString().slice(0,10);
-          if(!taskColorDates[ds]) taskColorDates[ds]=[];
-          taskColorDates[ds].push(tColor);
-          cur.setDate(cur.getDate()+1);
+        if(tMode==='weekly'){
+          var e=new Date(startDate+'T00:00:00');
+          var targetWd=t.weeklyDay!==undefined?parseInt(t.weeklyDay):1;
+          // 找下一个重置日
+          var daysToNext=((targetWd-e.getDay())+7)%7||7;
+          e.setDate(e.getDate()+daysToNext-1);
+          endDate=e.toISOString().slice(0,10);
+        } else if(tMode==='monthly'){
+          var e2=new Date(startDate+'T00:00:00');
+          e2.setMonth(e2.getMonth()+1);e2.setDate(e2.getDate()-1);
+          endDate=e2.toISOString().slice(0,10);
+        } else if(tMode==='custom'&&t.customDays){
+          var e3=new Date(startDate+'T00:00:00');
+          e3.setDate(e3.getDate()+(parseInt(t.customDays)||1)-1);
+          endDate=e3.toISOString().slice(0,10);
+        } else if(tMode==='daily'){
+          endDate=today();
+        }
+        var cur2=new Date(startDate+'T00:00:00');
+        var end2=new Date(endDate+'T00:00:00');
+        while(cur2<=end2){
+          var ds2=cur2.toISOString().slice(0,10);
+          if(!taskColorDates[ds2]) taskColorDates[ds2]=[];
+          taskColorDates[ds2].push({color:tColor,taskId:t.id,taskText:t.text,gameName:g2.name,mode:tMode});
+          cur2.setDate(cur2.getDate()+1);
         }
       }
     }
   }
+
   document.getElementById('cal-title').textContent=calY+'年'+(calM+1)+'月';
   var fd=new Date(calY,calM,1).getDay(),dim=new Date(calY,calM+1,0).getDate(),td=today();
   var h='';var dows=['日','一','二','三','四','五','六'];
-  for(var i=0;i<7;i++)h+='<div class="cal-dow">'+dows[i]+'</div>';
-  for(var i=0;i<fd;i++)h+='<div class="cal-day other"></div>';
+  for(var i=0;i<7;i++) h+='<div class="cal-dow">'+dows[i]+'</div>';
+  for(var i=0;i<fd;i++) h+='<div class="cal-day other"></div>';
   for(var d=1;d<=dim;d++){
-    var ds=calY+'-'+(calM+1<10?'0':'')+(calM+1)+'-'+(d<10?'0':'')+d;
-    var cls='cal-day';if(ds===td)cls+=' today';if(logDates[ds])cls+=' has-log';if(ds===calSel)cls+=' sel';
+    var ds3=calY+'-'+(calM+1<10?'0':'')+(calM+1)+'-'+(d<10?'0':'')+d;
+    var cls='cal-day';
+    if(ds3===td) cls+=' today';
+    if(logDates[ds3]) cls+=' has-log';
+    if(ds3===calSel) cls+=' sel';
     var taskDots='';
-    if(taskColorDates[ds]){
+    if(taskColorDates[ds3]){
       taskDots='<div class="cal-day-dots">';
-      var tcs=taskColorDates[ds].slice(0,3);
-      for(var ci=0;ci<tcs.length;ci++) taskDots+='<div class="cal-day-dot" style="background:'+tcs[ci]+'"></div>';
+      var tcs=taskColorDates[ds3].slice(0,4);
+      for(var ci=0;ci<tcs.length;ci++) taskDots+='<div class="cal-day-dot" style="background:'+tcs[ci].color+'"></div>';
       taskDots+='</div>';
     }
-    h+='<div class="'+cls+'" onclick="selCalDay(\''+ds+'\')">'+d+taskDots+'</div>';
+    h+='<div class="'+cls+'" onclick="selCalDay(\''+ds3+'\')">'+d+taskDots+'</div>';
   }
   document.getElementById('cal-grid').innerHTML=h;
   rCalDetail();
 }
 function selCalDay(ds){calSel=ds;rCal();}
 
-// MODIFIED: 日历详情 - 显示所有游戏所有账号的当天数据
+// MODIFIED: 日历详情 - 显示日志记录 + 当天限时活动
 function rCalDetail(){
   var el=document.getElementById('cal-detail');
   if(!calSel){el.innerHTML='';return;}
 
-  //收集当天所有游戏/账号的日志
-  var hasAny=false;
-  var groups=[]; // [{game, accounts:[{acct, logs:[]}]}]
+  // ② 收集当天的限时活动任务
+  var timedItems=[];
   for(var gi=0;gi<state.games.length;gi++){
     var g=state.games[gi];
     var aa=g.accounts||[];
-    var acctBlocks=[];
     for(var ai=0;ai<aa.length;ai++){
       var a=aa[ai];
-      var dayLogs=(a.logs||[]).filter(function(l){return l.date===calSel;});
-      if(dayLogs.length){
-        hasAny=true;
-        acctBlocks.push({acct:a,logs:dayLogs});
+      var ts=a.tasks||[];
+      for(var ti=0;ti<ts.length;ti++){
+        var t=ts[ti];
+        if(t.resetMode==='timed'&&t.timedStart&&t.timedEnd&&calSel>=t.timedStart&&calSel<=t.timedEnd){
+          timedItems.push({task:t,gameName:g.name,acctName:a.name,gid:g.id,aid:a.id,color:t.color||'#D0A040'});
+        }
       }
-    }
-    if(acctBlocks.length){
-      groups.push({game:g,acctBlocks:acctBlocks});
     }
   }
 
-  if(!hasAny){
-    el.innerHTML='<div class="cal-detail"><div class="cal-detail-date">'+fmtD(calSel)+'</div><div style="color:var(--text3);font-size:13px">当天没有记录</div></div>';return;
+  // 收集当天日志
+  var hasLogs=false;
+  var groups=[];
+  for(var gi2=0;gi2<state.games.length;gi2++){
+    var g2=state.games[gi2];
+    var aa2=g2.accounts||[];
+    var acctBlocks=[];
+    for(var ai2=0;ai2<aa2.length;ai2++){
+      var a2=aa2[ai2];
+      var dayLogs=(a2.logs||[]).filter(function(l){return l.date===calSel;});
+      if(dayLogs.length){hasLogs=true;acctBlocks.push({acct:a2,logs:dayLogs});}
+    }
+    if(acctBlocks.length) groups.push({game:g2,acctBlocks:acctBlocks});
   }
 
   var h='<div class="cal-detail"><div class="cal-detail-date">'+fmtD(calSel)+'</div>';
 
-  for(var gi=0;gi<groups.length;gi++){
-    var grp=groups[gi];
-    var g=grp.game;
-    var res=g.resources||[];
-    // 游戏标题
-    var gIcoH=g.iconData?imgTagH(g.iconData,'width:100%;height:100%;object-fit:cover;border-radius:5px'):'<span>'+g.emoji+'</span>';
-    h+='<div class="cal-game-group">'+'<div class="cal-game-title">'+'<div class="cal-game-ico" style="background:var(--bg2)">'+gIcoH+'</div>'
-      +'<span style="color:'+g.color+'">'+g.name+'</span>'
-      +'</div>';
-
-    for(var ai=0;ai<grp.acctBlocks.length;ai++){
-      var ab=grp.acctBlocks[ai];
-      var a=ab.acct;
-      var avH=a.avatarData?imgTagH(a.avatarData,'width:100%;height:100%;object-fit:cover;border-radius:50%'):'<span>🐭</span>';
-      h+='<div class="cal-acct-block">'
-        +'<div class="cal-acct-name"><div class="cal-acct-ava">'+avH+'</div>'+a.name+'</div>';
-
-      for(var li=0;li<ab.logs.length;li++){
-        var l=ab.logs[li],chips='';
-        for(var j=0;j<(l.entries||[]).length;j++){
-          var e=l.entries[j],r=null;
-          for(var k=0;k<res.length;k++){if(res[k].id===e.resourceId){r=res[k];break;}}
-          if(r)chips+='<span class="chip">'+r.emoji+r.name+' '+e.value.toLocaleString()+r.unit+'</span>';
-        }
-        h+='<div style="margin-bottom:5px">'
-          +(l.timeNote?'<div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:2px">'+l.timeNote+'</div>':'')
-          +'<div class="chips">'+(chips||'无数据')+'</div>'
-          +(l.note?'<div class="lognote">'+l.note+'</div>':'')+'</div>';
-      }
-      h+='</div>'; // cal-acct-block
+  // ② 限时活动区块
+  if(timedItems.length){
+    h+='<div style="margin-bottom:10px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">⏳ 当天限时活动</div>';
+    for(var ti2=0;ti2<timedItems.length;ti2++){
+      var item=timedItems[ti2];
+      var t2=item.task;
+      var isToday=(calSel===today());
+      var isDone=t2.isDone;
+      // 点击跳转到任务页对应游戏账号
+      h+='<div onclick="jumpToTask(\''+item.gid+'\',\''+item.aid+'\',\''+t2.id+'\')" '
+        +'style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card);border:2px solid '
+        +item.color+';border-radius:var(--r2);margin-bottom:6px;cursor:pointer;transition:all 0.15s" '
+        +'>'
+        +'<div style="width:10px;height:10px;border-radius:50%;background:'+item.color+';flex-shrink:0"></div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--text)'+(isDone?';text-decoration:line-through;color:var(--text3)':'')+'">'+(isDone?'✓ ':'')+t2.text+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+item.gameName+' · '+item.acctName
+        +' &nbsp;|&nbsp; '+(t2.timedStart?t2.timedStart.slice(5).replace('-','/'):'?')+'→'+(t2.timedEnd?t2.timedEnd.slice(5).replace('-','/'):'?')
+        +'</div>'
+        +'</div>'
+        +(isToday&&!isDone?'<span style="font-size:10px;color:var(--accent);font-weight:700;flex-shrink:0">去完成 →</span>':'')
+        +'</div>';
     }
-    h+='</div>'; // cal-game-group
+    h+='</div>';
   }
 
-  h+='</div>'; // cal-detail
+  if(!hasLogs&&!timedItems.length){
+    h+='<div style="color:var(--text3);font-size:13px">当天没有记录</div></div>';
+    el.innerHTML=h;return;
+  }
+
+  if(hasLogs){
+    for(var gi3=0;gi3<groups.length;gi3++){
+      var grp=groups[gi3];
+      var g3=grp.game;
+      var res=g3.resources||[];
+      var gIcoH=g3.iconData?imgTagH(g3.iconData,'width:100%;height:100%;object-fit:cover;border-radius:5px'):'<span>'+g3.emoji+'</span>';
+      h+='<div class="cal-game-group">'
+        +'<div class="cal-game-title"><div class="cal-game-ico" style="background:var(--bg2)">'+gIcoH+'</div>'
+        +'<span style="color:'+g3.color+'">'+g3.name+'</span></div>';
+      for(var ai3=0;ai3<grp.acctBlocks.length;ai3++){
+        var ab=grp.acctBlocks[ai3];
+        var a3=ab.acct;
+        var avH=a3.avatarData?imgTagH(a3.avatarData,'width:100%;height:100%;object-fit:cover;border-radius:50%'):'<span>🐭</span>';
+        h+='<div class="cal-acct-block"><div class="cal-acct-name"><div class="cal-acct-ava">'+avH+'</div>'+a3.name+'</div>';
+        for(var li=0;li<ab.logs.length;li++){
+          var l=ab.logs[li],chips='';
+          for(var j=0;j<(l.entries||[]).length;j++){
+            var e=l.entries[j],r=null;
+            for(var k=0;k<res.length;k++){if(res[k].id===e.resourceId){r=res[k];break;}}
+            if(r) chips+='<span class="chip">'+r.emoji+r.name+' '+e.value.toLocaleString()+r.unit+'</span>';
+          }
+          h+='<div style="margin-bottom:5px">'
+            +(l.timeNote?'<div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:2px">'+l.timeNote+'</div>':'')
+            +'<div class="chips">'+(chips||'无数据')+'</div>'
+            +(l.note?'<div class="lognote">'+l.note+'</div>':'')+'</div>';
+        }
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+  }
+
+  h+='</div>';
   el.innerHTML=h;fillIdbImgs(el);
+}
+
+// ② 从日历点击限时活动跳转到对应任务
+function jumpToTask(gid,aid,taskId){
+  curGid=gid;curAid=aid;
+  goPage('task');
+  // 短暂延迟后高亮该任务
+  setTimeout(function(){
+    var items=document.querySelectorAll('.titem');
+    for(var i=0;i<items.length;i++){
+      if(items[i].querySelector('[onclick*="'+taskId+'"]')){
+        items[i].style.background='var(--accbg)';
+        items[i].scrollIntoView({behavior:'smooth',block:'center'});
+        setTimeout(function(el){return function(){el.style.background='';}}(items[i]),1500);
+        break;
+      }
+    }
+    clog('CAL','跳转到任务',{gid:gid,aid:aid,taskId:taskId});
+  },300);
 }
 
 // ── CHARTS ──
@@ -3752,28 +4017,32 @@ async function collabLoadMsgs(){
   if(!el) return;
   el.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:13px;padding:20px">加载中…</div>';
   try{
-    // ⑥ 只用 created_at 排序（不依赖可能不存在的 is_pinned 字段），前端排序置顶
     var q = _sb.from('announcements').select('*').eq('room_code', _collabRoom);
-    // 过滤：置顶用前端过滤（is_pinned字段需先在Supabase建表后才能用DB过滤）
-    if(_collabFilter && _collabFilter !== 'pinned') q = q.eq('type', _collabFilter);
-    var res = await q.order('created_at', {ascending: false}).limit(100);
-    if(res.error){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败<br><span style="font-size:11px">'+esc(res.error.message)+'</span></div></div>'; clog('COLLAB','加载消息失败', res.error); return; }
+    // ⑥ 分类过滤
+    if(_collabFilter === 'pinned') q = q.eq('is_pinned', true);
+    else if(_collabFilter && _collabFilter !== '') q = q.eq('type', _collabFilter);
+    // 置顶消息优先，其次按时间倒序
+    var res = await q
+      .order('is_pinned', {ascending: false, nullsFirst: false})
+      .order('created_at', {ascending: false})
+      .limit(50);
+    if(res.error){
+      el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败<br><span style="font-size:11px">'+esc(res.error.message)+'</span></div></div>';
+      clog('COLLAB','加载消息失败', res.error.message); return;
+    }
     var msgs = res.data || [];
-    // 前端置顶排序：is_pinned===true 的放最前面
-    msgs.sort(function(a,b){
-      var ap=a.is_pinned?1:0, bp=b.is_pinned?1:0;
-      if(ap!==bp) return bp-ap;
-      return (b.created_at||'').localeCompare(a.created_at||'');
-    });
-    // 前端过滤置顶
-    if(_collabFilter==='pinned') msgs=msgs.filter(function(m){return m.is_pinned;});
-    msgs=msgs.slice(0,50);
     clog('COLLAB','加载消息', {count: msgs.length, filter: _collabFilter});
-    if(!msgs.length){ el.innerHTML = '<div class="empty"><span class="ei">💬</span><div class="et">暂无消息<br>'+(_collabFilter?'该分类没有内容':'发布一条公告吧！')+'</div></div>'; return; }
+    if(!msgs.length){
+      el.innerHTML = '<div class="empty"><span class="ei">💬</span><div class="et">暂无消息<br>'+(_collabFilter?'该分类没有内容':'发布一条公告吧！')+'</div></div>';
+      return;
+    }
     var h = '';
     msgs.forEach(function(m){ h += _collabMsgH(m); });
     el.innerHTML = h;
-  }catch(e){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败<br><span style="font-size:11px">'+esc(String(e.message||e))+'</span></div></div>'; clog('COLLAB','加载消息异常', e.message); }
+  }catch(e){
+    el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败<br><span style="font-size:11px">'+esc(String(e.message||e))+'</span></div></div>';
+    clog('COLLAB','加载消息异常', e.message);
+  }
 }
 
 // ── 渲染单条消息（支持置顶、日记分享、公告分类）──
@@ -3865,7 +4134,7 @@ async function collabUpdateStorage(){
   }catch(e){ clog('COLLAB','获取存储用量失败', e.message); }
 }
 
-// ── ⑩ 提交公告（支持分类+置顶，自动容错旧数据库）──
+// ── ⑩ 提交公告（支持分类+置顶）──
 async function collabSubmitPost(){
   if(!_sb || !_collabRoom){ toast('请先加入房间'); return; }
   var title = document.getElementById('collab-post-title').value.trim();
@@ -3877,44 +4146,33 @@ async function collabSubmitPost(){
   var pinBtn = document.getElementById('collab-post-pin');
   var isPinned = !!(pinBtn && pinBtn.classList.contains('on'));
 
-  // 尝试先用完整字段，失败则降级去掉 is_pinned
-  async function _doInsert(data){
-    var r = await _sb.from('announcements').insert(data);
-    if(r.error && r.error.message && r.error.message.includes('is_pinned')){
-      var d2 = Object.assign({}, data); delete d2.is_pinned;
-      return await _sb.from('announcements').insert(d2);
-    }
-    return r;
-  }
-  async function _doUpdate(data, id){
-    var r = await _sb.from('announcements').update(data).eq('id', id);
-    if(r.error && r.error.message && r.error.message.includes('is_pinned')){
-      var d2 = Object.assign({}, data); delete d2.is_pinned;
-      return await _sb.from('announcements').update(d2).eq('id', id);
-    }
-    return r;
-  }
-
   if(editId){
-    clog('COLLAB','编辑公告', {id:editId});
+    clog('COLLAB','编辑公告', {id:editId, pinned:isPinned});
     try{
-      var res = await _doUpdate({ title:title, content:content, type:postType, is_pinned:isPinned, edited_by:_collabNick, edited_at:new Date().toISOString() }, editId);
+      var res = await _sb.from('announcements').update({
+        title: title, content: content, type: postType,
+        is_pinned: isPinned,
+        edited_by: _collabNick, edited_at: new Date().toISOString()
+      }).eq('id', editId);
       if(res.error){ toast('编辑失败：' + res.error.message); return; }
       hideM('m-collab-post');
-      toast('公告已更新 ✅');
+      toast('公告已更新 ✅' + (isPinned?' 📌':''));
       collabLoadMsgs(); collabUpdateStorage();
     }catch(e){ toast('编辑失败：' + e.message); }
   } else {
     clog('COLLAB','发布新公告', {title, type:postType, pinned:isPinned});
     try{
-      var res2 = await _doInsert({ room_code:_collabRoom, sender_name:_collabNick||'匿名', title:title, content:content, type:postType, is_pinned:isPinned });
+      var res2 = await _sb.from('announcements').insert({
+        room_code: _collabRoom, sender_name: _collabNick||'匿名',
+        title: title, content: content, type: postType, is_pinned: isPinned
+      });
       if(res2.error){ toast('发布失败：' + res2.error.message); return; }
       document.getElementById('collab-post-title').value = '';
       document.getElementById('collab-post-content').value = '';
       document.getElementById('collab-post-edit-id').value = '';
       if(pinBtn) pinBtn.classList.remove('on');
       hideM('m-collab-post');
-      toast('公告已发布 📢' + (isPinned?' 📌':''));
+      toast('公告已发布 📢' + (isPinned?' 📌 已置顶':''));
       collabLoadMsgs(); collabUpdateStorage();
       if(!state._achPostCount) state._achPostCount=0;
       state._achPostCount++; saveData();
@@ -4024,23 +4282,17 @@ function _onOpenCollabSettings(){
 }
 
 // ══════════════════════════════════════════
-// ⑥ 协作公告置顶切换
+// ⑥ 协作公告置顶切换（数据库已有 is_pinned 列）
 // ══════════════════════════════════════════
 async function toggleCollabPin(id, pinValue){
   if(!_sb||!_collabRoom){ toast('未加入房间'); return; }
-  clog('COLLAB','切换置顶', {id, pinValue});
+  clog('COLLAB','切换置顶', {id:id, pinValue:pinValue});
   try{
-    var res=await _sb.from('announcements').update({is_pinned: pinValue}).eq('id', id);
-    if(res.error){
-      if(res.error.message && res.error.message.includes('is_pinned')){
-        toast('置顶需先在 Supabase 中添加 is_pinned 列，详见调试日志');
-        clog('COLLAB','is_pinned字段不存在，需在Supabase表中添加 boolean 列 is_pinned');
-      } else { toast('操作失败：'+res.error.message); }
-      return;
-    }
-    toast(pinValue?'已置顶 📌':'已取消置顶');
+    var res = await _sb.from('announcements').update({is_pinned: pinValue}).eq('id', id);
+    if(res.error){ toast('操作失败：' + res.error.message); clog('COLLAB','置顶失败', res.error.message); return; }
+    toast(pinValue ? '已置顶 📌' : '已取消置顶');
     collabLoadMsgs();
-  }catch(e){ toast('操作失败：'+e.message); }
+  }catch(e){ toast('操作失败：' + e.message); }
 }
 
 // ══════════════════════════════════════════
