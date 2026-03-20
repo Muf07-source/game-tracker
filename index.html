@@ -3752,19 +3752,28 @@ async function collabLoadMsgs(){
   if(!el) return;
   el.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:13px;padding:20px">加载中…</div>';
   try{
+    // ⑥ 只用 created_at 排序（不依赖可能不存在的 is_pinned 字段），前端排序置顶
     var q = _sb.from('announcements').select('*').eq('room_code', _collabRoom);
-    // ⑥ 应用过滤
-    if(_collabFilter==='pinned') q=q.eq('is_pinned',true);
-    else if(_collabFilter&&_collabFilter!=='') q=q.eq('type',_collabFilter);
-    var res = await q.order('is_pinned',{ascending:false,nullsFirst:false}).order('created_at', {ascending: false}).limit(50);
-    if(res.error){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; clog('COLLAB','加载消息失败', res.error); return; }
+    // 过滤：置顶用前端过滤（is_pinned字段需先在Supabase建表后才能用DB过滤）
+    if(_collabFilter && _collabFilter !== 'pinned') q = q.eq('type', _collabFilter);
+    var res = await q.order('created_at', {ascending: false}).limit(100);
+    if(res.error){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败<br><span style="font-size:11px">'+esc(res.error.message)+'</span></div></div>'; clog('COLLAB','加载消息失败', res.error); return; }
     var msgs = res.data || [];
+    // 前端置顶排序：is_pinned===true 的放最前面
+    msgs.sort(function(a,b){
+      var ap=a.is_pinned?1:0, bp=b.is_pinned?1:0;
+      if(ap!==bp) return bp-ap;
+      return (b.created_at||'').localeCompare(a.created_at||'');
+    });
+    // 前端过滤置顶
+    if(_collabFilter==='pinned') msgs=msgs.filter(function(m){return m.is_pinned;});
+    msgs=msgs.slice(0,50);
     clog('COLLAB','加载消息', {count: msgs.length, filter: _collabFilter});
     if(!msgs.length){ el.innerHTML = '<div class="empty"><span class="ei">💬</span><div class="et">暂无消息<br>'+(_collabFilter?'该分类没有内容':'发布一条公告吧！')+'</div></div>'; return; }
     var h = '';
     msgs.forEach(function(m){ h += _collabMsgH(m); });
     el.innerHTML = h;
-  }catch(e){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败</div></div>'; clog('COLLAB','加载消息异常', e.message); }
+  }catch(e){ el.innerHTML = '<div class="empty"><span class="ei">⚠️</span><div class="et">加载失败<br><span style="font-size:11px">'+esc(String(e.message||e))+'</span></div></div>'; clog('COLLAB','加载消息异常', e.message); }
 }
 
 // ── 渲染单条消息（支持置顶、日记分享、公告分类）──
@@ -3856,56 +3865,59 @@ async function collabUpdateStorage(){
   }catch(e){ clog('COLLAB','获取存储用量失败', e.message); }
 }
 
-// ── ⑩ 提交公告（移除"每人只能一条"限制，支持多条）──
+// ── ⑩ 提交公告（支持分类+置顶，自动容错旧数据库）──
 async function collabSubmitPost(){
   if(!_sb || !_collabRoom){ toast('请先加入房间'); return; }
   var title = document.getElementById('collab-post-title').value.trim();
   if(!title){ toast('请输入标题'); return; }
   var content = document.getElementById('collab-post-content').value.trim();
   var editId = document.getElementById('collab-post-edit-id').value;
-  // ⑥ 获取分类和置顶
-  var postType = (document.getElementById('collab-post-type')||{value:'announce'}).value || 'announce';
-  var isPinned = document.getElementById('collab-post-pin') && document.getElementById('collab-post-pin').classList.contains('on');
+  var postTypeEl = document.getElementById('collab-post-type');
+  var postType = postTypeEl ? postTypeEl.value : 'announce';
+  var pinBtn = document.getElementById('collab-post-pin');
+  var isPinned = !!(pinBtn && pinBtn.classList.contains('on'));
+
+  // 尝试先用完整字段，失败则降级去掉 is_pinned
+  async function _doInsert(data){
+    var r = await _sb.from('announcements').insert(data);
+    if(r.error && r.error.message && r.error.message.includes('is_pinned')){
+      var d2 = Object.assign({}, data); delete d2.is_pinned;
+      return await _sb.from('announcements').insert(d2);
+    }
+    return r;
+  }
+  async function _doUpdate(data, id){
+    var r = await _sb.from('announcements').update(data).eq('id', id);
+    if(r.error && r.error.message && r.error.message.includes('is_pinned')){
+      var d2 = Object.assign({}, data); delete d2.is_pinned;
+      return await _sb.from('announcements').update(d2).eq('id', id);
+    }
+    return r;
+  }
 
   if(editId){
     clog('COLLAB','编辑公告', {id:editId});
     try{
-      var res = await _sb.from('announcements').update({
-        title: title, content: content,
-        type: postType,
-        is_pinned: isPinned,
-        edited_by: _collabNick, edited_at: new Date().toISOString()
-      }).eq('id', editId);
+      var res = await _doUpdate({ title:title, content:content, type:postType, is_pinned:isPinned, edited_by:_collabNick, edited_at:new Date().toISOString() }, editId);
       if(res.error){ toast('编辑失败：' + res.error.message); return; }
       hideM('m-collab-post');
       toast('公告已更新 ✅');
-      collabLoadMsgs();
-      collabUpdateStorage();
+      collabLoadMsgs(); collabUpdateStorage();
     }catch(e){ toast('编辑失败：' + e.message); }
   } else {
-    clog('COLLAB','发布新公告', {title, type: postType, pinned: isPinned});
+    clog('COLLAB','发布新公告', {title, type:postType, pinned:isPinned});
     try{
-      var res2 = await _sb.from('announcements').insert({
-        room_code: _collabRoom,
-        sender_name: _collabNick || '匿名',
-        title: title,
-        content: content,
-        type: postType,
-        is_pinned: isPinned
-      });
+      var res2 = await _doInsert({ room_code:_collabRoom, sender_name:_collabNick||'匿名', title:title, content:content, type:postType, is_pinned:isPinned });
       if(res2.error){ toast('发布失败：' + res2.error.message); return; }
       document.getElementById('collab-post-title').value = '';
       document.getElementById('collab-post-content').value = '';
       document.getElementById('collab-post-edit-id').value = '';
-      if(document.getElementById('collab-post-pin')) document.getElementById('collab-post-pin').classList.remove('on');
+      if(pinBtn) pinBtn.classList.remove('on');
       hideM('m-collab-post');
-      toast('公告已发布 📢'+(isPinned?' 📌 已置顶':''));
-      collabLoadMsgs();
-      collabUpdateStorage();
-      // 成就计数
+      toast('公告已发布 📢' + (isPinned?' 📌':''));
+      collabLoadMsgs(); collabUpdateStorage();
       if(!state._achPostCount) state._achPostCount=0;
-      state._achPostCount++;
-      saveData();
+      state._achPostCount++; saveData();
     }catch(e){ toast('发布失败：' + e.message); }
   }
 }
@@ -4019,7 +4031,13 @@ async function toggleCollabPin(id, pinValue){
   clog('COLLAB','切换置顶', {id, pinValue});
   try{
     var res=await _sb.from('announcements').update({is_pinned: pinValue}).eq('id', id);
-    if(res.error){ toast('操作失败：'+res.error.message); return; }
+    if(res.error){
+      if(res.error.message && res.error.message.includes('is_pinned')){
+        toast('置顶需先在 Supabase 中添加 is_pinned 列，详见调试日志');
+        clog('COLLAB','is_pinned字段不存在，需在Supabase表中添加 boolean 列 is_pinned');
+      } else { toast('操作失败：'+res.error.message); }
+      return;
+    }
     toast(pinValue?'已置顶 📌':'已取消置顶');
     collabLoadMsgs();
   }catch(e){ toast('操作失败：'+e.message); }
