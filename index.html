@@ -5,515 +5,1102 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>囤囤鼠来哩</title>
 <link rel="manifest" href="/game-tracker/manifest.json">
-<meta name="theme-color" content="#6B9E78">
+<meta name="theme-color" content="#7FA882">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="囤囤鼠来哩">
 <style>
+/* ══════════════════════════════════════════════════════
+   囤囤鼠来哩 v11
+   双主题：
+   [illus] 默认·插画暖系 — 大圆角·手绘感·暖米白
+   [clean] 极简·苔绿系  — 细线·留白·现代感
+══════════════════════════════════════════════════════ */
+
+/* ── 插画风变量（默认） ── */
 :root {
-  /* 主题色变量 – 支持 HSL 动态调整 */
-  --accent-h:145;--accent-s:18%;--accent-l:57%;
+  --ui-mode: illus;
+  --accent-h:145;--accent-s:24%;--accent-l:46%;
   --accent:hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-  --accent2:hsl(var(--accent-h),calc(var(--accent-s) + 6%),calc(var(--accent-l) + 8%));
-  --accbg:hsl(var(--accent-h),30%,95%);
-  --green:#6B9E78;--red:#C07070;--blue:#7E9AB8;
-  /*卡片透明度 */
+  --accent2:hsl(var(--accent-h),30%,58%);
+  --accbg:hsl(var(--accent-h),32%,92%);
+  --accbg2:hsl(var(--accent-h),22%,84%);
+
+  --bg:#FAF8F3;--bg2:#F0EDE5;--bg3:#E6E2D8;
+  --card:#FFFFFF;
+  --border:#E8E4DA;--border2:#D0CCBF;
+  --text:#2A2722;--text2:#6A6458;--text3:#A09A8E;
+  --green:#5A8C68;--red:#B86868;--blue:#6878A8;
+
+  --nav:#FAF8F3;--navborder:#E8E4DA;
+  --sh:0 2px 12px rgba(100,80,40,.08);
+  --sh2:0 6px 24px rgba(100,80,40,.13);
+  --sh3:0 12px 40px rgba(100,80,40,.18);
+
+  /* 插画风专属 */
   --card-opacity:1;
-  --bg:#F6F5F0;--bg2:#EDEBE4;--bg3:#E1DED6;
-  --card:rgba(255,255,255,var(--card-opacity));--border:#DDD9D0;
-  --text:#2C2A25;--text2:#6B6660;--text3:#A09A90;
-  --shadow:none;--shadow2:none;
-  --r:16px;--r2:12px;--r3:10px;
-  --nav:#FFFFFF;--navborder:#E8E4DC;
+  --r:20px;--r2:16px;--r3:12px;--r4:24px;
+  --font-title:'PingFang SC','Noto Serif SC','Georgia',serif;
+  --stroke:#2A2722;
+
+  /* 装饰色（手绘感） */
+  --warm1:#F5E8D0;--warm2:#EDD8B0;--warm3:#E2C890;
+  --deco-green:hsl(145,28%,72%);
+  --deco-peach:#F0B8A0;
 }
-[data-theme=dark]{
-  --bg:#151413;--bg2:#1C1B19;--bg3:#252320;
-  --card:rgba(30,29,26,var(--card-opacity));--border:#2E2C27;
-  --text:#E8E4DC;--text2:#9A9488;--text3:#5C5850;
-  --accbg:hsl(var(--accent-h),25%,11%);
-  --green:#8BC49A;--red:#D08080;--blue:#90AAD0;
-  --nav:#1C1B19;--navborder:#2E2C27;
+
+/* ── 深色模式（插画风） ── */
+[data-theme=dark] {
+  --bg:#1A1814;--bg2:#201E18;--bg3:#282420;
+  --card:#242018;
+  --border:#302C24;--border2:#3C3830;
+  --text:#EAE4D8;--text2:#968E80;--text3:#564E44;
+  --accbg:hsl(var(--accent-h),24%,11%);
+  --accbg2:hsl(var(--accent-h),20%,16%);
+  --green:#72A880;--red:#C08080;--blue:#8098C0;
+  --nav:#201E18;--navborder:#302C24;
+  --warm1:#2A2418;--warm2:#322A1C;--warm3:#3A3020;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);font-family:-apple-system,'Helvetica Neue','PingFang SC','Noto Sans SC',sans-serif;color:var(--text);overflow:hidden;transition:background 0.3s,color 0.3s}
-#app{height:100vh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
 
-/*── NAV ── Q版气泡 */
-#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:62px;background:var(--nav);border-top:2px solid var(--navborder);display:flex;z-index:90;transition:background 0.3s;padding:0 4px}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;font-size:8px;font-weight:700;color:var(--text3);cursor:pointer;font-family:inherit;transition:all 0.2s;letter-spacing:0.3px;border-radius:12px;margin:5px 1px}
-.nb.on{color:var(--accent);background:var(--accbg)}
-.nb svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 0.2s}
-.nb.on svg{transform:scale(1.15)}
+/* ── 极简风覆盖变量 ── */
+[data-ui=clean] {
+  --bg:#F7F6F1;--bg2:#EEECEA;--bg3:#E3E1D8;
+  --card:#FFFFFF;
+  --border:#E0DDD4;--border2:#C8C5BC;
+  --text:#242220;--text2:#686460;--text3:#9E9890;
+  --nav:#FAFAF7;--navborder:#ECEAE2;
+  --r:14px;--r2:10px;--r3:8px;--r4:18px;
+  --sh:0 1px 4px rgba(0,0,0,.06);
+  --sh2:0 4px 18px rgba(0,0,0,.09);
+  --sh3:0 8px 28px rgba(0,0,0,.12);
+  --warm1:#F0EDE5;--warm2:#E8E4DA;--warm3:#E0DDD4;
+}
+[data-ui=clean][data-theme=dark] {
+  --bg:#131210;--bg2:#191816;--bg3:#211F1C;
+  --card:rgba(24,23,21,1);
+  --border:#272420;--border2:#343028;
+  --text:#E4E0D6;--text2:#908A80;--text3:#524E48;
+  --nav:#191816;--navborder:#272420;
+  --warm1:#1C1A16;--warm2:#222018;--warm3:#28261E;
+}
 
-/* ── PAGES ── */
-.pg{flex:1;overflow-y:auto;padding-bottom:70px;display:none}
-.pg.on{display:block}
+* { box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent }
+html,body {
+  height:100%;background:var(--bg);
+  font-family:-apple-system,'PingFang SC','Noto Sans SC','Helvetica Neue',sans-serif;
+  color:var(--text);overflow:hidden;
+  transition:background .3s,color .3s;
+}
+#app {
+  height:100vh;max-width:480px;margin:0 auto;
+  display:flex;flex-direction:column;
+  background:var(--bg);position:relative;overflow:hidden;
+}
 
-/* ── HEADER ── Q版渐变标题 */
-.hdr{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:10;border-bottom:2px solid var(--border)}
-.ht{font-size:18px;font-weight:900;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hs{font-size:11px;color:var(--text3);margin-top:2px}
-.hdr-right{display:flex;align-items:center;gap:8px}
+/* ══════════════════════════════════════
+   底部导航 — 4格固定
+══════════════════════════════════════ */
+#nav {
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;height:64px;
+  background:var(--nav);border-top:1px solid var(--navborder);
+  display:flex;align-items:center;z-index:90;
+  padding:0 8px 6px;
+  transition:background .3s;
+}
+.nb {
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;
+  background:none;border:none;
+  font-size:9px;font-weight:600;color:var(--text3);
+  cursor:pointer;font-family:inherit;
+  transition:color .18s;letter-spacing:.1px;
+  padding:5px 2px 3px;border-radius:10px;
+}
+.nb.on { color:var(--accent); }
+.nb svg {
+  width:20px;height:20px;stroke:currentColor;fill:none;
+  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .18s;
+}
+.nb.on svg { transform:scale(1.1); }
 
-/* ── THEME TOGGLE ── */
-.theme-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:var(--bg2);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
-.theme-btn:active{transform:scale(0.88)}
-
-/* ── BUTTONS ── Q版圆润*/
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 18px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;transition:all 0.15s}
-.btn:active{opacity:0.7;transform:scale(0.95)}
-.bp{background:var(--accent);color:#fff;box-shadow:0 3px 10px hsla(var(--accent-h),40%,50%,0.3)}
-.bg{background:var(--bg2);color:var(--text2);border:2px solid var(--border)}
-.bd{background:var(--bg2);color:var(--red);border:2px solid var(--border)}
-[data-theme=dark] .bd{background:#2A1818;color:#D08080;border-color:#3A2020}
-.bfull{width:100%}.bsm{padding:5px 12px;font-size:12px}
-.btn-icon{width:32px;height:32px;padding:0;border-radius:50%;font-size:15px}
-
-/* ── TABS ── */
-.tabs{display:flex;gap:6px;padding:10px 20px;overflow-x:auto;border-bottom:2px solid var(--border);scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex-shrink:0;padding:6px 16px;border-radius:20px;border:2px solid var(--border);background:var(--card);font-size:12px;font-weight:700;cursor:pointer;color:var(--text3);white-space:nowrap;transition:all 0.2s}
-.tab.on{color:#fff;border-color:transparent;box-shadow:0 3px 8px rgba(0,0,0,0.15)}
-
-/* ── SECTION ── */
-.sact{padding:0 20px 10px;display:flex;gap:8px}
-.sec-h{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:14px 20px 6px}
-
-/* ── GAME CARD ── */
-.game-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);margin:0 20px 14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
-.game-hdr{display:flex;align-items:center;gap:12px;padding:14px 16px 10px;flex-wrap:wrap}
-.game-icon{width:46px;height:46px;border-radius:14px;object-fit:cover;flex-shrink:0;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
-.game-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-.game-info{flex:1;min-width:0}.game-name{font-size:15px;font-weight:700}
-.game-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.game-btns{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
-.game-color-strip{height:4px;width:100%}
-.acct-list{padding:0 14px 12px}
-.acct-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border-radius:14px;margin-bottom:6px;cursor:pointer;transition:all 0.15s;border:2px solid transparent}
-.acct-row:active{background:var(--bg3);border-color:var(--accent)}
-.acct-avatar{width:34px;height:34px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;border:2px solid var(--border)}
-.acct-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-.acct-info{flex:1;min-width:0}.acct-name{font-size:13px;font-weight:700}
-.acct-note{font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.acct-btns{display:flex;gap:5px;flex-shrink:0}
-
-/* ── RESOURCE CARDS ── */
-.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 20px}
-.rcard{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.05)}
-.raccent{position:absolute;top:0;left:0;right:0;height:4px}
-.remoji{font-size:22px;margin-bottom:6px;display:block}
-.rname{font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600}
-.rval{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text)}
-.runit{font-size:10px;color:var(--text3);margin-left:2px}
-.rdelta{font-size:11px;margin-top:4px;font-weight:700}
-.rup{color:var(--green)}.rdn{color:var(--red)}.rfl{color:var(--text3)}
-.spark{width:100%;height:26px;overflow:visible;margin-top:6px}
-
-/* ── LOG── */
-.logitem{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
-.logdate{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px}
-.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
-.chip{background:var(--accbg);border-radius:10px;padding:3px 10px;font-size:12px;color:var(--accent);font-weight:600;border:1.5px solid hsla(var(--accent-h),40%,60%,0.2)}
-.lognote{font-size:12px;color:var(--text3);font-style:italic}
-
-/* ── TASKS ── */
-.titem{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1.5px solid var(--border);background:var(--card)}
-.titem:first-of-type{border-top:1.5px solid var(--border)}
-.tcheck{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:12px;color:#fff;transition:all 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
-.tcheck.on{background:var(--green);border-color:var(--green);box-shadow:0 2px 8px rgba(107,158,120,0.4)}
-.ttxt{flex:1;font-size:14px;line-height:1.4;font-weight:500}
-.ttxt.done{text-decoration:line-through;color:var(--text3)}
-.tbadge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;flex-shrink:0}
-.tbdaily{background:var(--accbg);color:var(--accent);border:1.5px solid hsla(var(--accent-h),40%,60%,0.3)}
-[data-theme=dark] .tbdaily{background:hsla(var(--accent-h),25%,12%,1);color:hsl(var(--accent-h),40%,70%)}
-.tbonce{background:var(--bg2);color:var(--text2);border:1.5px solid var(--border)}
-[data-theme=dark] .tbonce{background:#252320;color:#9A9488}
-.tdel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:2px 4px;border-radius:50%;transition:all 0.15s}
-
-/* ── CALENDAR ── */
-.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 8px}
-.cal-nav-title{font-size:16px;font-weight:700}
-.cal-nav-btn{background:var(--bg2);border:1px solid var(--border);width:32px;height:32px;border-radius:var(--r3);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 20px 12px}
-.cal-dow{font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0}
-.cal-day{min-height:38px;border-radius:var(--r3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);position:relative;transition:background 0.15s}
-.cal-day.other{color:var(--text3)}
-.cal-day.today{background:var(--accbg);color:var(--accent);font-weight:800}
-.cal-day.has-log::after{content:'';width:4px;height:4px;border-radius:50%;background:var(--accent);position:absolute;bottom:3px}
-.cal-day.sel{background:var(--accent);color:#fff}
-.cal-day.sel::after{background:#fff}
-.cal-detail{margin:0 20px 12px;background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px}
-.cal-detail-date{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px}
-
-/* NEW:日历全局详情中的游戏分组样式 */
-.cal-game-group{margin-bottom:12px}
-.cal-game-group:last-child{margin-bottom:0}
-.cal-game-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.cal-game-title .cal-game-ico{width:22px;height:22px;border-radius:5px;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden;flex-shrink:0}
-.cal-game-title .cal-game-ico img{width:100%;height:100%;object-fit:cover;border-radius:5px}
-.cal-acct-block{margin-left:4px;margin-bottom:8px;padding:8px 10px;background:var(--bg2);border-radius:var(--r3)}
-.cal-acct-block:last-child{margin-bottom:0}
-.cal-acct-name{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:flex;align-items:center;gap:5px}
-.cal-acct-name .cal-acct-ava{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;overflow:hidden;background:var(--bg3);flex-shrink:0}
-.cal-acct-name .cal-acct-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-
-/* ── CHART ── */
-.chart-wrap{padding:12px 20px}
-.chart-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:0 3px 10px rgba(0,0,0,0.05)}
-.chart-title{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text)}
-
-/* ══════════════════════════════════════════全屏详情页(账号详情 & 日记详情)像原生App 从右滑入，不是底部 sheet
-   ══════════════════════════════════════════ */
-.detail-page{
+/* ══════════════════════════════════════
+   悬浮＋按钮（猫爪气泡，仅任务页显示）
+══════════════════════════════════════ */
+#fab-wrap {
   position:fixed;
-  top:0;left:50%;
+  bottom:72px;
+  left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;
+  pointer-events:none;z-index:91;
+  height:0;
+}
+#fab-btn {
+  position:absolute;
+  bottom:0;left:50%;transform:translateX(-50%);
+  width:48px;height:48px;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px hsla(var(--accent-h),44%,36%,.38);
+  pointer-events:auto;
+  transition:transform .15s,box-shadow .15s;
+  z-index:92;
+}
+#fab-btn svg {
+  width:22px;height:22px;stroke:#fff;fill:none;
+  stroke-width:2.2;stroke-linecap:round;
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+}
+#fab-btn.open svg { transform:rotate(45deg); }
+#fab-btn:active { transform:translateX(-50%) scale(.9); }
+
+/* 插画风按钮装饰 */
+:root #fab-btn::before {
+  content:'';position:absolute;inset:-3px;
+  border-radius:50%;
+  border:2px dashed rgba(255,255,255,.4);
+  pointer-events:none;
+  animation:fabRotate 8s linear infinite;
+}
+@keyframes fabRotate { to { transform:rotate(360deg); } }
+[data-ui=clean] #fab-btn::before { display:none; }
+
+/* 气泡菜单3个 — 猫爪形分布 */
+.paw-bubble {
+  position:absolute;bottom:8px;left:50%;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  opacity:0;pointer-events:none;
+  transform:translateY(12px) scale(.75);
+  transition:opacity .22s,transform .26s cubic-bezier(.34,1.4,.64,1);
+}
+.paw-bubble.show {
+  opacity:1;pointer-events:auto;
+  transform:translateY(0) scale(1);
+}
+/* 猫爪位置：左爪/中爪/右爪 */
+#pb-log   { transform-origin:bottom center; left:calc(50% - 120px); }
+#pb-chart { left:calc(50% - 24px); bottom:18px; }
+#pb-diary { left:calc(50% + 72px); }
+
+#pb-log.show   { transform:translate(-10px,-58px) scale(1); }
+#pb-chart.show { transform:translate(0px,-72px) scale(1); }
+#pb-diary.show { transform:translate(10px,-58px) scale(1); }
+
+.paw-btn {
+  width:46px;height:46px;border-radius:50%;
+  background:var(--card);border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--sh2);cursor:pointer;
+  transition:transform .13s;
+}
+.paw-btn:active { transform:scale(.88); }
+.paw-btn svg {
+  width:19px;height:19px;stroke:var(--accent);fill:none;
+  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
+}
+.paw-label {
+  font-size:10px;font-weight:700;color:var(--text2);
+  background:var(--card);padding:2px 8px;
+  border-radius:8px;box-shadow:var(--sh);
+  border:1px solid var(--border);white-space:nowrap;
+}
+
+/* 插画风气泡装饰 */
+:root .paw-btn { border-radius:50% 50% 50% 50% / 48% 48% 52% 52%; }
+:root .paw-btn::after {
+  content:'';position:absolute;width:8px;height:8px;
+  background:var(--accent);opacity:.15;border-radius:50%;
+  bottom:-2px;left:50%;transform:translateX(-50%);
+}
+
+/* 气泡遮罩 */
+#fab-overlay {
+  position:fixed;inset:0;z-index:88;
+  background:rgba(0,0,0,0);pointer-events:none;
+  transition:background .22s;
+}
+#fab-overlay.show {
+  pointer-events:auto;
+  background:rgba(0,0,0,.12);
+  backdrop-filter:blur(1px);
+}
+
+/* ══════════════════════════════════════
+   页面容器
+══════════════════════════════════════ */
+.pg { flex:1;overflow-y:auto;padding-bottom:72px;display:none;-webkit-overflow-scrolling:touch; }
+.pg.on { display:block; }
+
+/* ══════════════════════════════════════
+   顶部 Header
+══════════════════════════════════════ */
+.hdr {
+  padding:14px 18px 11px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg);position:sticky;top:0;z-index:10;
+  border-bottom:1px solid var(--border);
+}
+.ht { font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--text); }
+.hs { font-size:11px;color:var(--text3);margin-top:2px; }
+.hdr-right { display:flex;align-items:center;gap:7px; }
+
+/* 图标按钮（无底色细线） */
+.icon-btn {
+  width:32px;height:32px;border-radius:9px;
+  border:1.5px solid var(--border);background:transparent;
+  color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .14s,color .14s;
+}
+.icon-btn:active { border-color:var(--accent);color:var(--accent); }
+.icon-btn svg { width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round; }
+
+/* 插画风 icon-btn 圆角大一点 */
+:root .icon-btn { border-radius:12px; }
+
+/* ══════════════════════════════════════
+   游戏+账号选择条（任务页顶部）
+══════════════════════════════════════ */
+#task-selector {
+  display:flex;align-items:center;gap:8px;
+  padding:8px 18px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.selector-pill {
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;
+  border:1.5px solid var(--border2);background:var(--card);
+  cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);
+  box-shadow:var(--sh);transition:all .14s;
+  max-width:48%;overflow:hidden;
+}
+.selector-pill:active { border-color:var(--accent);color:var(--accent); }
+.selector-pill-icon {
+  width:20px;height:20px;border-radius:6px;
+  background:var(--bg2);display:flex;align-items:center;
+  justify-content:center;font-size:11px;flex-shrink:0;overflow:hidden;
+}
+.selector-pill-icon img { width:100%;height:100%;object-fit:cover;border-radius:5px; }
+.selector-pill-name { flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.selector-pill-arrow { font-size:10px;color:var(--text3);flex-shrink:0; }
+/* 插画风选择条 */
+:root .selector-pill { border-radius:20px;background:var(--warm1); }
+
+/* ══════════════════════════════════════
+   按钮
+══════════════════════════════════════ */
+.btn { display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 16px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .14s; }
+.btn:active { opacity:.72;transform:scale(.96); }
+.bp { background:var(--accent);color:#fff;box-shadow:0 2px 10px hsla(var(--accent-h),40%,42%,.28); }
+.bg { background:var(--bg2);color:var(--text2);border:1.5px solid var(--border); }
+.bd { background:transparent;color:var(--red);border:1.5px solid var(--border); }
+[data-theme=dark] .bd { color:#C07878; }
+.bfull { width:100%; }.bsm { padding:6px 12px;font-size:12px; }
+
+/* 插画风按钮圆润 */
+:root .btn { border-radius:24px; }
+:root .bp { box-shadow:0 3px 14px hsla(var(--accent-h),44%,38%,.32); }
+
+/* ══════════════════════════════════════
+   任务卡片 — 插画风独立圆角卡片
+══════════════════════════════════════ */
+.task-section-title {
+  font-size:11px;font-weight:700;color:var(--text3);
+  letter-spacing:.8px;text-transform:uppercase;
+  padding:12px 18px 6px;display:flex;align-items:center;gap:6px;
+}
+.task-section-title::before {
+  content:'';width:3px;height:13px;
+  background:var(--accent);border-radius:2px;display:block;
+}
+
+/* 插画风任务卡片 */
+.tcard {
+  margin:0 16px 8px;
+  background:var(--card);
+  border-radius:var(--r2);
+  border:1.5px solid var(--border);
+  padding:12px 14px;
+  box-shadow:var(--sh);
+  display:flex;align-items:flex-start;gap:10px;
+  position:relative;overflow:hidden;
+  transition:transform .12s;
+}
+.tcard:active { transform:scale(.99); }
+
+/* 插画风卡片左侧彩色竖条 */
+:root .tcard::before {
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:4px;background:var(--accent);opacity:.5;border-radius:4px 0 0 4px;
+}
+:root .tcard.timed-card::before { background:var(--deco-peach);opacity:.9; }
+:root .tcard.done-card { opacity:.7; }
+:root .tcard.done-card::before { background:var(--text3);opacity:.3; }
+
+.tcard-check {
+  width:22px;height:22px;border-radius:50%;
+  border:1.5px solid var(--border2);background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;margin-top:1px;
+  font-size:11px;color:#fff;
+  transition:all .18s;
+}
+.tcard-check.on {
+  background:var(--green);border-color:var(--green);
+  box-shadow:0 2px 8px rgba(90,140,104,.32);
+}
+.tcard-check.on::after { content:'✓'; }
+.tcard-body { flex:1;min-width:0; }
+.tcard-name { font-size:13px;font-weight:600;line-height:1.4;color:var(--text); }
+.tcard-name.done { text-decoration:line-through;color:var(--text3); }
+.tcard-sub { font-size:11px;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap; }
+.tcard-badge {
+  font-size:10px;padding:2px 8px;border-radius:8px;
+  font-weight:600;flex-shrink:0;margin-top:1px;
+}
+.tbdaily { background:var(--accbg);color:var(--accent);border:1px solid var(--accbg2); }
+.tbonce { background:var(--bg2);color:var(--text3);border:1px solid var(--border); }
+.tbtimed { background:#FFF0E8;color:#C06040;border:1px solid #F0C8A0; }
+[data-theme=dark] .tbtimed { background:#281808;color:#E09060;border-color:#483020; }
+[data-theme=dark] .tbdaily { background:hsl(var(--accent-h),22%,12%);color:hsl(var(--accent-h),36%,64%); }
+.tcard-del {
+  background:none;border:none;color:var(--border2);
+  cursor:pointer;font-size:15px;padding:2px;border-radius:50%;
+  transition:color .13s;margin-top:1px;flex-shrink:0;
+}
+.tcard-del:active { color:var(--red); }
+
+/* 限时任务卡片特殊样式 */
+:root .tcard.timed-card {
+  background:linear-gradient(135deg, var(--card) 0%, #FFF8F3 100%);
+  border-color:#F0D8C8;
+}
+:root .tcard.timed-card .tcard-check { border-color:#F0A080; }
+:root .tcard.timed-card .tcard-check.on { background:#D07858;border-color:#D07858; }
+
+/* 极简风任务条目 */
+[data-ui=clean] .tcard {
+  border-radius:10px;padding:11px 14px;
+  border:1.5px solid var(--border);
+}
+[data-ui=clean] .tcard::before { display:none; }
+
+/* ══════════════════════════════════════
+   子页面顶部（返回键）— 日志/图表/日记
+══════════════════════════════════════ */
+.sub-hdr {
+  padding:13px 18px 11px;
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg);position:sticky;top:0;z-index:10;
+  border-bottom:1px solid var(--border);
+}
+.sub-back {
+  width:32px;height:32px;border-radius:50%;
+  background:var(--bg2);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:15px;color:var(--text2);flex-shrink:0;
+}
+.sub-back:active { opacity:.7; }
+:root .sub-back { border-radius:12px; }
+.sub-title { font-size:15px;font-weight:700;flex:1; }
+.sub-acct-tag {
+  font-size:11px;color:var(--text3);
+  background:var(--bg2);padding:3px 9px;
+  border-radius:10px;border:1px solid var(--border);
+}
+
+/* ══════════════════════════════════════
+   日志子页面 — 资源概览卡
+══════════════════════════════════════ */
+.res-overview {
+  margin:10px 16px;
+  background:var(--card);
+  border-radius:var(--r2);
+  border:1.5px solid var(--border);
+  padding:13px 14px;
+  box-shadow:var(--sh);
+}
+.res-overview-title {
+  font-size:11px;font-weight:700;color:var(--text3);
+  letter-spacing:.5px;text-transform:uppercase;
+  margin-bottom:10px;display:flex;align-items:center;gap:5px;
+}
+.res-overview-grid {
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+}
+.res-ov-item {
+  background:var(--bg2);border-radius:var(--r3);
+  padding:8px 10px;text-align:center;
+}
+:root .res-ov-item { background:var(--warm1);border-radius:12px; }
+.res-ov-emoji { font-size:16px;display:block;margin-bottom:3px; }
+.res-ov-val { font-size:14px;font-weight:800;color:var(--text); }
+.res-ov-name { font-size:10px;color:var(--text3);margin-top:1px; }
+
+/* ══════════════════════════════════════
+   资源卡片（资源管理页）
+══════════════════════════════════════ */
+.res-grid { display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:10px 16px; }
+.rcard {
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:var(--r2);padding:13px;
+  position:relative;overflow:hidden;box-shadow:var(--sh);
+}
+:root .rcard { border-radius:var(--r); }
+.raccent { position:absolute;top:0;left:0;right:0;height:3px; }
+.remoji { font-size:20px;margin-bottom:5px;display:block; }
+.rname { font-size:11px;color:var(--text3);margin-bottom:3px;font-weight:600; }
+.rval { font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text); }
+.runit { font-size:10px;color:var(--text3);margin-left:2px; }
+.rdelta { font-size:11px;margin-top:3px;font-weight:600; }
+.rup{color:var(--green)}.rdn{color:var(--red)}.rfl{color:var(--text3);}
+.spark { width:100%;height:24px;overflow:visible;margin-top:5px; }
+
+/* ══════════════════════════════════════
+   游戏卡片（资源管理页）
+══════════════════════════════════════ */
+.game-card {
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:var(--r);margin:0 16px 12px;
+  overflow:hidden;box-shadow:var(--sh);
+}
+:root .game-card { border-radius:var(--r4); }
+.game-color-strip { height:3px;width:100%; }
+.game-hdr { display:flex;align-items:center;gap:10px;padding:13px 14px 10px;flex-wrap:wrap; }
+.game-icon {
+  width:42px;height:42px;border-radius:11px;flex-shrink:0;
+  background:var(--bg2);display:flex;align-items:center;
+  justify-content:center;font-size:20px;overflow:hidden;
+  border:1.5px solid var(--border);
+}
+:root .game-icon { border-radius:14px; }
+.game-icon img { width:100%;height:100%;object-fit:cover;border-radius:10px; }
+.game-info { flex:1;min-width:0; }
+.game-name { font-size:14px;font-weight:700; }
+.game-sub { font-size:11px;color:var(--text3);margin-top:1px; }
+.game-btns { display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap; }
+.game-btns .btn { padding:4px 9px;font-size:11px; }
+.acct-list { padding:0 12px 10px; }
+.acct-row {
+  display:flex;align-items:center;gap:9px;padding:9px 10px;
+  background:var(--bg2);border-radius:10px;margin-bottom:5px;
+  cursor:pointer;transition:all .14s;border:1.5px solid transparent;
+}
+:root .acct-row { border-radius:14px;background:var(--warm1); }
+.acct-row:active { background:var(--bg3);border-color:var(--accent); }
+.acct-avatar {
+  width:32px;height:32px;border-radius:50%;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;flex-shrink:0;overflow:hidden;border:1.5px solid var(--border);
+}
+.acct-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+.acct-info { flex:1;min-width:0; }
+.acct-name { font-size:13px;font-weight:600; }
+.acct-note { font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.acct-btns { display:flex;gap:4px;flex-shrink:0; }
+.acct-btns .btn { padding:3px 8px;font-size:11px; }
+
+/* ══════════════════════════════════════
+   日历
+══════════════════════════════════════ */
+.cal-nav { display:flex;align-items:center;justify-content:space-between;padding:10px 18px 6px; }
+.cal-nav-title { font-size:15px;font-weight:700; }
+:root .cal-nav-title { font-family:var(--font-title); }
+.cal-nav-btn {
+  background:transparent;border:1.5px solid var(--border);
+  width:30px;height:30px;border-radius:var(--r3);font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);
+}
+:root .cal-nav-btn { border-radius:10px; }
+.cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 16px 10px; }
+.cal-dow { font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:3px 0; }
+.cal-day {
+  min-height:38px;border-radius:10px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;
+  font-size:12px;font-weight:600;color:var(--text2);
+  position:relative;transition:background .11s;
+}
+:root .cal-day { border-radius:12px; }
+.cal-day.other { color:var(--text3); }
+.cal-day.today { background:var(--accbg);color:var(--accent);font-weight:800; }
+.cal-day.has-log::after { content:'';width:4px;height:4px;border-radius:50%;background:var(--accent);position:absolute;bottom:2px; }
+.cal-day.sel { background:var(--accent);color:#fff; }
+.cal-day.sel::after { background:#fff; }
+.cal-detail {
+  margin:0 16px 10px;background:var(--card);
+  border:1.5px solid var(--border);border-radius:var(--r);padding:13px;box-shadow:var(--sh);
+}
+:root .cal-detail { border-radius:var(--r4); }
+.cal-detail-date { font-size:12px;font-weight:700;color:var(--accent);margin-bottom:7px; }
+.cal-game-group { margin-bottom:10px; }.cal-game-group:last-child { margin-bottom:0; }
+.cal-game-title { display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--border); }
+.cal-game-title .cal-game-ico { width:20px;height:20px;border-radius:5px;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:13px;overflow:hidden;flex-shrink:0; }
+.cal-game-title .cal-game-ico img { width:100%;height:100%;object-fit:cover;border-radius:4px; }
+.cal-acct-block { margin-left:2px;margin-bottom:6px;padding:7px 9px;background:var(--bg2);border-radius:var(--r3); }
+:root .cal-acct-block { background:var(--warm1);border-radius:12px; }
+.cal-acct-block:last-child { margin-bottom:0; }
+.cal-acct-name { font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:4px; }
+.cal-acct-name .cal-acct-ava { width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;overflow:hidden;background:var(--bg3);flex-shrink:0; }
+.cal-acct-name .cal-acct-ava img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+.cal-day-dots { display:flex;gap:1px;justify-content:center;position:absolute;bottom:2px;left:0;right:0; }
+.cal-day-dot { width:3px;height:3px;border-radius:50%; }
+
+/* ══════════════════════════════════════
+   图表
+══════════════════════════════════════ */
+.chart-wrap { padding:10px 16px; }
+.chart-card { background:var(--card);border:1.5px solid var(--border);border-radius:var(--r2);padding:13px;margin-bottom:10px;box-shadow:var(--sh); }
+:root .chart-card { border-radius:var(--r); }
+.chart-title { font-size:12px;font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:5px;color:var(--text); }
+
+/* ══════════════════════════════════════
+   日志条目
+══════════════════════════════════════ */
+.logitem {
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;box-shadow:var(--sh);
+}
+:root .logitem { border-radius:var(--r); }
+.logdate { font-size:12px;color:var(--accent);font-weight:700;margin-bottom:5px; }
+.chips { display:flex;flex-wrap:wrap;gap:4px;margin-bottom:3px; }
+.chip {
+  background:var(--accbg);border-radius:8px;padding:2px 8px;
+  font-size:11px;color:var(--accent);font-weight:600;border:1px solid var(--accbg2);
+}
+:root .chip { border-radius:10px; }
+.lognote { font-size:11px;color:var(--text3);font-style:italic; }
+
+/* ══════════════════════════════════════
+   日记
+══════════════════════════════════════ */
+.dvtog { display:flex;gap:6px;padding:9px 16px 0; }
+.dvbtn { flex:1;padding:7px;border-radius:18px;border:1.5px solid var(--border);background:transparent;font-size:12px;font-weight:600;cursor:pointer;color:var(--text3);transition:all .14s;font-family:inherit; }
+:root .dvbtn { border-radius:22px; }
+.dvbtn.on { background:var(--accent);border-color:var(--accent);color:#fff; }
+.tagrow { display:flex;gap:5px;padding:7px 16px;overflow-x:auto;scrollbar-width:none; }
+.tagrow::-webkit-scrollbar { display:none; }
+.tchip { flex-shrink:0;padding:4px 12px;border-radius:16px;border:1.5px solid var(--border);background:transparent;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);transition:all .14s;font-family:inherit; }
+:root .tchip { border-radius:20px; }
+.tchip.on { background:var(--accent);border-color:var(--accent);color:#fff; }
+.dlist { padding:7px 16px; }
+.dcard {
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:var(--r2);padding:11px;margin-bottom:8px;
+  cursor:pointer;position:relative;overflow:hidden;box-shadow:var(--sh);
+}
+:root .dcard { border-radius:var(--r); }
+.dcard:active { opacity:.8;transform:scale(.99); }
+.dtbar { position:absolute;left:0;top:0;bottom:0;width:3px; }
+.dcin { padding-left:8px; }
+.dctop { display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap; }
+.dtbadge { font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600; }
+:root .dtbadge { border-radius:8px; }
+.ddate { font-size:10px;color:var(--text3);margin-left:auto; }
+.dtitle { font-size:13px;font-weight:700;margin-bottom:2px;color:var(--text); }
+.dprev { font-size:11px;color:var(--text2);line-height:1.4; }
+.dthumb { width:46px;height:46px;border-radius:8px;object-fit:cover;float:right;margin-left:7px; }
+:root .dthumb { border-radius:12px; }
+.dgtag { font-size:10px;color:var(--text3);background:var(--bg2);padding:1px 6px;border-radius:6px; }
+:root .dgtag { background:var(--warm1);border-radius:8px; }
+.t攻略{background:#EEF4EE;color:#4A7A58;}.b攻略{background:#78987E;}
+.t心得{background:#E7EDF6;color:#485E82;}.b心得{background:#8090B0;}
+.t吐槽{background:#F4EDEC;color:#804A4A;}.b吐槽{background:#A87070;}
+.t日常{background:#F1EDE6;color:#806840;}.b日常{background:#B09068;}
+.t其他{background:#EAEAEA;color:#585858;}.b其他{background:#888888;}
+[data-theme=dark] .t攻略{background:#182418;color:#78A882;}
+[data-theme=dark] .t心得{background:#181E28;color:#7890B8;}
+[data-theme=dark] .t吐槽{background:#281818;color:#BC7878;}
+[data-theme=dark] .t日常{background:#281E0E;color:#BCA068;}
+[data-theme=dark] .t其他{background:#202020;color:#888888;}
+
+/* ══════════════════════════════════════
+   搜索栏
+══════════════════════════════════════ */
+.search-bar-wrap { padding:7px 16px;display:flex;gap:7px;align-items:center; }
+.search-input {
+  flex:1;padding:8px 13px;background:var(--bg2);
+  border:1.5px solid var(--border);border-radius:18px;
+  font-family:inherit;font-size:12px;color:var(--text);
+  outline:none;transition:border-color .14s;
+}
+:root .search-input { border-radius:22px;background:var(--warm1); }
+.search-input:focus { border-color:var(--accent); }
+.search-sort-btn {
+  padding:6px 11px;border-radius:16px;border:1.5px solid var(--border);
+  background:transparent;font-size:11px;font-weight:600;cursor:pointer;
+  color:var(--text3);white-space:nowrap;transition:all .14s;font-family:inherit;
+}
+.search-sort-btn.on { background:var(--accbg);color:var(--accent);border-color:var(--accbg2); }
+
+/* ══════════════════════════════════════
+   全屏详情页（从右滑入）
+══════════════════════════════════════ */
+.detail-page {
+  position:fixed;top:0;left:50%;
   transform:translateX(-50%) translateX(100%);
   width:100%;max-width:480px;height:100vh;
-  background:var(--bg);
-  z-index:200;
-  display:flex;flex-direction:column;
-  transition:transform 0.32s cubic-bezier(0.32,0.72,0,1);
-  overflow:hidden;
+  background:var(--bg);z-index:200;display:flex;flex-direction:column;
+  transition:transform .3s cubic-bezier(.32,.72,0,1);overflow:hidden;
 }
-.detail-page.open{transform:translateX(-50%) translateX(0);}
-
-/*详情页 header */
-.dp-hdr{
-  display:flex;align-items:center;gap:10px;
-  padding:14px 16px 12px;
-  background:var(--bg);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
+.detail-page.open { transform:translateX(-50%) translateX(0); }
+.dp-hdr {
+  display:flex;align-items:center;gap:9px;padding:13px 15px 10px;
+  background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;
 }
-.dp-back{
-  width:34px;height:34px;border-radius:50%;
-  background:var(--bg2);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:18px;color:var(--text2);
-  flex-shrink:0;
+.dp-back {
+  width:30px;height:30px;border-radius:50%;background:var(--bg2);
+  border:1.5px solid var(--border);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;font-size:15px;color:var(--text2);flex-shrink:0;
 }
-.dp-back:active{opacity:0.7}
-.dp-title{
-  flex:1;font-size:16px;font-weight:700;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+.dp-back:active { opacity:.7; }
+:root .dp-back { border-radius:12px; }
+.dp-title { flex:1;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.dp-actions { display:flex;gap:5px;flex-shrink:0; }
+.dp-body { flex:1;overflow-y:auto;padding-bottom:80px; }
+.acct-detail-banner { display:flex;align-items:center;gap:13px;padding:14px 16px 12px;border-bottom:1px solid var(--border); }
+.acct-detail-ava { width:48px;height:48px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0; }
+.acct-detail-ava img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+.acct-detail-info { flex:1; }.acct-detail-name { font-size:16px;font-weight:700; }.acct-detail-note { font-size:11px;color:var(--text3);margin-top:2px; }
+.acct-detail-desc { margin:0 16px 10px;padding:10px 13px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--text2);line-height:1.7; }
+.diary-det-meta { display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:11px 16px 0; }
+.diary-det-body { padding:13px 16px;font-size:14px;line-height:1.9;white-space:pre-wrap;color:var(--text); }
+.diary-det-imgs { display:flex;gap:7px;flex-wrap:wrap;padding:0 16px 14px; }
+.diary-det-imgs img { width:calc(50% - 4px);border-radius:10px;object-fit:cover; }
+
+/* ══════════════════════════════════════
+   Modal
+══════════════════════════════════════ */
+.mover { position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px); }
+.mbox {
+  background:var(--card);border-radius:22px 22px 0 0;
+  width:100%;max-width:480px;max-height:92vh;
+  overflow-y:auto;padding:0 0 32px;
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
 }
-.dp-actions{display:flex;gap:6px;flex-shrink:0}
+:root .mbox { border-radius:26px 26px 0 0; }
+.mover.show .mbox { transform:translateY(0); }
+.m-handle { width:38px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0; }
+:root .m-handle { background:var(--warm3); }
+.mhdr { display:flex;justify-content:space-between;align-items:center;padding:14px 18px 0; }
+.mtitle { font-size:16px;font-weight:800;color:var(--text); }
+:root .mtitle { font-family:var(--font-title); }
+.mclose { width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);font-size:15px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center; }
+.mbody { padding:13px 18px 0; }
 
-/* 详情页 body */
-.dp-body{
-  flex:1;overflow-y:auto;padding-bottom:80px;
+/* ══════════════════════════════════════
+   表单
+══════════════════════════════════════ */
+.fg { margin-bottom:12px; }
+.fl { font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px;display:block;letter-spacing:.5px;text-transform:uppercase; }
+.fi { width:100%;padding:10px 12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r2);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color .14s; }
+:root .fi { border-radius:14px;background:var(--warm1); }
+.fi:focus { border-color:var(--accent); }
+textarea.fi { resize:none;min-height:82px;line-height:1.6; }
+select.fi { -webkit-appearance:none;appearance:none; }
+.frow { display:flex;gap:8px; }.frow .fg { flex:1; }
+.divider { height:1px;background:var(--border);margin:10px 0; }
+.togrow { display:flex;align-items:center;justify-content:space-between;padding:7px 0; }
+.tog { width:42px;height:23px;background:var(--border);border-radius:12px;position:relative;cursor:pointer;border:none;flex-shrink:0;transition:background .18s; }
+.tog.on { background:var(--accent); }
+.tog::after { content:'';position:absolute;top:2px;left:2px;width:19px;height:19px;background:#fff;border-radius:50%;transition:transform .18s;box-shadow:0 1px 4px rgba(0,0,0,.16); }
+.tog.on::after { transform:translateX(19px); }
+
+/* 图片上传 */
+.upload-btn { display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:20px 0;border:1.5px dashed var(--border2);border-radius:var(--r);background:var(--bg2);cursor:pointer;font-size:12px;color:var(--text3);font-weight:600;font-family:inherit;transition:border-color .14s; }
+:root .upload-btn { background:var(--warm1); }
+.upload-btn:active { border-color:var(--accent); }
+.game-icon-preview { width:54px;height:54px;border-radius:var(--r2);object-fit:cover;border:1.5px solid var(--border);cursor:pointer;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:23px;overflow:hidden; }
+.game-icon-preview img { width:100%;height:100%;object-fit:cover;border-radius:10px; }
+.iplist { display:flex;gap:6px;flex-wrap:wrap;margin-top:6px; }
+.ipitem { position:relative;width:60px;height:60px; }
+.ipitem img { width:100%;height:100%;object-fit:cover;border-radius:var(--r3); }
+.ipdel { position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:10px;cursor:pointer;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center; }
+.mresitem { display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border); }
+.mresitem:last-child { border-bottom:none; }
+.mresdel { background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;margin-left:auto;padding:2px; }
+
+/* ══════════════════════════════════════
+   其他/成就/设置页
+══════════════════════════════════════ */
+.menu-row { display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .14s; }
+.menu-row:first-child { border-top:1px solid var(--border); }
+.menu-row:active { opacity:.65; }
+.menu-icon { width:36px;height:36px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+:root .menu-icon { border-radius:14px;background:var(--warm1); }
+.menu-icon svg { width:17px;height:17px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round; }
+.menu-info { flex:1;min-width:0; }
+.menu-label { font-size:13px;font-weight:600;color:var(--text); }
+.menu-sub { font-size:11px;color:var(--text3);margin-top:1px; }
+.menu-arrow { font-size:13px;color:var(--border2); }
+
+/* 数据行 */
+.data-row { display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border); }
+.data-row:first-child { border-top:1px solid var(--border); }
+.data-row-label { font-size:13px;font-weight:600;color:var(--text); }
+.data-row-sub { font-size:11px;color:var(--text3);margin-top:1px; }
+
+/* ══════════════════════════════════════
+   成就系统
+══════════════════════════════════════ */
+.ach-grid { display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 16px; }
+.ach-card { background:var(--card);border:1.5px solid var(--border);border-radius:var(--r2);padding:11px;position:relative;overflow:hidden;cursor:pointer;transition:all .14s; }
+:root .ach-card { border-radius:var(--r); }
+.ach-card.unlocked { border-color:var(--accent);background:var(--accbg); }
+:root .ach-card.unlocked { background:linear-gradient(135deg,var(--accbg),var(--warm1)); }
+.ach-card.locked { opacity:.55;filter:grayscale(.4); }
+.ach-card:active { transform:scale(.97); }
+.ach-icon { font-size:24px;margin-bottom:5px;display:block; }
+.ach-name { font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px; }
+.ach-desc { font-size:10px;color:var(--text3);line-height:1.4; }
+.ach-badge { position:absolute;top:6px;right:6px;font-size:9px;padding:2px 6px;border-radius:6px;font-weight:700; }
+.ach-badge.done { background:var(--accent);color:#fff; }
+.ach-badge.lock { background:var(--bg3);color:var(--text3); }
+.ach-progress { height:3px;background:var(--bg3);border-radius:2px;margin-top:5px;overflow:hidden; }
+.ach-progress-fill { height:100%;border-radius:2px;background:var(--accent);transition:width .4s; }
+.ach-section-title { font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:10px 16px 3px; }
+
+/* ══════════════════════════════════════
+   任务资源配置
+══════════════════════════════════════ */
+.task-res-mode { display:flex;gap:5px;margin-bottom:9px; }
+.task-res-mode-btn { flex:1;padding:7px 3px;border-radius:10px;border:1.5px solid var(--border);background:transparent;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);text-align:center;transition:all .14s;font-family:inherit; }
+.task-res-mode-btn.on { border-color:var(--accent);background:var(--accbg);color:var(--accent); }
+.task-res-entry { display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--border); }
+.task-res-entry:last-child { border-bottom:none; }
+.task-res-del { background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 1px; }
+.task-color-swatch { width:20px;height:20px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:all .14s; }
+.task-color-swatch.sel { border-color:var(--text); }
+.task-color-row { display:flex;flex-wrap:wrap;gap:5px;margin-top:5px; }
+
+/* ══════════════════════════════════════
+   协作
+══════════════════════════════════════ */
+.collab-filter-bar { display:flex;gap:5px;padding:7px 16px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border); }
+.collab-filter-bar::-webkit-scrollbar { display:none; }
+.collab-ftag { flex-shrink:0;padding:4px 12px;border-radius:16px;border:1.5px solid var(--border);background:transparent;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);white-space:nowrap;transition:all .14s;font-family:inherit; }
+:root .collab-ftag { border-radius:20px; }
+.collab-ftag.on { background:var(--accent);border-color:var(--accent);color:#fff; }
+.collab-pinned-badge { font-size:10px;padding:1px 5px;background:#F0C840;color:#7A5800;border-radius:6px;font-weight:700; }
+
+/* ══════════════════════════════════════
+   插画风装饰元素
+══════════════════════════════════════ */
+
+/* 任务页背景装饰图案（插画风） */
+:root #pg-task::before {
+  content:'';
+  position:fixed;top:0;right:0;
+  width:120px;height:120px;
+  background:radial-gradient(circle at 70% 30%, hsla(145,28%,72%,.12) 0%, transparent 70%);
+  pointer-events:none;z-index:0;
+}
+:root #pg-task .pg-deco {
+  position:absolute;right:18px;top:12px;
+  font-size:32px;opacity:.08;pointer-events:none;
+  transform:rotate(15deg);
 }
 
-/* 账号详情 -顶部账号信息条 */
-.acct-detail-banner{
-  display:flex;align-items:center;gap:14px;
-  padding:16px 20px 14px;
-  border-bottom:1px solid var(--border);
-}
-.acct-detail-ava{
-  width:52px;height:52px;border-radius:50%;
-  background:var(--bg2);border:2px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;overflow:hidden;flex-shrink:0;
-}
-.acct-detail-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-.acct-detail-info{flex:1}
-.acct-detail-name{font-size:17px;font-weight:700}
-.acct-detail-note{font-size:12px;color:var(--text3);margin-top:2px}
-.acct-detail-desc{
-  margin:0 20px 12px;
-  padding:11px 14px;
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r);
-  font-size:13px;color:var(--text2);line-height:1.7;
-}
+/* 插画风空状态 */
+.empty { text-align:center;padding:40px 16px;color:var(--text3); }
+.empty .ei { font-size:38px;margin-bottom:8px;opacity:.5;display:block;animation:bob 2.5s ease-in-out infinite; }
+:root .empty .ei { font-size:44px;opacity:.6; }
+.empty .et { font-size:13px;font-weight:500; }
+:root .empty .et { font-size:14px; }
+@keyframes bob { 0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)} }
 
-/* 日记详情 */
-.diary-det-meta{
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  padding:12px 20px 0;
-}
-.diary-det-body{
-  padding:14px 20px;
-  font-size:15px;line-height:1.9;
-  white-space:pre-wrap;color:var(--text);
-}
-.diary-det-imgs{
-  display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px;
-}
-.diary-det-imgs img{
-  width:calc(50% - 4px);border-radius:12px;object-fit:cover;
-}
+/* ══════════════════════════════════════
+   通用工具
+══════════════════════════════════════ */
+.sec-h { font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:12px 16px 5px; }
+.sact { padding:0 16px 10px;display:flex;gap:7px; }
+.tabs { display:flex;gap:5px;padding:8px 16px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab { flex-shrink:0;padding:5px 13px;border-radius:18px;border:1.5px solid var(--border);background:transparent;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);white-space:nowrap;transition:all .18s; }
+.tab.on { color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(0,0,0,.12); }
 
-/* ── MODAL (Bottom Sheet) ── */
-.mover{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
-.mbox{background:var(--card);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:0 0 36px;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.32,0.72,0,1)}
-.mover.show .mbox{transform:translateY(0)}
-.m-handle{width:40px;height:5px;background:var(--border);border-radius:3px;margin:12px auto 0}
-.mhdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 0}
-.mtitle{font-size:17px;font-weight:900;color:var(--text)}
-.mclose{width:30px;height:30px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);font-size:16px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center}
-.mbody{padding:14px 20px 0}
+/* Toast */
+#toast { position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 20px;border-radius:20px;font-size:12px;font-weight:600;z-index:999;opacity:0;transition:opacity .16s;pointer-events:none;white-space:nowrap;max-width:280px;text-align:center;box-shadow:0 3px 14px rgba(0,0,0,.18); }
+:root #toast { border-radius:24px; }
+#toast.on { opacity:1; }
 
-/* ── FORM ── */
-.fg{margin-bottom:14px}
-.fl{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px;display:block;letter-spacing:0.5px;text-transform:uppercase}
-.fi{width:100%;padding:12px 14px;background:var(--bg2);border:2px solid var(--border);border-radius:var(--r2);font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border-color 0.15s}
-.fi:focus{border-color:var(--accent)}
-textarea.fi{resize:none;min-height:88px;line-height:1.6}
-select.fi{-webkit-appearance:none;appearance:none}
-.frow{display:flex;gap:10px}.frow .fg{flex:1}
-.divider{height:2px;background:var(--border);margin:12px 0;border-radius:1px}
-.togrow{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
-.tog{width:46px;height:26px;background:var(--border);border-radius:13px;position:relative;cursor:pointer;border:none;flex-shrink:0;transition:background 0.2s}
-.tog.on{background:var(--accent)}
-.tog::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 2px 5px rgba(0,0,0,0.2)}
-.tog.on::after{transform:translateX(20px)}
-
-/* ── IMG UPLOAD ── */
-.upload-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:24px 0;border:2px dashed var(--border);border-radius:var(--r);background:var(--bg2);cursor:pointer;font-size:13px;color:var(--text3);font-weight:700;font-family:inherit;transition:border-color 0.15s}
-.upload-btn:active{border-color:var(--accent)}
-.game-icon-preview{width:60px;height:60px;border-radius:var(--r2);object-fit:cover;border:2px solid var(--border);cursor:pointer;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden}
-.game-icon-preview img{width:100%;height:100%;object-fit:cover;border-radius:var(--r2)}
-.iplist{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
-.ipitem{position:relative;width:64px;height:64px}
-.ipitem img{width:100%;height:100%;object-fit:cover;border-radius:var(--r3)}
-.ipdel{position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:11px;cursor:pointer;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center}
-.mresitem{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1.5px solid var(--border)}
-.mresitem:last-child{border-bottom:none}
-.mresdel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;margin-left:auto;padding:2px 4px}
-
-/* ── DATA── */
-.data-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1.5px solid var(--border)}
-.data-row:first-child{border-top:1.5px solid var(--border)}
-.data-row-label{font-size:14px;font-weight:700;color:var(--text)}
-.data-row-sub{font-size:11px;color:var(--text3);margin-top:2px}
-
-/* ── EMPTY ── */
-.empty{text-align:center;padding:44px 20px;color:var(--text3)}
-.empty .ei{font-size:40px;margin-bottom:10px;opacity:0.55;display:block;animation:bob 2s ease-in-out infinite}.empty .et{font-size:14px;font-weight:500}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-
-/* ── TOAST ── */
-#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 24px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;max-width:300px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.25)}
-#toast.on{opacity:1}
-
-/* ── 颜色预设 ── */
-.color-presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.color-dot{width:34px;height:34px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.15s;box-shadow:0 2px 6px rgba(0,0,0,0.1)}
-.color-dot:active{transform:scale(0.88)}
-.color-dot.sel{border-color:var(--text);box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--text)}
-
-/* ── DIARY ── */
-.dvtog{display:flex;gap:8px;padding:10px 20px 0}
-.dvbtn{flex:1;padding:8px;border-radius:20px;border:2px solid var(--border);background:var(--card);font-size:13px;font-weight:700;cursor:pointer;color:var(--text2);transition:all 0.15s}
-.dvbtn.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 3px 10px hsla(var(--accent-h),40%,50%,0.3)}
-.tagrow{display:flex;gap:6px;padding:8px 20px;overflow-x:auto;scrollbar-width:none}
-.tagrow::-webkit-scrollbar{display:none}
-.tchip{flex-shrink:0;padding:5px 14px;border-radius:20px;border:2px solid var(--border);background:var(--card);font-size:12px;font-weight:700;cursor:pointer;color:var(--text2);transition:all 0.15s}
-.tchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.dlist{padding:8px 20px}
-.dcard{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
-.dcard:active{opacity:0.8;transform:scale(0.99)}
-.dtbar{position:absolute;left:0;top:0;bottom:0;width:4px}
-.dcin{padding-left:10px}
-.dctop{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap}
-.dtbadge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
-.ddate{font-size:11px;color:var(--text3);margin-left:auto}
-.dtitle{font-size:14px;font-weight:700;margin-bottom:2px;color:var(--text)}
-.dprev{font-size:12px;color:var(--text2);line-height:1.4}
-.dthumb{width:52px;height:52px;border-radius:10px;object-fit:cover;float:right;margin-left:8px}
-.dgtag{font-size:10px;color:var(--text3);background:var(--bg2);padding:2px 8px;border-radius:8px}
-.t攻略{background:#EFF5EF;color:#5A8A6A}.b攻略{background:#8BA995}
-.t心得{background:#E8EEF8;color:#5A7AA8}.b心得{background:#A8BEDF}
-.t吐槽{background:#F5ECEC;color:#A06060}.b吐槽{background:#C07070}
-.t日常{background:#F2EDE5;color:#9A8060}.b日常{background:#CBAF98}
-.t其他{background:#EDEDED;color:#707070}.b其他{background:#A0A0A0}
-[data-theme=dark] .t攻略{background:#1A2A1A;color:#8BC49A}
-[data-theme=dark] .t心得{background:#1A2040;color:#90AAD0}
-[data-theme=dark] .t吐槽{background:#2A1818;color:#D08080}
-[data-theme=dark] .t日常{background:#2A2010;color:#D0B888}
-[data-theme=dark] .t其他{background:#252525;color:#909090}
-
-/* NEW: 存储用量条 */
-.storage-bar-wrap{margin-top:12px}
-.storage-bar-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:flex;justify-content:space-between}
-.storage-bar{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
-.storage-bar-fill{height:100%;border-radius:4px;transition:width 0.3s}
-
-/* ── Q版额外美化 ── */
-.game-name{font-size:15px;font-weight:800!important}
-.game-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.game-btns .btn{padding:4px 10px!important;font-size:11px!important}
-.acct-btns .btn{padding:4px 9px!important;font-size:11px!important}
+/* 颜色预设 */
+.color-presets { display:flex;flex-wrap:wrap;gap:6px;margin-top:5px; }
+.color-dot { width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .14s;box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.color-dot:active { transform:scale(.86); }
+.color-dot.sel { border-color:var(--text);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text); }
 
 /* 通知卡片 */
-.notif-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);margin:10px 20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 3px 12px rgba(0,0,0,0.06)}
-.notif-icon{font-size:26px;flex-shrink:0;width:44px;height:44px;background:var(--accbg);border-radius:14px;display:flex;align-items:center;justify-content:center}
-.notif-info{flex:1;min-width:0}
-.notif-title{font-size:13px;font-weight:700;color:var(--text)}
-.notif-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.notif-card { background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);margin:9px 16px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh); }
+.notif-icon { font-size:22px;flex-shrink:0;width:38px;height:38px;background:var(--accbg);border-radius:11px;display:flex;align-items:center;justify-content:center; }
+:root .notif-icon { border-radius:14px;background:var(--warm1); }
+.notif-info { flex:1;min-width:0; }
+.notif-title { font-size:13px;font-weight:700;color:var(--text); }
+.notif-sub { font-size:11px;color:var(--text3);margin-top:1px; }
 
-/* 主题自定义面板 */
-.theme-section{padding:14px 20px 0}
-.theme-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
-.opacity-row{display:flex;align-items:center;gap:10px}
-.opacity-slider{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:var(--bg3);outline:none;cursor:pointer}
-.opacity-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);cursor:pointer}
-.opacity-val{font-size:12px;font-weight:700;color:var(--accent);width:34px;text-align:right}
+/* 主题面板 */
+.theme-section { padding:12px 18px 0; }
+.theme-section-title { font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px; }
+.opacity-row { display:flex;align-items:center;gap:8px; }
+.opacity-slider { flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:var(--bg3);outline:none;cursor:pointer; }
+.opacity-slider::-webkit-slider-thumb { -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.16);cursor:pointer; }
+.opacity-val { font-size:12px;font-weight:700;color:var(--accent);width:32px;text-align:right; }
 
-/* 分享日报卡片 */
-.share-preview-wrap{padding:10px 20px}
-.share-card-inner{background:linear-gradient(135deg,var(--accbg),var(--bg2));border:2px solid var(--border);border-radius:20px;padding:20px;overflow:hidden;position:relative}
-.share-card-inner::before{content:'🐭';position:absolute;right:-8px;bottom:-8px;font-size:72px;opacity:0.08;pointer-events:none}
-.share-card-title{font-size:16px;font-weight:900;color:var(--accent);margin-bottom:4px}
-.share-card-date{font-size:11px;color:var(--text3);margin-bottom:14px}
-.share-res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.share-res-item{background:var(--card);border-radius:12px;padding:10px;border:2px solid var(--border)}
-.share-res-name{font-size:10px;color:var(--text3);font-weight:600}
-.share-res-val{font-size:17px;font-weight:900;color:var(--text);margin-top:2px}
+/* 日报卡片 */
+.share-preview-wrap { padding:9px 16px; }
+.share-card-inner { background:linear-gradient(135deg,var(--accbg),var(--bg2));border:1.5px solid var(--border);border-radius:var(--r4);padding:18px;overflow:hidden;position:relative; }
+:root .share-card-inner { background:linear-gradient(135deg,var(--warm1),var(--accbg)); }
+.share-card-inner::before { content:'🐭';position:absolute;right:-6px;bottom:-6px;font-size:62px;opacity:.07;pointer-events:none; }
+.share-card-title { font-size:15px;font-weight:800;color:var(--accent);margin-bottom:3px; }
+.share-card-date { font-size:11px;color:var(--text3);margin-bottom:12px; }
+.share-res-grid { display:grid;grid-template-columns:1fr 1fr;gap:7px; }
+.share-res-item { background:var(--card);border-radius:10px;padding:9px;border:1.5px solid var(--border); }
+:root .share-res-item { border-radius:14px; }
+.share-res-name { font-size:10px;color:var(--text3);font-weight:600; }
+.share-res-val { font-size:16px;font-weight:800;color:var(--text);margin-top:2px; }
 
-/* 默认Q版鼠鼠图标替代🐭 */
-.q-default-game-icon{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,var(--accbg),var(--bg2))}
-.q-default-acct-icon{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;background:linear-gradient(135deg,var(--accbg),var(--bg2))}
+/* 存储条 */
+.storage-bar-wrap { margin-top:10px; }
+.storage-bar-label { font-size:11px;color:var(--text2);margin-bottom:3px;display:flex;justify-content:space-between; }
+.storage-bar { height:5px;background:var(--bg3);border-radius:3px;overflow:hidden; }
+.storage-bar-fill { height:100%;border-radius:3px;transition:width .3s; }
 
-/* 日报卡片区域 */
-.report-section{padding:10px 20px}
-.report-hdr{font-size:15px;font-weight:900;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+/* 日记分享 */
+.diary-share-btn { font-size:11px;padding:3px 10px;border-radius:9px;background:var(--accbg);color:var(--accent);border:1px solid var(--accbg2);font-weight:600;cursor:pointer;font-family:inherit;transition:all .14s; }
+:root .diary-share-btn { border-radius:12px; }
+.diary-share-btn:active { opacity:.7; }
 
-/* ══ 新增：搜索栏 ══ */
-.search-bar-wrap{padding:8px 20px;display:flex;gap:8px;align-items:center}
-.search-input{flex:1;padding:9px 14px;background:var(--bg2);border:2px solid var(--border);border-radius:20px;font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s}
-.search-input:focus{border-color:var(--accent)}
-.search-sort-btn{padding:7px 12px;border-radius:20px;border:2px solid var(--border);background:var(--card);font-size:12px;font-weight:700;cursor:pointer;color:var(--text2);white-space:nowrap;transition:all 0.15s;font-family:inherit}
-.search-sort-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* PWA */
+.pwa-install-btn { display:flex;align-items:center;gap:9px;width:100%;padding:11px 14px;background:var(--accent);border:none;border-radius:var(--r);cursor:pointer;font-family:inherit;color:#fff;font-size:12px;font-weight:600;transition:all .14s; }
+:root .pwa-install-btn { border-radius:var(--r4); }
+.pwa-install-btn:active { opacity:.84;transform:scale(.98); }
+.pwa-install-btn svg { width:17px;height:17px;stroke:#fff;fill:none;stroke-width:1.5;flex-shrink:0; }
 
-/* ══ 新增：成就系统 ══ */
-.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 20px}
-.ach-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:12px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.15s}
-.ach-card.unlocked{border-color:var(--accent);background:var(--accbg)}
-.ach-card.locked{opacity:0.6;filter:grayscale(0.5)}
-.ach-card:active{transform:scale(0.97)}
-.ach-icon{font-size:28px;margin-bottom:6px;display:block}
-.ach-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px}
-.ach-desc{font-size:10px;color:var(--text3);line-height:1.4}
-.ach-badge{position:absolute;top:6px;right:6px;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:700}
-.ach-badge.done{background:var(--accent);color:#fff}
-.ach-badge.lock{background:var(--bg3);color:var(--text3)}
-.ach-progress{height:4px;background:var(--bg3);border-radius:2px;margin-top:6px;overflow:hidden}
-.ach-progress-fill{height:100%;border-radius:2px;background:var(--accent);transition:width 0.4s}
-.ach-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:12px 20px 4px}
+/* 更新横幅 */
+#update-banner { display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:500;background:var(--accent);color:#fff;padding:9px 15px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.14); }
+#update-banner button { background:rgba(255,255,255,.2);border:none;color:#fff;padding:3px 9px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;margin-left:8px;font-family:inherit; }
 
-/* ══ 新增：任务资源配置 ══ */
-.task-res-mode{display:flex;gap:6px;margin-bottom:10px}
-.task-res-mode-btn{flex:1;padding:8px 4px;border-radius:12px;border:2px solid var(--border);background:var(--card);font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);text-align:center;transition:all 0.15s;font-family:inherit}
-.task-res-mode-btn.on{border-color:var(--accent);background:var(--accbg);color:var(--accent)}
-.task-res-entry{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1.5px solid var(--border)}
-.task-res-entry:last-child{border-bottom:none}
-.task-res-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:0 2px}
-.task-color-swatch{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:all 0.15s}
-.task-color-swatch.sel{border-color:var(--text)}
-.task-color-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+/* ══════════════════════════════════════
+   风格切换按钮（主题面板中）
+══════════════════════════════════════ */
+.ui-style-row { display:flex;gap:10px;margin-bottom:12px; }
+.ui-style-card {
+  flex:1;border-radius:14px;border:2px solid var(--border);
+  padding:12px 10px;text-align:center;cursor:pointer;
+  transition:all .16s;background:var(--card);
+}
+.ui-style-card.active { border-color:var(--accent);background:var(--accbg); }
+:root .ui-style-card { border-radius:18px; }
+.ui-style-card:active { transform:scale(.97); }
+.ui-style-preview { height:48px;border-radius:8px;margin-bottom:7px;overflow:hidden;display:flex;align-items:center;justify-content:center; }
+.ui-style-label { font-size:12px;font-weight:700;color:var(--text); }
+.ui-style-sub { font-size:10px;color:var(--text3);margin-top:2px; }
 
-/* ══ 新增：日历任务条 ══ */
-.cal-task-bar{height:4px;border-radius:2px;width:100%;margin-top:1px}
-.cal-day{position:relative}
-.cal-day-dots{display:flex;gap:1px;justify-content:center;position:absolute;bottom:2px;left:0;right:0}
-.cal-day-dot{width:4px;height:4px;border-radius:50%}
+/* 插画风预览色块 */
+.preview-illus { background:linear-gradient(135deg,#FAF8F3,#F0EDE5);border:1.5px solid #E8E4DA;border-radius:10px;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;gap:3px; }
+/* 极简风预览色块 */
+.preview-clean { background:linear-gradient(135deg,#F7F6F1,#EEECEA);border:1.5px solid #E0DDD4;border-radius:10px;width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
+.preview-clean-line { width:70%;height:2px;background:var(--border2);border-radius:1px; }
 
-/* ══ 新增：协作公告分类/置顶 ══ */
-.collab-filter-bar{display:flex;gap:6px;padding:8px 20px;overflow-x:auto;scrollbar-width:none;border-bottom:2px solid var(--border)}
-.collab-filter-bar::-webkit-scrollbar{display:none}
-.collab-ftag{flex-shrink:0;padding:5px 14px;border-radius:20px;border:2px solid var(--border);background:var(--card);font-size:12px;font-weight:700;cursor:pointer;color:var(--text2);white-space:nowrap;transition:all 0.15s}
-.collab-ftag.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.collab-pinned-badge{font-size:10px;padding:1px 6px;background:#FFD700;color:#7A5800;border-radius:8px;font-weight:700}
+/* ══════════════════════════════════════
+   选择游戏/账号浮层
+══════════════════════════════════════ */
+#selector-sheet {
+  position:fixed;inset:0;z-index:280;
+  background:rgba(0,0,0,.3);display:none;
+  align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(3px);
+}
+#selector-sheet.show { display:flex; }
+.selector-box {
+  background:var(--card);border-radius:22px 22px 0 0;
+  width:100%;max-width:480px;
+  max-height:70vh;overflow-y:auto;
+  padding:0 0 28px;
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.32,.72,0,1);
+}
+#selector-sheet.show .selector-box { transform:translateY(0); }
+:root .selector-box { border-radius:26px 26px 0 0; }
+.selector-title { font-size:15px;font-weight:800;padding:16px 18px 4px;color:var(--text); }
+:root .selector-title { font-family:var(--font-title); }
+.selector-item {
+  display:flex;align-items:center;gap:10px;
+  padding:11px 18px;cursor:pointer;transition:background .12s;
+}
+.selector-item:active { background:var(--bg2); }
+.selector-item.selected .selector-item-name { color:var(--accent); }
+.selector-item-icon { width:32px;height:32px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:15px;overflow:hidden;flex-shrink:0; }
+:root .selector-item-icon { border-radius:12px;background:var(--warm1); }
+.selector-item-icon img { width:100%;height:100%;object-fit:cover;border-radius:9px; }
+.selector-item-name { font-size:14px;font-weight:600;color:var(--text); }
+.selector-item-sub { font-size:11px;color:var(--text3); }
+.selector-item-check { margin-left:auto;color:var(--accent);font-size:16px;font-weight:700; }
+.selector-section { font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:8px 18px 4px;margin-top:4px; }
+.selector-divider { height:1px;background:var(--border);margin:4px 18px; }
 
-/* ══ 新增：日记分享到协作 ══ */
-.diary-share-btn{font-size:11px;padding:4px 12px;border-radius:10px;background:var(--accbg);color:var(--accent);border:1.5px solid hsla(var(--accent-h),40%,60%,0.2);font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s}
-.diary-share-btn:active{opacity:0.7}
-
-/* ══ 新增：PWA 添加到桌面按钮 ══ */
-.pwa-install-btn{display:flex;align-items:center;gap:10px;width:100%;padding:13px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--r);cursor:pointer;font-family:inherit;color:#fff;font-size:13px;font-weight:700;margin-top:4px;transition:all 0.15s}
-.pwa-install-btn:active{opacity:0.85;transform:scale(0.98)}
-.pwa-install-btn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;flex-shrink:0}
-
-/* ══ 新增：更新提示横幅 ══ */
-#update-banner{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:500;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;padding:10px 16px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.2)}
-#update-banner button{background:rgba(255,255,255,0.25);border:none;color:#fff;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:10px;font-family:inherit}
-
+/* ══════════════════════════════════════
+   插画风标题装饰
+══════════════════════════════════════ */
+:root .ht-deco {
+  display:inline-flex;align-items:center;gap:5px;
+}
+:root .ht-deco::after {
+  content:'';width:24px;height:3px;
+  background:linear-gradient(90deg,var(--accent),transparent);
+  border-radius:2px;display:inline-block;
+}
 </style>
 </head>
 <body>
-<!-- ④ 更新提示横幅 -->
-<div id="update-banner" onclick="location.reload(true)" style="display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:500;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;padding:10px 16px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
+<div id="update-banner" onclick="location.reload(true)">
   🎉 囤囤鼠有新版本！点击立即更新
-  <button onclick="event.stopPropagation();document.getElementById('update-banner').style.display='none'" style="background:rgba(255,255,255,0.25);border:none;color:#fff;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:10px;font-family:inherit">稍后</button>
+  <button onclick="event.stopPropagation();document.getElementById('update-banner').style.display='none'">稍后</button>
 </div>
+
 <div id="app">
+
+  <!-- ══ 底部导航（固定4格）══ -->
   <div id="nav">
-    <button class="nb on" id="nb-task" onclick="goPage('task')"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>任务</button>
-    <button class="nb" id="nb-res" onclick="goPage('res')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>资源</button><button class="nb" id="nb-log" onclick="goPage('log')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>日志</button>
-    <!-- MODIFIED: 修复SVG rxry缺少空格-->
-    <button class="nb" id="nb-cal" onclick="goPage('cal')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>日历</button>
-    <button class="nb" id="nb-chart" onclick="goPage('chart')"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>图表</button>
-    <button class="nb" id="nb-diary" onclick="goPage('diary')"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>日记</button>
-    <button class="nb" id="nb-collab" onclick="goPage('collab')"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>协作</button>
-    <button class="nb" id="nb-ach" onclick="goPage('ach')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>成就</button>
+    <button class="nb on" id="nb-task" onclick="goPage('task')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      任务
+    </button>
+    <button class="nb" id="nb-cal" onclick="goPage('cal')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      日历
+    </button>
+    <button class="nb" id="nb-collab" onclick="goPage('collab')">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      协作
+    </button>
+    <button class="nb" id="nb-more" onclick="goPage('more')">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+      其他
+    </button>
   </div>
 
-  <!-- 任务 -->
+  <!-- ══ 悬浮＋气泡按钮（只在任务页显示）══ -->
+  <div id="fab-overlay" onclick="closeFab()"></div>
+  <div id="fab-wrap">
+    <!-- 猫爪气泡：日志 -->
+    <div class="paw-bubble" id="pb-log" onclick="closeFab();openSubPage('log')">
+      <div class="paw-btn">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <span class="paw-label">日志</span>
+    </div>
+    <!-- 猫爪气泡：图表 -->
+    <div class="paw-bubble" id="pb-chart" onclick="closeFab();openSubPage('chart')">
+      <div class="paw-btn">
+        <svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      </div>
+      <span class="paw-label">图表</span>
+    </div>
+    <!-- 猫爪气泡：日记 -->
+    <div class="paw-bubble" id="pb-diary" onclick="closeFab();openSubPage('diary')">
+      <div class="paw-btn">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      </div>
+      <span class="paw-label">日记</span>
+    </div>
+    <!-- 中央＋按钮 -->
+    <button id="fab-btn" onclick="toggleFab()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- ══ 游戏+账号选择浮层 ══ -->
+  <div id="selector-sheet" onclick="if(event.target===this)closeSelectorSheet()">
+    <div class="selector-box">
+      <div class="m-handle"></div>
+      <div class="selector-title" id="selector-title">选择游戏</div>
+      <div id="selector-list"></div>
+    </div>
+  </div>
+
+  <!-- ══ 任务页 ══ -->
   <div class="pg on" id="pg-task">
     <div class="hdr">
-      <div><div class="ht">囤囤鼠来哩</div><div class="hs" id="task-date"></div></div>
+      <div>
+        <div class="ht ht-deco">囤囤鼠来哩</div>
+        <div class="hs" id="task-date"></div>
+      </div>
       <div class="hdr-right">
-        <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☾</button>
-        <button class="theme-btn" onclick="showM('m-data')" title="设置" style="font-size:14px">⚙</button>
+        <button class="icon-btn" onclick="toggleTheme()" id="theme-btn-task" title="切换主题">
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+        <!-- 资源管理图标（进入游戏/账号设置）-->
+        <button class="icon-btn" onclick="goPage('res')" title="资源管理">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </button>
         <button class="btn bp bsm" onclick="openAddTask()">＋ 任务</button>
       </div>
     </div>
-    <div class="tabs" id="task-gtabs"></div>
-    <div class="tabs" id="task-atabs"></div>
+    <!-- 游戏+账号选择条 -->
+    <div id="task-selector">
+      <div class="selector-pill" id="pill-game" onclick="openSelectorSheet('game')">
+        <div class="selector-pill-icon" id="pill-game-icon">🎮</div>
+        <span class="selector-pill-name" id="pill-game-name">选择游戏</span>
+        <span class="selector-pill-arrow">▾</span>
+      </div>
+      <div class="selector-pill" id="pill-acct" onclick="openSelectorSheet('acct')">
+        <div class="selector-pill-icon" id="pill-acct-icon">🐭</div>
+        <span class="selector-pill-name" id="pill-acct-name">选择账号</span>
+        <span class="selector-pill-arrow">▾</span>
+      </div>
+    </div>
     <div id="tasklist"></div>
   </div>
 
-  <!-- 资源 -->
+  <!-- ══ 资源管理页 ══ -->
   <div class="pg" id="pg-res">
     <div class="hdr">
-      <div class="ht">囤囤鼠来哩 🐭</div>
+      <div class="ht ht-deco">资源管理</div>
       <div class="hdr-right">
-        <button class="theme-btn" onclick="toggleTheme()">☾</button>
-        <!-- MODIFIED: 添加数据管理入口按钮 -->
-        <button class="theme-btn" onclick="showM('m-data')" title="数据管理" style="font-size:14px">⚙</button>
+        <button class="icon-btn" onclick="toggleTheme()">
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
         <button class="btn bp bsm" onclick="showM('m-addgame')">＋ 游戏</button>
       </div>
     </div>
     <div id="res-content" style="padding-top:10px"></div>
   </div>
 
-  <!-- 日志 -->
+  <!-- ══ 日志子页面（从任务页气泡进入）══ -->
   <div class="pg" id="pg-log">
-    <div class="hdr">
-      <div class="ht">记录历史</div>
-      <button class="theme-btn" onclick="toggleTheme()">☾</button></div>
-    <div class="tabs" id="log-gtabs"></div>
-    <div class="tabs" id="log-atabs"></div>
-    <!-- NEW: 搜索+排序栏 -->
+    <div class="sub-hdr">
+      <button class="sub-back" onclick="closeSubPage()">←</button>
+      <span class="sub-title">日志记录</span>
+      <span class="sub-acct-tag" id="log-acct-tag"></span>
+    </div>
+    <!-- 当前账号资源概览 -->
+    <div class="res-overview" id="log-res-overview" style="display:none">
+      <div class="res-overview-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        当前资源
+      </div>
+      <div class="res-overview-grid" id="log-res-grid"></div>
+    </div>
     <div class="search-bar-wrap">
-      <input class="search-input" id="log-search" placeholder="搜索日志备注关键词…" oninput="rLogs()">
+      <input class="search-input" id="log-search" placeholder="搜索日志备注…" oninput="rLogs()">
       <button class="search-sort-btn on" id="log-sort-btn" onclick="toggleLogSort()">↓ 最新</button>
     </div>
     <div class="sact" style="padding-top:6px">
       <button class="btn bp bfull" onclick="showLogM()">＋ 新增记录</button>
     </div>
-    <div id="loglist" style="padding:0 20px"></div>
+    <div id="loglist" style="padding:0 16px"></div>
   </div>
 
-  <!-- 日历 MODIFIED: 移除游戏/账号 tabs，改为全局日历 -->
+  <!-- ══ 日历页 ══ -->
   <div class="pg" id="pg-cal">
     <div class="hdr">
-      <div class="ht">日历</div>
-      <button class="theme-btn" onclick="toggleTheme()">☾</button>
-    </div><!--不再有cal-gtabs 和 cal-atabs -->
+      <div class="ht ht-deco">日历</div>
+      <button class="icon-btn" onclick="toggleTheme()">
+        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+    </div>
     <div class="cal-nav">
       <button class="cal-nav-btn" onclick="calMov(-1)">‹</button>
       <div class="cal-nav-title" id="cal-title"></div>
@@ -523,36 +1110,31 @@ select.fi{-webkit-appearance:none;appearance:none}
     <div id="cal-detail"></div>
   </div>
 
-  <!-- 图表 -->
+  <!-- ══ 图表子页面 ══ -->
   <div class="pg" id="pg-chart">
-    <div class="hdr">
-      <div class="ht">趋势图表</div>
-      <button class="theme-btn" onclick="toggleTheme()">☾</button>
+    <div class="sub-hdr">
+      <button class="sub-back" onclick="closeSubPage()">←</button>
+      <span class="sub-title">趋势图表</span>
+      <span class="sub-acct-tag" id="chart-acct-tag"></span>
     </div>
-    <div class="tabs" id="chart-gtabs"></div>
-    <div class="tabs" id="chart-atabs"></div>
     <div class="chart-wrap" id="chart-content"></div>
   </div>
 
-  <!-- 日记 -->
+  <!-- ══ 日记子页面 ══ -->
   <div class="pg" id="pg-diary">
-    <div class="hdr">
-      <div class="ht">囤囤鼠来哩日记</div>
-      <div class="hdr-right">
-        <button class="theme-btn" onclick="toggleTheme()">☾</button>
-        <button class="btn bp bsm" onclick="showDE(null)">＋ 写日记</button>
-      </div>
+    <div class="sub-hdr">
+      <button class="sub-back" onclick="closeSubPage()">←</button>
+      <span class="sub-title">游戏日记</span>
+      <button class="btn bp bsm" onclick="showDE(null)" style="margin-left:auto">＋ 写日记</button>
     </div>
     <div class="dvtog">
       <button class="dvbtn on" id="dvg" onclick="setDV('acct')">本账号</button>
       <button class="dvbtn" id="dva" onclick="setDV('all')">全部</button>
     </div>
-    <!-- 本账号视图：账号选择器 -->
-    <div id="diary-acct-bar" style="padding:8px 20px 0;display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--text3);font-weight:700;flex-shrink:0">查看账号：</span>
-      <select class="fi" id="diary-view-acct" onchange="rDiary()" style="flex:1;padding:7px 10px;font-size:13px"></select>
+    <div id="diary-acct-bar" style="padding:8px 16px 0;display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--text3);font-weight:600;flex-shrink:0">账号：</span>
+      <select class="fi" id="diary-view-acct" onchange="rDiary()" style="flex:1;padding:6px 10px;font-size:12px"></select>
     </div>
-    <!-- NEW: 日记搜索栏 -->
     <div class="search-bar-wrap" style="padding-top:8px">
       <input class="search-input" id="diary-search" placeholder="搜索日记标题或内容…" oninput="rDiary()">
       <button class="search-sort-btn on" id="diary-sort-btn" onclick="toggleDiarySort()">↓ 最新</button>
@@ -561,105 +1143,154 @@ select.fi{-webkit-appearance:none;appearance:none}
     <div class="dlist" id="dlist"></div>
   </div>
 
-  <!-- 协作 -->
+  <!-- ══ 协作页 ══ -->
   <div class="pg" id="pg-collab">
     <div class="hdr">
-      <div><div class="ht" id="collab-room-name-display">多人协作 🐭</div><div class="hs" id="collab-room-label">未加入房间</div></div>
-      <div class="hdr-right">
-        <button class="theme-btn" onclick="toggleTheme()">☾</button>
+      <div>
+        <div class="ht ht-deco" id="collab-room-name-display">多人协作</div>
+        <div class="hs" id="collab-room-label">未加入房间</div>
       </div>
+      <button class="icon-btn" onclick="toggleTheme()">
+        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
     </div>
-    <!-- 未配置 Supabase 时的提示 -->
-    <div id="collab-setup-tip" style="margin:16px 20px;padding:14px;background:var(--accbg);border-radius:var(--r);border:2px solid var(--border);font-size:13px;color:var(--text2);line-height:1.8;display:none">
-      <b style="color:var(--accent)">⚙️ 需要配置 Supabase</b><br>
-      请在代码中填入你的 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_URL</code> 和 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_ANON_KEY</code>。
+    <div id="collab-setup-tip" style="margin:14px 16px;padding:13px;background:var(--accbg);border-radius:var(--r);border:1.5px solid var(--border);font-size:13px;color:var(--text2);line-height:1.8;display:none">
+      <b style="color:var(--accent)">⚙ 需要配置 Supabase</b><br>
+      请在代码中填入 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_URL</code> 和 <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">SUPABASE_ANON_KEY</code>。
     </div>
-    <!-- 未加入房间：历史房间列表 + 新建/加入 -->
-    <div id="collab-join-area" style="padding:16px 20px">
-      <!-- 历史房间 -->
-      <div id="collab-history-area" style="display:none;margin-bottom:14px">
-        <div class="sec-h" style="padding:0 0 8px">历史房间</div>
+    <div id="collab-join-area" style="padding:14px 16px">
+      <div id="collab-history-area" style="display:none;margin-bottom:13px">
+        <div class="sec-h" style="padding:0 0 7px">历史房间</div>
         <div id="collab-history-list"></div>
       </div>
-      <div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:10px">🏠 创建新房间</div>
-        <div class="fg"><label class="fl">房间名称</label><input class="fi" id="collab-room-name-input" placeholder="例如：原神资源共享群" maxlength="16"></div>
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--r4);padding:16px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:9px;color:var(--text)">创建新房间</div>
+        <div class="fg"><label class="fl">房间名称</label><input class="fi" id="collab-room-name-input" placeholder="例如：原神资源共享" maxlength="16"></div>
         <div class="fg"><label class="fl">你的昵称</label><input class="fi" id="collab-nick-create" placeholder="囤囤鼠" maxlength="12"></div>
         <button class="btn bp bfull" onclick="collabCreateRoom()">创建房间 → 获取邀请码</button>
       </div>
-      <div style="text-align:center;color:var(--text3);font-size:12px;margin:8px 0">— 或者输入邀请码加入 —</div>
-      <div style="background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:16px">
-        <div class="fg"><label class="fl">邀请码（6位）</label><input class="fi" id="collab-invite-code" placeholder="AB1C2D" maxlength="8" style="text-transform:uppercase;letter-spacing:3px;font-size:18px;font-weight:900;text-align:center"></div>
+      <div style="text-align:center;color:var(--text3);font-size:11px;margin:7px 0">— 或输入邀请码加入 —</div>
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--r4);padding:16px">
+        <div class="fg"><label class="fl">邀请码（6位）</label><input class="fi" id="collab-invite-code" placeholder="AB1C2D" maxlength="8" style="text-transform:uppercase;letter-spacing:3px;font-size:18px;font-weight:800;text-align:center"></div>
         <div class="fg"><label class="fl">你的昵称</label><input class="fi" id="collab-nick-join" placeholder="囤囤鼠2号" maxlength="12"></div>
         <button class="btn bg bfull" onclick="collabJoinRoom()">加入房间</button>
       </div>
     </div>
-    <!-- 已加入房间 -->
     <div id="collab-room-area" style="display:none">
-      <!-- 房间信息卡 -->
-      <div style="margin:10px 20px 0;background:var(--accbg);border-radius:var(--r);border:2px solid var(--border);padding:12px 14px">
+      <div style="margin:10px 16px 0;background:var(--card);border-radius:var(--r4);border:1.5px solid var(--border);padding:14px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <div style="flex:1;min-width:0">
-            <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:0.5px;margin-bottom:2px">房间名称</div>
-            <div id="collab-room-name-card" style="font-size:15px;font-weight:900;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+            <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.5px;margin-bottom:2px">房间名称</div>
+            <div id="collab-room-name-card" style="font-size:15px;font-weight:800;color:var(--text)">—</div>
           </div>
-        <button class="btn bg bsm" onclick="_onOpenCollabSettings();showM('m-collab-settings')" style="flex-shrink:0;font-size:11px">⚙ 设置</button>
+          <button class="icon-btn" onclick="_onOpenCollabSettings();showM('m-collab-settings')" title="设置">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          </button>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div style="flex:1">
-            <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:0.5px;margin-bottom:2px">邀请码</div>
-            <div id="collab-room-code-display" style="font-size:20px;font-weight:900;letter-spacing:4px;color:var(--text);font-family:monospace">------</div>
+            <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.5px;margin-bottom:2px">邀请码</div>
+            <div id="collab-room-code-display" style="font-size:20px;font-weight:800;letter-spacing:4px;color:var(--text);font-family:monospace">------</div>
           </div>
-          <button class="btn bg bsm" onclick="collabCopyCode()" style="flex-shrink:0">复制邀请</button>
-          <button class="btn bd bsm" onclick="collabLeaveRoom()" style="flex-shrink:0">退出</button>
+          <button class="btn bg bsm" onclick="collabCopyCode()">复制邀请</button>
+          <button class="btn bd bsm" onclick="collabLeaveRoom()">退出</button>
         </div>
-        <!-- 服务器剩余空间 -->
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">
+        <div style="margin-top:9px;padding-top:9px;border-top:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px">
             <span>服务器消息存储</span><span id="collab-storage-text">计算中…</span>
           </div>
-          <div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden">
-            <div id="collab-storage-bar" style="height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width 0.3s"></div>
+          <div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden">
+            <div id="collab-storage-bar" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .3s"></div>
           </div>
         </div>
       </div>
-      <!-- 操作按钮 -->
-      <div style="padding:10px 20px;display:flex;gap:8px">
-        <button class="btn bp" style="flex:1" onclick="collabOpenPost(null,'','')">📢 发公告</button>
-        <button class="btn bg" style="flex:1" onclick="collabRefresh()">🔄 刷新</button>
+      <div style="padding:9px 16px;display:flex;gap:7px">
+        <button class="btn bp" style="flex:1" onclick="collabOpenPost(null,'','')">发布公告</button>
+        <button class="btn bg" style="flex:1" onclick="collabRefresh()">刷新</button>
       </div>
-      <!-- NEW: 公告分类过滤栏 -->
       <div class="collab-filter-bar" id="collab-filter-bar">
         <button class="collab-ftag on" data-filter="" onclick="setCollabFilter(this,'')">全部</button>
         <button class="collab-ftag" data-filter="pinned" onclick="setCollabFilter(this,'pinned')">📌 置顶</button>
-        <button class="collab-ftag" data-filter="announce" onclick="setCollabFilter(this,'announce')">📢 公告</button>
-        <button class="collab-ftag" data-filter="share_task" onclick="setCollabFilter(this,'share_task')">📋 任务</button>
-        <button class="collab-ftag" data-filter="diary_share" onclick="setCollabFilter(this,'diary_share')">📖 日记</button>
+        <button class="collab-ftag" data-filter="announce" onclick="setCollabFilter(this,'announce')">公告</button>
+        <button class="collab-ftag" data-filter="share_task" onclick="setCollabFilter(this,'share_task')">任务</button>
+        <button class="collab-ftag" data-filter="diary_share" onclick="setCollabFilter(this,'diary_share')">日记</button>
       </div>
-      <!-- 消息列表 -->
       <div class="sec-h">房间消息</div>
-      <div id="collab-msg-list" style="padding:0 20px 20px">
+      <div id="collab-msg-list" style="padding:0 16px 20px">
         <div class="empty"><span class="ei">💬</span><div class="et">暂无消息</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ══ 成就系统页面 ══ -->
-  <div class="pg" id="pg-ach">
+  <!-- ══ 其他功能页 ══ -->
+  <div class="pg" id="pg-more">
     <div class="hdr">
-      <div><div class="ht">成就系统 🏆</div><div class="hs" id="ach-subtitle">努力解锁成就吧！</div></div>
-      <button class="theme-btn" onclick="toggleTheme()">☾</button>
+      <div class="ht ht-deco">其他功能</div>
+      <button class="icon-btn" onclick="toggleTheme()">
+        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
     </div>
-    <div class="ach-section-title">🎮 游戏记录成就</div>
-    <div class="ach-grid" id="ach-grid-game"></div>
-    <div class="ach-section-title">✍️ 日记成就</div>
-    <div class="ach-grid" id="ach-grid-diary"></div>
-    <div class="ach-section-title">📋 任务成就</div>
-    <div class="ach-grid" id="ach-grid-task"></div>
-    <div class="ach-section-title">🤝 协作成就</div>
-    <div class="ach-grid" id="ach-grid-collab"></div>
-    <div style="height:20px"></div>
+    <div style="padding:10px 16px">
+      <div class="menu-row" onclick="goPage('ach')">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+        <div class="menu-info"><div class="menu-label">成就系统</div><div class="menu-sub" id="more-ach-sub">解锁游戏里程碑</div></div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="showM('m-theme')">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 010 20"/><path d="M2 12h20"/></svg></div>
+        <div class="menu-info"><div class="menu-label">主题 / 风格自定义</div><div class="menu-sub">切换插画风·极简风，调色</div></div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="openNotifModal()">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+        <div class="menu-info"><div class="menu-label">推送提醒</div><div class="menu-sub">每日打卡提醒设置</div></div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" onclick="openShareModal()">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16,6 12,2 8,6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></div>
+        <div class="menu-info"><div class="menu-label">生成日报图片</div><div class="menu-sub">分享今日资源数据</div></div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-row" id="menu-pwa-row" onclick="triggerPWAInstall()">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M12 2v13M7 11l5 5 5-5"/><rect x="2" y="17" width="20" height="5" rx="1"/></svg></div>
+        <div class="menu-info"><div class="menu-label">添加到桌面</div><div class="menu-sub">安装为手机应用</div></div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div id="pwa-ios-tip" style="display:none;font-size:11px;color:var(--text3);margin:0 0 10px;line-height:1.8;padding:10px 12px;background:var(--accbg);border-radius:var(--r)">
+        📱 Safari/iPhone：点底部<b>分享</b>→<b>添加到主屏幕</b><br>📱 安卓Chrome：右上角菜单→<b>添加到主屏幕</b>
+      </div>
+      <div class="menu-row" onclick="showM('m-data')">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+        <div class="menu-info"><div class="menu-label">数据管理</div><div class="menu-sub">导出、导入、清空数据</div></div>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+    <div style="margin:0 16px 4px;padding:12px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r4)">
+      <div class="storage-bar-label"><span style="font-weight:600;color:var(--text2)">本地存储用量</span><span id="storage-usage-text" style="color:var(--text3)">计算中…</span></div>
+      <div class="storage-bar"><div class="storage-bar-fill" id="storage-usage-bar" style="width:0%;background:var(--accent)"></div></div>
+    </div>
+    <div style="padding:8px 16px;font-size:11px;color:var(--text3);line-height:1.7">v11 · 数据存储于本机浏览器，请定期导出备份</div>
   </div>
+
+  <!-- ══ 成就页 ══ -->
+  <div class="pg" id="pg-ach">
+    <div class="sub-hdr">
+      <button class="sub-back" onclick="goPage('more')">←</button>
+      <span class="sub-title">成就系统</span>
+      <span class="sub-acct-tag" id="ach-subtitle">加载中…</span>
+    </div>
+    <div class="ach-section-title">游戏记录</div>
+    <div class="ach-grid" id="ach-grid-game"></div>
+    <div class="ach-section-title">日记</div>
+    <div class="ach-grid" id="ach-grid-diary"></div>
+    <div class="ach-section-title">任务</div>
+    <div class="ach-grid" id="ach-grid-task"></div>
+    <div class="ach-section-title">协作</div>
+    <div class="ach-grid" id="ach-grid-collab"></div>
+    <div style="height:18px"></div>
+  </div>
+
+  <!-- ══ 全屏详情页（账号/日记）══ -->
   <div class="detail-page" id="dp-acct">
     <div class="dp-hdr">
       <button class="dp-back" onclick="closeDPAcct()">←</button>
@@ -668,8 +1299,6 @@ select.fi{-webkit-appearance:none;appearance:none}
     </div>
     <div class="dp-body" id="dp-acct-body"></div>
   </div>
-
-  <!-- ══ 全屏详情页：日记详情 ══ -->
   <div class="detail-page" id="dp-diary">
     <div class="dp-hdr">
       <button class="dp-back" onclick="closeDPDiary()">←</button>
@@ -1155,6 +1784,76 @@ select.fi{-webkit-appearance:none;appearance:none}
       </div>
     </div>
   </div>
+
+</div>
+<div id="toast"></div>
+
+
+</div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- ══ 主题自定义 Modal（增强版含风格切换）══ -->
+<div class="mover" id="m-theme" onclick="bgC(event,'m-theme')">
+  <div class="mbox">
+    <div class="m-handle"></div>
+    <div class="mhdr"><div class="mtitle">🎨 主题自定义</div><button class="mclose" onclick="hideM('m-theme')">×</button></div>
+    <div class="mbody">
+      <!-- 风格切换 -->
+      <div class="theme-section" style="padding-top:4px">
+        <div class="theme-section-title">界面风格</div>
+        <div class="ui-style-row">
+          <div class="ui-style-card active" id="style-card-illus" onclick="setUIStyle('illus')">
+            <div class="ui-style-preview">
+              <div class="preview-illus">🐱 🌿 ✨</div>
+            </div>
+            <div class="ui-style-label">插画暖系</div>
+            <div class="ui-style-sub">大圆角·手绘感</div>
+          </div>
+          <div class="ui-style-card" id="style-card-clean" onclick="setUIStyle('clean')">
+            <div class="ui-style-preview">
+              <div class="preview-clean"><div class="preview-clean-line"></div></div>
+            </div>
+            <div class="ui-style-label">极简清雅</div>
+            <div class="ui-style-sub">细线·现代感</div>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="theme-section">
+        <div class="theme-section-title">主题色</div>
+        <div class="color-presets" id="theme-color-presets"></div>
+        <div class="fg" style="margin-top:10px">
+          <label class="fl">自定义强调色</label>
+          <input type="color" class="fi" id="theme-custom-color" value="#5A9068" style="padding:5px;height:44px;cursor:pointer" onchange="applyThemeColor(this.value)">
+        </div>
+      </div>
+      <div class="theme-section" style="margin-top:4px">
+        <div class="theme-section-title">背景色方案</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="theme-bg-presets"></div>
+        <div class="fg">
+          <label class="fl">自定义背景色</label>
+          <input type="color" class="fi" id="theme-custom-bg" value="#FAF8F3" style="padding:5px;height:44px;cursor:pointer" onchange="applyCustomBg(this.value)">
+        </div>
+      </div>
+      <div class="theme-section" style="margin-top:4px">
+        <div class="theme-section-title">卡片透明度</div>
+        <div class="opacity-row">
+          <input type="range" class="opacity-slider" id="opacity-slider" min="0.4" max="1" step="0.05" value="1" oninput="applyCardOpacity(this.value)">
+          <span class="opacity-val" id="opacity-val">100%</span>
+        </div>
+      </div>
+      <div class="theme-section" style="margin-top:4px;padding-bottom:10px">
+        <div class="theme-section-title">预设配色方案</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="theme-schemes"></div>
+      </div>
+      <div class="theme-section" style="margin-top:4px;padding-bottom:10px">
+        <button class="btn bg bfull bsm" onclick="resetTheme()">↺ 恢复默认主题</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </div>
 <div id="toast"></div>
@@ -1647,6 +2346,33 @@ setInterval(function(){
 },60000);
 function toast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on');},2500);}
 
+// ══ 气泡菜单 ══
+var _bubbleOpen=false;
+function toggleBubble(){
+  _bubbleOpen?closeBubble():openBubble();
+}
+function openBubble(){
+  _bubbleOpen=true;
+  document.getElementById('nb-plus-inner').classList.add('open');
+  document.getElementById('bubble-overlay').classList.add('show');
+  // 气泡依次展开，带延迟
+  var items=['bubble-res','bubble-log','bubble-chart','bubble-diary'];
+  items.forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(el) setTimeout(function(){el.classList.add('show');},i*40);
+  });
+}
+function closeBubble(){
+  _bubbleOpen=false;
+  document.getElementById('nb-plus-inner').classList.remove('open');
+  document.getElementById('bubble-overlay').classList.remove('show');
+  var items=['bubble-res','bubble-log','bubble-chart','bubble-diary'];
+  items.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.classList.remove('show');
+  });
+}
+
 // NEW: 图片压缩工具函数
 function compressImage(dataUrl, maxSize, callback){
   var img=new Image();
@@ -1682,38 +2408,337 @@ function bgC(e,id){if(e.target===e.currentTarget)hideM(id);}
 
 // ── THEME ──
 var isDark=false;
+// 月亮/太阳 SVG
+var _moonSVG='<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+var _sunSVG='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+function _updateThemeBtns(){
+  var btns=document.querySelectorAll('.icon-btn[onclick*="toggleTheme"]');
+  for(var i=0;i<btns.length;i++) btns[i].innerHTML=isDark?_sunSVG:_moonSVG;
+  // 兼容旧版.theme-btn
+  var old=document.querySelectorAll('.theme-btn');
+  for(var j=0;j<old.length;j++) old[j].textContent=isDark?'☀':'☾';
+}
 function toggleTheme(){
   isDark=!isDark;
   document.documentElement.setAttribute('data-theme',isDark?'dark':'');
-  var btns=document.querySelectorAll('.theme-btn');
-  for(var i=0;i<btns.length;i++)btns[i].textContent=isDark?'☀':'☾';
+  _updateThemeBtns();
   try{localStorage.setItem('gt_theme',isDark?'dark':'light');}catch(e){}
 }
 function loadTheme(){
-  try{var t=localStorage.getItem('gt_theme');if(t==='dark'){isDark=true;document.documentElement.setAttribute('data-theme','dark');var btns=document.querySelectorAll('.theme-btn');for(var i=0;i<btns.length;i++)btns[i].textContent='☀';}}catch(e){}
+  try{
+    var t=localStorage.getItem('gt_theme');
+    if(t==='dark'){isDark=true;document.documentElement.setAttribute('data-theme','dark');}
+    _updateThemeBtns();
+  }catch(e){}
 }
 
 // ── PAGE NAV ──
+// ══ 页面导航 ══
+var _prevMainPage='task'; // 记录进入子页面前的主页面
+
 function goPage(p){
   curPage=p;
-  var ps=['task','res','log','cal','chart','diary','collab','ach'];
+  var ps=['task','res','log','cal','chart','diary','collab','ach','more'];
   for(var i=0;i<ps.length;i++){
     var pgEl=document.getElementById('pg-'+ps[i]);
-    var nbEl=document.getElementById('nb-'+ps[i]);
     if(pgEl) pgEl.classList.toggle('on',ps[i]===p);
-    if(nbEl) nbEl.classList.toggle('on',ps[i]===p);
   }
+  // 底部导航高亮
+  var navMap={task:'nb-task',cal:'nb-cal',collab:'nb-collab',more:'nb-more'};
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  if(navMap[p]){ var nb=document.getElementById(navMap[p]);if(nb)nb.classList.add('on'); }
+  // FAB只在任务页显示
+  var fabWrap=document.getElementById('fab-wrap');
+  if(fabWrap) fabWrap.style.display=(p==='task')?'block':'none';
+  closeFab();
   rPage(p);
 }
+
+// 子页面：从任务页气泡进入，隐藏FAB
+function openSubPage(p){
+  _prevMainPage=curPage||'task';
+  goPage(p);
+}
+function closeSubPage(){
+  goPage(_prevMainPage||'task');
+}
+
 function rPage(p){
-  if(p==='task'){rGTabs('task-gtabs','task');rATabs('task-atabs','task');rTasks();}
+  if(p==='task'){updateSelectorPills();rTasks();}
   if(p==='res'){rRes();}
-  if(p==='log'){rGTabs('log-gtabs','log');rATabs('log-atabs','log');rLogs();}
+  if(p==='log'){rLogs();renderLogResOverview();}
   if(p==='cal'){rCal();}
-  if(p==='chart'){rGTabs('chart-gtabs','chart');rATabs('chart-atabs','chart');rCharts();}
+  if(p==='chart'){rCharts();}
   if(p==='diary'){rDiary();}
   if(p==='collab'){rCollabPage();}
-  if(p==='ach'){rAch();}
+  if(p==='ach'){rAch();updateMoreAchSub();}
+  if(p==='more'){updateStorageUsage();updateMoreAchSub();}
+}
+function updateMoreAchSub(){
+  var sub=document.getElementById('more-ach-sub');
+  if(!sub)return;
+  var total=typeof ACH_DEFS!=='undefined'?ACH_DEFS.length:19;
+  var done=state._achUnlocked?Object.keys(state._achUnlocked).length:0;
+  sub.textContent='已解锁 '+done+'/'+total+' 个';
+}
+
+// ══ 游戏+账号选择Pill更新 ══
+function updateSelectorPills(){
+  var g=G(),a=A();
+  var gIcon=document.getElementById('pill-game-icon');
+  var gName=document.getElementById('pill-game-name');
+  var aIcon=document.getElementById('pill-acct-icon');
+  var aName=document.getElementById('pill-acct-name');
+  if(g){
+    if(gIcon){
+      if(g.iconData) gIcon.innerHTML=imgTagH(g.iconData,'width:100%;height:100%;object-fit:cover;border-radius:5px');
+      else gIcon.innerHTML=g.emoji||'🎮';
+    }
+    if(gName) gName.textContent=g.name;
+  } else {
+    if(gIcon) gIcon.innerHTML='🎮';
+    if(gName) gName.textContent='选择游戏';
+  }
+  if(a){
+    if(aIcon){
+      if(a.avatarData) aIcon.innerHTML=imgTagH(a.avatarData,'width:100%;height:100%;object-fit:cover;border-radius:50%');
+      else aIcon.innerHTML='🐭';
+    }
+    if(aName) aName.textContent=a.name;
+    // 子页面账号标签
+    var logTag=document.getElementById('log-acct-tag');
+    var chartTag=document.getElementById('chart-acct-tag');
+    var label=(g?g.name+' · ':'')+a.name;
+    if(logTag) logTag.textContent=label;
+    if(chartTag) chartTag.textContent=label;
+  } else {
+    if(aIcon) aIcon.innerHTML='🐭';
+    if(aName) aName.textContent='选择账号';
+  }
+  // 填充IDB图片
+  var ts=document.getElementById('task-selector');
+  if(ts) fillIdbImgs(ts);
+}
+
+// ══ 游戏/账号选择浮层 ══
+var _selectorMode='game';
+function openSelectorSheet(mode){
+  _selectorMode=mode;
+  var title=document.getElementById('selector-title');
+  var list=document.getElementById('selector-list');
+  if(!list)return;
+  var h='';
+  if(mode==='game'){
+    if(title) title.textContent='选择游戏';
+    if(!state.games.length){ list.innerHTML='<div style="padding:16px 18px;color:var(--text3);font-size:13px">还没有游戏，请先在资源管理中添加</div>'; }
+    else {
+      state.games.forEach(function(g){
+        var icoH=g.iconData?imgTagH(g.iconData,'width:100%;height:100%;object-fit:cover;border-radius:9px'):'<span>'+g.emoji+'</span>';
+        var sel=g.id===curGid;
+        h+='<div class="selector-item" onclick="selectorPickGame(\''+g.id+'\')">'
+          +'<div class="selector-item-icon">'+icoH+'</div>'
+          +'<div><div class="selector-item-name"'+(sel?' style="color:var(--accent)"':'')+'>'+g.name+'</div>'
+          +'<div class="selector-item-sub">'+(g.accounts||[]).length+'个账号</div></div>'
+          +(sel?'<span class="selector-item-check">✓</span>':'')
+          +'</div>';
+      });
+      list.innerHTML=h;
+      fillIdbImgs(list);
+    }
+  } else {
+    if(title) title.textContent='选择账号';
+    var g=G();
+    if(!g||!(g.accounts||[]).length){ list.innerHTML='<div style="padding:16px 18px;color:var(--text3);font-size:13px">当前游戏没有账号</div>'; }
+    else {
+      g.accounts.forEach(function(a){
+        var avH=a.avatarData?imgTagH(a.avatarData,'width:100%;height:100%;object-fit:cover;border-radius:50%'):'<span>🐭</span>';
+        var sel=a.id===curAid;
+        h+='<div class="selector-item" onclick="selectorPickAcct(\''+a.id+'\')">'
+          +'<div class="selector-item-icon" style="border-radius:50%">'+avH+'</div>'
+          +'<div><div class="selector-item-name"'+(sel?' style="color:var(--accent)"':'')+'>'+a.name+'</div>'
+          +(a.note?'<div class="selector-item-sub">'+a.note+'</div>':'')+'</div>'
+          +(sel?'<span class="selector-item-check">✓</span>':'')
+          +'</div>';
+      });
+      list.innerHTML=h;
+      fillIdbImgs(list);
+    }
+  }
+  var sheet=document.getElementById('selector-sheet');
+  if(sheet) sheet.classList.add('show');
+}
+function closeSelectorSheet(){
+  var sheet=document.getElementById('selector-sheet');
+  if(sheet) sheet.classList.remove('show');
+}
+function selectorPickGame(gid){
+  curGid=gid;
+  var g=G();
+  if(g&&g.accounts&&g.accounts.length) curAid=g.accounts[0].id;
+  else curAid=null;
+  closeSelectorSheet();
+  updateSelectorPills();
+  rTasks();
+  clog('UI','切换游戏',{gid:gid});
+}
+function selectorPickAcct(aid){
+  curAid=aid;
+  closeSelectorSheet();
+  updateSelectorPills();
+  rTasks();
+  clog('UI','切换账号',{aid:aid});
+}
+
+// ══ FAB 气泡菜单 ══
+var _fabOpen=false;
+function toggleFab(){ _fabOpen?closeFab():openFab(); }
+function openFab(){
+  _fabOpen=true;
+  document.getElementById('fab-btn').classList.add('open');
+  document.getElementById('fab-overlay').classList.add('show');
+  var ids=['pb-log','pb-chart','pb-diary'];
+  ids.forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(el) setTimeout(function(){el.classList.add('show');},i*55);
+  });
+}
+function closeFab(){
+  _fabOpen=false;
+  var btn=document.getElementById('fab-btn');
+  if(btn) btn.classList.remove('open');
+  var ov=document.getElementById('fab-overlay');
+  if(ov) ov.classList.remove('show');
+  ['pb-log','pb-chart','pb-diary'].forEach(function(id){
+    var el=document.getElementById(id);if(el) el.classList.remove('show');
+  });
+}
+
+// ══ 日志子页面资源概览 ══
+function renderLogResOverview(){
+  var g=G(),a=A();
+  var wrap=document.getElementById('log-res-overview');
+  var grid=document.getElementById('log-res-grid');
+  if(!wrap||!grid)return;
+  if(!g||!a||!(g.resources||[]).length){ wrap.style.display='none'; return; }
+  var res=g.resources||[];
+  var logs=(a.logs||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var last=logs.length?logs[0]:null;
+  var h='';
+  res.slice(0,6).forEach(function(r){
+    var val=0;
+    if(last){ (last.entries||[]).forEach(function(e){if(e.resourceId===r.id)val=e.value;}); }
+    h+='<div class="res-ov-item">'
+      +'<span class="res-ov-emoji">'+r.emoji+'</span>'
+      +'<div class="res-ov-val">'+val.toLocaleString()+'</div>'
+      +'<div class="res-ov-name">'+r.name+'</div>'
+      +'</div>';
+  });
+  grid.innerHTML=h;
+  wrap.style.display='block';
+}
+
+// ══ UI 风格切换（插画风 ↔ 极简风）══
+function setUIStyle(style){
+  document.documentElement.setAttribute('data-ui', style==='clean'?'clean':'');
+  try{ localStorage.setItem('tdr_ui_style',style); }catch(e){}
+  // 更新风格卡高亮
+  var illus=document.getElementById('style-card-illus');
+  var clean=document.getElementById('style-card-clean');
+  if(illus) illus.classList.toggle('active',style!=='clean');
+  if(clean) clean.classList.toggle('active',style==='clean');
+  toast(style==='clean'?'已切换到极简风 ✦':'已切换到插画风 🌿');
+  clog('UI','风格切换',{style:style});
+}
+function loadUIStyle(){
+  try{
+    var s=localStorage.getItem('tdr_ui_style')||'illus';
+    document.documentElement.setAttribute('data-ui',s==='clean'?'clean':'');
+    var illus=document.getElementById('style-card-illus');
+    var clean=document.getElementById('style-card-clean');
+    if(illus) illus.classList.toggle('active',s!=='clean');
+    if(clean) clean.classList.toggle('active',s==='clean');
+  }catch(e){}
+}
+
+// ══ rTasks 使用新卡片样式 ══
+function rTasks(){
+  document.getElementById('task-date').textContent=today();
+  var el=document.getElementById('tasklist'),g=G(),a=A();
+  if(!g){el.innerHTML='<div class="empty"><div class="ei">🎮</div><div class="et">请先添加游戏<br><span style="font-size:12px">点右上角四方格图标管理游戏</span></div></div>';return;}
+  if(!a){el.innerHTML='<div class="empty"><div class="ei">🐭</div><div class="et">请先添加账号<br><span style="font-size:12px">点资源管理为游戏添加账号</span></div></div>';return;}
+  var tasks=a.tasks||[];
+  if(!tasks.length){el.innerHTML='<div class="empty"><div class="ei">✓</div><div class="et">还没有任务<br><span style="font-size:12px">点右上角 ＋任务 添加</span></div></div>';return;}
+  var timed_active=[],timed_expired=[],cycled=[],once=[];
+  var td=today();
+  tasks.forEach(function(t){
+    var mode=t.resetMode||(t.isDaily?'daily':'none');
+    if(mode==='timed'){
+      var te=t.timedEnd||'';
+      if(te&&td>te) timed_expired.push(t);
+      else timed_active.push(t);
+    } else if(mode!=='none') cycled.push(t);
+    else once.push(t);
+  });
+  var h='';
+  if(timed_active.length){
+    h+='<div class="task-section-title" style="color:var(--deco-peach,#D07858)">⏳ 限时活动</div>';
+    timed_active.forEach(function(t){h+=tCardH(t);});
+  }
+  if(cycled.length){
+    h+='<div class="task-section-title">循环任务</div>';
+    cycled.forEach(function(t){h+=tCardH(t);});
+  }
+  if(once.length){
+    h+='<div class="task-section-title">一次性任务</div>';
+    once.forEach(function(t){h+=tCardH(t);});
+  }
+  if(timed_expired.length){
+    h+='<div class="task-section-title" style="color:var(--text3)">已结束活动</div>';
+    timed_expired.forEach(function(t){h+=tCardH(t);});
+  }
+  el.innerHTML=h;
+}
+
+function tCardH(t){
+  var mode=t.resetMode||(t.isDaily?'daily':'none');
+  var label=_resetLabel(t);
+  var isDone=t.isDone;
+  var isExpired=mode==='timed'&&t.timedEnd&&today()>t.timedEnd;
+  var isNotStarted=mode==='timed'&&t.timedStart&&today()<t.timedStart;
+  var checkable=!isExpired&&!isNotStarted;
+  var colorDot=t.color?'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+t.color+';margin-right:4px;flex-shrink:0;vertical-align:middle"></span>':'';
+  var badgeCls=(mode==='none')?'tbonce':(mode==='timed')?'tbtimed':'tbdaily';
+  var cardCls='tcard'+(mode==='timed'?' timed-card':'')+(isDone?' done-card':'');
+  // 资源提示
+  var resHint='';
+  if(t.resUpdateMode&&t.resUpdateMode!=='none'&&(t.resEntries||[]).length){
+    resHint='<span style="font-size:10px;color:var(--accent);background:var(--accbg);padding:1px 6px;border-radius:6px;border:1px solid var(--accbg2)">'+(t.resUpdateMode==='add'?'＋':'＝')+'资源</span>';
+  }
+  // 限时任务日期
+  var timedSub='';
+  if(mode==='timed'&&(t.timedStart||t.timedEnd)){
+    var s2=t.timedStart?t.timedStart.slice(5).replace('-','/'):' ';
+    var e2=t.timedEnd?t.timedEnd.slice(5).replace('-','/'):' ';
+    timedSub='<span style="font-size:10px;color:'+(isExpired?'var(--text3)':'#C06040')+'">'
+      +s2+'→'+e2+(isExpired?' 已结束':isNotStarted?' 未开始':' 进行中')+'</span>';
+  }
+  return '<div class="'+cardCls+'">'
+    +'<div class="tcard-check'+(isDone?' on':'')+'" onclick="'+(checkable?'togTask(\''+t.id+'\')':'')+'" '
+    +'style="'+(checkable?'':'cursor:default;opacity:.4')+'">'
+    +(isDone?'':'')+'</div>'
+    +'<div class="tcard-body">'
+    +'<div class="tcard-name'+(isDone?' done':'')+'" onclick="openEditTask(\''+t.id+'\')">'+colorDot+t.text+'</div>'
+    +'<div class="tcard-sub">'+timedSub+resHint+'</div>'
+    +'</div>'
+    +'<span class="tcard-badge '+badgeCls+'">'+label+'</span>'
+    +'<button class="tcard-del" onclick="delTask(\''+t.id+'\')">×</button>'
+    +'</div>';
+}
+
+// rAllTabs不再用于任务页，保留兼容用
+function rAllTabs(){
+  // 保留兼容
+  updateSelectorPills();
 }
 
 // ── TABS ──
@@ -2269,83 +3294,69 @@ function _resetLabel(t){
   return '一次';
 }
 
-function rTasks(){
-  document.getElementById('task-date').textContent=today();
-  var el=document.getElementById('tasklist'),g=G(),a=A();
-  if(!g){el.innerHTML='<div class="empty"><div class="ei">📦</div><div class="et">请先添加游戏</div></div>';return;}
-  if(!a){el.innerHTML='<div class="empty"><div class="ei">👤</div><div class="et">请先添加账号</div></div>';return;}
-  var tasks=a.tasks||[];
-  if(!tasks.length){el.innerHTML='<div class="empty"><div class="ei">✓</div><div class="et">没有任务<br><span style="font-size:12px">点右上角 ＋任务 添加</span></div></div>';return;}
-  var timed_active=[],timed_expired=[],cycled=[],once=[];
-  var td=today();
-  for(var i=0;i<tasks.length;i++){
-    var mode=tasks[i].resetMode||(tasks[i].isDaily?'daily':'none');
-    if(mode==='timed'){
-      var ts2=tasks[i].timedStart||'',te2=tasks[i].timedEnd||'';
-      if(te2&&td>te2) timed_expired.push(tasks[i]);
-      else timed_active.push(tasks[i]);
-    } else if(mode!=='none') cycled.push(tasks[i]);
-    else once.push(tasks[i]);
-  }
-  var h='';
-  if(timed_active.length){h+='<div class="sec-h" style="color:var(--accent)">⏳ 限时活动</div>';for(var i=0;i<timed_active.length;i++)h+=tH(timed_active[i]);}
-  if(cycled.length){h+='<div class="sec-h">循环任务</div>';for(var i=0;i<cycled.length;i++)h+=tH(cycled[i]);}
-  if(once.length){h+='<div class="sec-h">一次性任务</div>';for(var i=0;i<once.length;i++)h+=tH(once[i]);}
-  if(timed_expired.length){h+='<div class="sec-h" style="color:var(--text3)">已结束的活动</div>';for(var i=0;i<timed_expired.length;i++)h+=tH(timed_expired[i]);}
-  el.innerHTML=h;
-}
-
-function tH(t){
-  var label=_resetLabel(t);
-  var mode=t.resetMode||(t.isDaily?'daily':'none');
-  var badgeClass=(mode==='none')?'tbonce':(mode==='timed'?'tbonce':'tbdaily');
-  var colorDot=t.color?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+t.color+';margin-right:5px;flex-shrink:0;vertical-align:middle"></span>':'';
-  var resHint='';
-  if(t.resUpdateMode&&t.resUpdateMode!=='none'&&t.resEntries&&t.resEntries.length){
-    resHint='<div style="font-size:10px;color:var(--accent);margin-top:2px">'+(t.resUpdateMode==='add'?'＋':'＝')+' 完成时更新资源</div>';
-  }
-  // 限时任务：判断是否在活动期
-  var isExpired=false,isNotStarted=false;
-  if(mode==='timed'){
-    var td2=today();
-    if(t.timedEnd&&td2>t.timedEnd) isExpired=true;
-    if(t.timedStart&&td2<t.timedStart) isNotStarted=true;
-    badgeClass='tbonce';
-  }
-  var checkable=!isExpired&&!isNotStarted;
-  var badgeStyle=mode==='timed'?(isExpired?'background:var(--bg3);color:var(--text3);border-color:var(--border)':isNotStarted?'background:#EFF5EF;color:#5A8A6A;border-color:#8BA995':'background:var(--accbg);color:var(--accent);border-color:hsla(var(--accent-h),40%,60%,0.3)'):'';
-  return '<div class="titem"'+(isExpired?' style="opacity:0.5"':'')+' >'
-    +'<div class="tcheck'+(t.isDone?' on':'')+'" onclick="'+(checkable?'togTask(\''+t.id+'\')':'')+'" style="'+(checkable?'':'cursor:default;opacity:0.4')+'">'+(t.isDone?'✓':'')+'</div>'
-    +'<div style="flex:1;min-width:0"><div class="ttxt'+(t.isDone?' done':'')+'" onclick="openEditTask(\''+t.id+'\')">'+colorDot+t.text+'</div>'+resHint
-    +(mode==='timed'&&(t.timedStart||t.timedEnd)?'<div style="font-size:10px;color:var(--text3);margin-top:2px">'+(t.timedStart?t.timedStart.slice(5).replace('-','/'):'?')+'→'+(t.timedEnd?t.timedEnd.slice(5).replace('-','/'):'?')+(isExpired?' 已结束':isNotStarted?' 未开始':' 进行中')+'</div>':'')
-    +'</div>'
-    +'<span class="tbadge '+badgeClass+'" style="'+badgeStyle+'">'+label+'</span>'
-    +'<button class="tdel" onclick="delTask(\''+t.id+'\')">×</button>'
-    +'</div>';
-}
+// tH保持向后兼容（部分地方可能仍调用）
+function tH(t){ return tCardH(t); }
 
 function togTask(id){
   var a=A();if(!a)return;var tasks=a.tasks||[];
   var theTask=null;
-  for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){tasks[i].isDone=!tasks[i].isDone;theTask=tasks[i];break;}}
-  // ① 任务完成时自动更新资源
-  if(theTask&&theTask.isDone&&theTask.resUpdateMode&&theTask.resUpdateMode!=='none'&&theTask.resEntries&&theTask.resEntries.length){
+  var wasAlreadyDone=false;
+  for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){wasAlreadyDone=tasks[i].isDone;tasks[i].isDone=!tasks[i].isDone;theTask=tasks[i];break;}}
+  if(!theTask)return;
+
+  // 取消完成：直接保存刷新，不做资源处理
+  if(!theTask.isDone){
+    saveData();rTasks();return;
+  }
+
+  // ── 成就计数 ──
+  if(!state._achTaskDone)state._achTaskDone=0;
+  state._achTaskDone++;
+
+  var mode=theTask.resUpdateMode||'none';
+  var hasEntries=theTask.resEntries&&theTask.resEntries.length;
+
+  if(mode==='none'||!hasEntries){
+    // ③ 无资源变更：仅提示，写日志
+    saveData();rTasks();
+    _appendTaskDoneLog(theTask);
+    toast('✅ 已完成：'+theTask.text);
+  } else if(mode==='add'){
+    // ② 增加模式：自动叠加资源，不弹界面
     _applyTaskResUpdate(theTask);
+    saveData();rTasks();
+  } else if(mode==='set'){
+    // ① 设置模式：弹出记录界面让用户手动设置资源
+    saveData();rTasks();
+    toast('✅ 任务完成！请手动设置今日资源');
+    setTimeout(function(){openLogFor(curGid,curAid);},400);
   }
-  // ② 成就计数
-  if(theTask&&theTask.isDone){
-    if(!state._achTaskDone)state._achTaskDone=0;
-    state._achTaskDone++;
-  }
-  saveData();rTasks();
+
+  // 全部完成检测
   var undone=0;for(var i=0;i<tasks.length;i++){if(!tasks[i].isDone)undone++;}
   if(undone===0&&tasks.length>0){
-    // 成就：全部完成
     if(!state._achAllDone)state._achAllDone=0;
     state._achAllDone++;
     saveData();
-    toast('全部完成！🎉');setTimeout(function(){openLogFor(curGid,curAid);},900);
+    if(mode!=='set') toast('全部完成！🎉');
   }
+}
+
+// 仅在日志界面写入"已完成xx任务"的文字记录（无资源变更模式）
+function _appendTaskDoneLog(task){
+  var a=A();if(!a)return;
+  if(!a.logs)a.logs=[];
+  // 找今天日志或创建
+  var todayLog=null;
+  for(var i=0;i<a.logs.length;i++){if(a.logs[i].date===today()){todayLog=a.logs[i];break;}}
+  if(!todayLog){
+    todayLog={id:uid(),date:today(),timeNote:'',note:'',entries:[]};
+    a.logs.push(todayLog);
+  }
+  // 在备注末尾追加任务完成信息
+  var appendTxt='已完成「'+task.text+'」';
+  todayLog.note=todayLog.note?(todayLog.note+'\n'+appendTxt):appendTxt;
+  saveData();
 }
 
 // ① 执行任务资源更新
@@ -2987,31 +3998,79 @@ function rCharts(){
   var logs=(a.logs||[]).slice().sort(function(a,b){return a.date.localeCompare(b.date);});
   var dayMap={};for(var i=0;i<logs.length;i++){dayMap[logs[i].date]=logs[i];}
   var days=Object.keys(dayMap).sort();
-  if(days.length<2){el.innerHTML='<div class="empty"><div class="ei">📈</div><div class="et">至少需要2天记录才能显示趋势</div></div>';return;}
+  if(!days.length){el.innerHTML='<div class="empty"><div class="ei">📈</div><div class="et">还没有记录数据</div></div>';return;}
   var h='';
   for(var ri=0;ri<res.length;ri++){
     var r=res[ri],vals=[];
     for(var di=0;di<days.length;di++){var es=dayMap[days[di]].entries||[];for(var j=0;j<es.length;j++){if(es[j].resourceId===r.id){vals.push({d:days[di],v:es[j].value});break;}}}
-    if(vals.length<2)continue;
+    if(!vals.length)continue;
     h+=chartCardH(r,vals,g.color);
   }
-  el.innerHTML=h||'<div class="empty"><div class="ei">📈</div><div class="et">暂无足够数据</div></div>';
+  el.innerHTML=h||'<div class="empty"><div class="ei">📈</div><div class="et">暂无数据</div></div>';
 }
 function chartCardH(res,vals,color){
-  var W=300,H=90,BAR_W=Math.max(6,Math.min(24,Math.floor(W/vals.length)-5));
+  var W=300,H=90;
   var mn=vals[0].v,mx=vals[0].v;
   for(var i=1;i<vals.length;i++){if(vals[i].v<mn)mn=vals[i].v;if(vals[i].v>mx)mx=vals[i].v;}
   var range=Math.max(mx-mn,1);
+
+  // 单个数据点特殊处理
+  if(vals.length===1){
+    var cx=W/2, cy=H/2;
+    var label=vals[0].d.slice(5).replace('-','/');
+    var valStr=vals[0].v.toLocaleString();
+    return '<div class="chart-card"><div class="chart-title"><span>'+res.emoji+'</span>'+res.name
+      +'<span style="margin-left:auto;font-variant-numeric:tabular-nums;font-size:14px;color:'+color+'">'+valStr+'<span style="font-size:11px;color:var(--text3);margin-left:2px">'+res.unit+'</span></span></div>'
+      +'<svg style="width:100%;height:110px;overflow:visible" viewBox="0 0 '+W+' '+(H+28)+'" preserveAspectRatio="xMidYMid meet">'
+      +'<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="'+color+'"/>'
+      +'<text x="'+cx+'" y="'+(cy-10)+'" font-size="10" fill="'+color+'" text-anchor="middle" font-weight="bold">'+valStr+res.unit+'</text>'
+      +'<text x="'+cx+'" y="'+(H+16)+'" font-size="9" fill="var(--text3)" text-anchor="middle">'+label+'</text>'
+      +'</svg></div>';
+  }
+
+  // 多点折线
+  var BAR_W=Math.max(6,Math.min(24,Math.floor(W/vals.length)-5));
   var linePts='';
-  for(var i=0;i<vals.length;i++){var x=(i/(vals.length-1))*W,y=H-((vals[i].v-mn)/range)*(H-18)-9;linePts+=x+','+y+' ';}
-  var bars='',step=W/vals.length;
-  for(var i=0;i<vals.length;i++){var bh=Math.max(4,((vals[i].v-mn)/range)*(H-18)+9),bx=i*step+step/2-BAR_W/2,by=H-bh;bars+='<rect x="'+bx+'" y="'+by+'" width="'+BAR_W+'" height="'+bh+'" rx="3" fill="'+color+'" opacity="0.18"/>';}
-  var labels='';
-  if(vals.length>=2){var d0=vals[0].d.slice(5).replace('-','/'),d1=vals[vals.length-1].d.slice(5).replace('-','/');labels='<text x="0" y="'+(H+16)+'" font-size="9" fill="var(--text3)">'+d0+'</text><text x="'+W+'" y="'+(H+16)+'" font-size="9" fill="var(--text3)" text-anchor="end">'+d1+'</text>';}
-  var lx=W,ly=H-((vals[vals.length-1].v-mn)/range)*(H-18)-9;
+  var dots='';
+  var ptLabels='';
+  var step=W/(vals.length-1);
+
+  for(var i=0;i<vals.length;i++){
+    var x=(vals.length===1)?W/2:i*step;
+    var y=H-((vals[i].v-mn)/range)*(H-18)-9;
+    linePts+=x+','+y+' ';
+    // 圆点
+    dots+='<circle cx="'+x+'" cy="'+y+'" r="3.5" fill="'+color+'" stroke="var(--card)" stroke-width="1.5"/>';
+    // 数值标签：奇偶交错避免重叠（上下交替）
+    var labelY=(i%2===0)?(y-10):(y+18);
+    // 边界保护
+    if(labelY<10) labelY=y+18;
+    if(labelY>H+4) labelY=y-10;
+    var valLabel=vals[i].v.toLocaleString();
+    ptLabels+='<text x="'+x+'" y="'+labelY+'" font-size="9" fill="'+color+'" text-anchor="middle" font-weight="600">'+valLabel+'</text>';
+  }
+
+  // X轴日期标签（仅首尾，避免拥挤）
+  var d0=vals[0].d.slice(5).replace('-','/');
+  var d1=vals[vals.length-1].d.slice(5).replace('-','/');
+  var xLabels='<text x="0" y="'+(H+22)+'" font-size="9" fill="var(--text3)">'+d0+'</text>'
+    +'<text x="'+W+'" y="'+(H+22)+'" font-size="9" fill="var(--text3)" text-anchor="end">'+d1+'</text>';
+
+  // 柱状背景（淡色）
+  var barStep=W/vals.length;
+  var bars='';
+  for(var i=0;i<vals.length;i++){
+    var bh=Math.max(4,((vals[i].v-mn)/range)*(H-18)+9),bx=i*barStep+barStep/2-BAR_W/2,by=H-bh;
+    bars+='<rect x="'+bx+'" y="'+by+'" width="'+BAR_W+'" height="'+bh+'" rx="3" fill="'+color+'" opacity="0.13"/>';
+  }
+
   return '<div class="chart-card"><div class="chart-title"><span>'+res.emoji+'</span>'+res.name
-    +'<span style="margin-left:auto;font-variant-numeric:tabular-nums;font-size:14px;color:'+color+'">'+vals[vals.length-1].v.toLocaleString()+'<span style="font-size:11px;color:var(--text3);margin-left:2px">'+res.unit+'</span></span></div>'+'<svg style="width:100%;height:110px;overflow:visible" viewBox="0 0 '+W+' '+(H+22)+'" preserveAspectRatio="xMidYMid meet">'
-    +bars+'<polyline points="'+linePts+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+'<circle cx="'+lx+'" cy="'+ly+'" r="3" fill="'+color+'"/>'+labels+'</svg></div>';
+    +'<span style="margin-left:auto;font-variant-numeric:tabular-nums;font-size:14px;color:'+color+'">'+vals[vals.length-1].v.toLocaleString()+'<span style="font-size:11px;color:var(--text3);margin-left:2px">'+res.unit+'</span></span></div>'
+    +'<svg style="width:100%;height:120px;overflow:visible" viewBox="0 0 '+W+' '+(H+30)+'" preserveAspectRatio="xMidYMid meet">'
+    +bars
+    +'<polyline points="'+linePts+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
+    +ptLabels+dots+xLabels
+    +'</svg></div>';
 }
 
 // ══════════════════════════════════════════
@@ -3451,7 +4510,7 @@ function resetTheme(){
   document.documentElement.style.removeProperty('--accent-l');
   document.documentElement.style.removeProperty('--card-opacity');
   try{localStorage.removeItem('tdr_theme_hsl');localStorage.removeItem('tdr_theme_bg');localStorage.removeItem('tdr_card_opacity');}catch(e){}
-  var btns=document.querySelectorAll('.theme-btn');for(var i=0;i<btns.length;i++)btns[i].textContent=isDark?'☀':'☾';
+  _updateThemeBtns();
   toast('已恢复默认主题');
   initThemePanel();
 }
@@ -4483,33 +5542,32 @@ function _setupSWUpdateCheck(reg){
 }
 
 window.onload=function(){
-  loadData();loadTheme();initColorPresets();
+  loadData();loadTheme();loadUIStyle();initColorPresets();
   if(state.games.length){
     curGid=state.games[0].id;
     var aa=state.games[0].accounts||[];
     if(aa.length)curAid=aa[0].id;
   }
-  rAllTabs();rPage('task');
+  // 初始化主页面（任务页）
+  goPage('task');
   initThemePanel();
   document.getElementById('task-date').textContent=today();
   _dailyCheckDay=today();
   setTimeout(migrateImagesToIDB, 1500);
   registerSW();
   initSupabase();
-  // ③ PWA: 检查是否已安装，如果是，隐藏安装按钮
+  // PWA: 检查是否已安装
   if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone){
-    var btn=document.getElementById('pwa-install-btn');
-    if(btn) btn.style.display='none';
-    var manBtn=document.getElementById('pwa-manual-btn');
-    if(manBtn) manBtn.style.display='none';
+    var pwaRow=document.getElementById('menu-pwa-row');
+    if(pwaRow) pwaRow.style.display='none';
+    var iosTip=document.getElementById('pwa-ios-tip');
+    if(iosTip) iosTip.style.display='none';
     clog('PWA','已以PWA模式运行');
   }
-  // ② 成就：进入时检查（延迟避免阻塞渲染）
-  setTimeout(function(){ try{rAch();}catch(e){} }, 2000);
-  clog('APP','初始化完成 v8.0',{games:state.games.length});
+  // 成就：延迟检查
+  setTimeout(function(){ try{rAch();updateMoreAchSub();}catch(e){} }, 2200);
+  clog('APP','初始化完成 v11',{games:state.games.length});
 };
 </script>
 </body>
 </html>
-
-
