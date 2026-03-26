@@ -12,9 +12,7 @@
 <style>
 /* ══════════════════════════════════════════════════════
    囤囤鼠来哩 v11
-   双主题：
-   [illus] 默认·插画暖系 — 大圆角·手绘感·暖米白
-   [clean] 极简·苔绿系  — 细线·留白·现代感
+   主题：默认·插画暖系 — 大圆角·手绘感·暖米白
 ══════════════════════════════════════════════════════ */
 
 /* ── 插画风变量（默认） ── */
@@ -62,27 +60,7 @@
   --warm1:#2A2418;--warm2:#322A1C;--warm3:#3A3020;
 }
 
-/* ── 极简风覆盖变量 ── */
-[data-ui=clean] {
-  --bg:#F7F6F1;--bg2:#EEECEA;--bg3:#E3E1D8;
-  --card:#FFFFFF;
-  --border:#E0DDD4;--border2:#C8C5BC;
-  --text:#242220;--text2:#686460;--text3:#9E9890;
-  --nav:#FAFAF7;--navborder:#ECEAE2;
-  --r:14px;--r2:10px;--r3:8px;--r4:18px;
-  --sh:0 1px 4px rgba(0,0,0,.06);
-  --sh2:0 4px 18px rgba(0,0,0,.09);
-  --sh3:0 8px 28px rgba(0,0,0,.12);
-  --warm1:#F0EDE5;--warm2:#E8E4DA;--warm3:#E0DDD4;
-}
-[data-ui=clean][data-theme=dark] {
-  --bg:#131210;--bg2:#191816;--bg3:#211F1C;
-  --card:rgba(24,23,21,1);
-  --border:#272420;--border2:#343028;
-  --text:#E4E0D6;--text2:#908A80;--text3:#524E48;
-  --nav:#191816;--navborder:#272420;
-  --warm1:#1C1A16;--warm2:#222018;--warm3:#28261E;
-}
+/* ── 极简风已移除，仅保留默认插画风 ── */
 
 * { box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent }
 html,body {
@@ -164,7 +142,7 @@ html,body {
   animation:fabRotate 8s linear infinite;
 }
 @keyframes fabRotate { to { transform:rotate(360deg); } }
-[data-ui=clean] #fab-btn::before { display:none; }
+/* fab dashed ring — 插画风专属 */
 
 /* 气泡菜单3个 — 猫爪形分布 */
 .paw-bubble {
@@ -380,12 +358,7 @@ html,body {
 :root .tcard.timed-card .tcard-check { border-color:#F0A080; }
 :root .tcard.timed-card .tcard-check.on { background:#D07858;border-color:#D07858; }
 
-/* 极简风任务条目 */
-[data-ui=clean] .tcard {
-  border-radius:10px;padding:11px 14px;
-  border:1.5px solid var(--border);
-}
-[data-ui=clean] .tcard::before { display:none; }
+/* 任务卡片插画风专属样式已在上方定义 */
 
 /* ══════════════════════════════════════
    子页面顶部（返回键）— 日志/图表/日记
@@ -899,9 +872,6 @@ select.fi { -webkit-appearance:none;appearance:none; }
 
 /* 插画风预览色块 */
 .preview-illus { background:linear-gradient(135deg,#FAF8F3,#F0EDE5);border:1.5px solid #E8E4DA;border-radius:10px;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;gap:3px; }
-/* 极简风预览色块 */
-.preview-clean { background:linear-gradient(135deg,#F7F6F1,#EEECEA);border:1.5px solid #E0DDD4;border-radius:10px;width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
-.preview-clean-line { width:70%;height:2px;background:var(--border2);border-radius:1px; }
 
 /* ══════════════════════════════════════
    选择游戏/账号浮层
@@ -1597,45 +1567,7 @@ select.fi { -webkit-appearance:none;appearance:none; }
   </div>
 
   <!-- ══ 主题自定义 Modal ══ -->
-  <div class="mover" id="m-theme" onclick="bgC(event,'m-theme')">
-    <div class="mbox">
-      <div class="m-handle"></div>
-      <div class="mhdr"><div class="mtitle">🎨 主题自定义</div><button class="mclose" onclick="hideM('m-theme')">×</button></div>
-      <div class="mbody">
-        <div class="theme-section">
-          <div class="theme-section-title">主题色（强调色）</div>
-          <div class="color-presets" id="theme-color-presets"></div>
-          <div class="fg" style="margin-top:10px">
-            <label class="fl">自定义强调色</label>
-            <input type="color" class="fi" id="theme-custom-color" value="#8BA995" style="padding:5px;height:44px;cursor:pointer" onchange="applyThemeColor(this.value)">
-          </div>
-        </div>
-        <div class="theme-section" style="margin-top:4px">
-          <div class="theme-section-title">背景色方案</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="theme-bg-presets"></div>
-          <div class="fg">
-            <label class="fl">自定义背景色（主背景）</label>
-            <input type="color" class="fi" id="theme-custom-bg" value="#F6F5F0" style="padding:5px;height:44px;cursor:pointer" onchange="applyCustomBg(this.value)">
-          </div>
-        </div>
-        <div class="theme-section" style="margin-top:4px">
-          <div class="theme-section-title">卡片透明度</div>
-          <div class="opacity-row">
-            <input type="range" class="opacity-slider" id="opacity-slider" min="0.4" max="1" step="0.05" value="1" oninput="applyCardOpacity(this.value)">
-            <span class="opacity-val" id="opacity-val">100%</span>
-          </div>
-          <div style="font-size:11px;color:var(--text3);margin-top:6px">降低透明度可让卡片呈现毛玻璃感</div>
-        </div>
-        <div class="theme-section" style="margin-top:4px;padding-bottom:10px">
-          <div class="theme-section-title">预设配色方案</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px" id="theme-schemes"></div>
-        </div>
-        <div class="theme-section" style="margin-top:4px;padding-bottom:10px">
-          <button class="btn bg bfull bsm" onclick="resetTheme()">↺ 恢复默认主题</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- m-theme is outside #app to avoid stacking context issues -->
 
   <!-- ══ 每日打卡提醒 Modal ══ -->
   <div class="mover" id="m-notif" onclick="bgC(event,'m-notif')">
@@ -1800,8 +1732,8 @@ select.fi { -webkit-appearance:none;appearance:none; }
     <div class="m-handle"></div>
     <div class="mhdr"><div class="mtitle">🎨 主题自定义</div><button class="mclose" onclick="hideM('m-theme')">×</button></div>
     <div class="mbody">
-      <!-- 风格切换 -->
-      <div class="theme-section" style="padding-top:4px">
+      <!-- 风格切换（已锁定为插画暖系） -->
+      <div class="theme-section" style="padding-top:4px;display:none">
         <div class="theme-section-title">界面风格</div>
         <div class="ui-style-row">
           <div class="ui-style-card active" id="style-card-illus" onclick="setUIStyle('illus')">
@@ -1811,16 +1743,8 @@ select.fi { -webkit-appearance:none;appearance:none; }
             <div class="ui-style-label">插画暖系</div>
             <div class="ui-style-sub">大圆角·手绘感</div>
           </div>
-          <div class="ui-style-card" id="style-card-clean" onclick="setUIStyle('clean')">
-            <div class="ui-style-preview">
-              <div class="preview-clean"><div class="preview-clean-line"></div></div>
-            </div>
-            <div class="ui-style-label">极简清雅</div>
-            <div class="ui-style-sub">细线·现代感</div>
-          </div>
         </div>
       </div>
-      <div class="divider"></div>
       <div class="theme-section">
         <div class="theme-section-title">主题色</div>
         <div class="color-presets" id="theme-color-presets"></div>
@@ -2340,9 +2264,16 @@ function G(gid){var id=gid||curGid;for(var i=0;i<state.games.length;i++)if(state
 function A(gid,aid){var g=G(gid);if(!g)return null;var aa=g.accounts||[];for(var i=0;i<aa.length;i++)if(aa[i].id===(aid||curAid))return aa[i];return null;}
 // ── 跨天自动检测（每分钟检查一次）──
 var _dailyCheckDay='';
+var _lastResetCheck='';
 setInterval(function(){
   var t=today();
   if(t!==_dailyCheckDay){_dailyCheckDay=t;resetDaily();toast('每日任务已自动重置 🌅');}
+  // ④ 每分钟也调用resetDaily以触发 05:00 等时间点的重置
+  else {
+    var bjNowD=bjDate();
+    var nowKey=t+'-'+bjNowD.getHours()+':'+bjNowD.getMinutes();
+    if(nowKey!==_lastResetCheck){_lastResetCheck=nowKey;resetDaily();}
+  }
 },60000);
 function toast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on');},2500);}
 
@@ -2639,24 +2570,19 @@ function renderLogResOverview(){
 
 // ══ UI 风格切换（插画风 ↔ 极简风）══
 function setUIStyle(style){
-  document.documentElement.setAttribute('data-ui', style==='clean'?'clean':'');
-  try{ localStorage.setItem('tdr_ui_style',style); }catch(e){}
-  // 更新风格卡高亮
+  // 仅保留默认插画风，忽略其他风格参数
+  document.documentElement.setAttribute('data-ui','');
+  try{ localStorage.setItem('tdr_ui_style','illus'); }catch(e){}
   var illus=document.getElementById('style-card-illus');
-  var clean=document.getElementById('style-card-clean');
-  if(illus) illus.classList.toggle('active',style!=='clean');
-  if(clean) clean.classList.toggle('active',style==='clean');
-  toast(style==='clean'?'已切换到极简风 ✦':'已切换到插画风 🌿');
-  clog('UI','风格切换',{style:style});
+  if(illus) illus.classList.add('active');
+  clog('UI','风格：插画暖系（默认）');
 }
 function loadUIStyle(){
   try{
-    var s=localStorage.getItem('tdr_ui_style')||'illus';
-    document.documentElement.setAttribute('data-ui',s==='clean'?'clean':'');
+    // 强制使用插画风（已移除其他主题）
+    document.documentElement.setAttribute('data-ui','');
     var illus=document.getElementById('style-card-illus');
-    var clean=document.getElementById('style-card-clean');
-    if(illus) illus.classList.toggle('active',s!=='clean');
-    if(clean) clean.classList.toggle('active',s==='clean');
+    if(illus) illus.classList.add('active');
   }catch(e){}
 }
 
@@ -2714,6 +2640,8 @@ function tCardH(t){
   if(t.resUpdateMode&&t.resUpdateMode!=='none'&&(t.resEntries||[]).length){
     resHint='<span style="font-size:10px;color:var(--accent);background:var(--accbg);padding:1px 6px;border-radius:6px;border:1px solid var(--accbg2)">'+(t.resUpdateMode==='add'?'＋':'＝')+'资源</span>';
   }
+  // 同步标记
+  var syncBadge=t.syncAll?'<span style="font-size:10px;color:var(--blue,#6878A8);background:rgba(104,120,168,.12);padding:1px 6px;border-radius:6px;border:1px solid rgba(104,120,168,.22)">🔗全账号</span>':'';
   // 限时任务日期
   var timedSub='';
   if(mode==='timed'&&(t.timedStart||t.timedEnd)){
@@ -2728,7 +2656,7 @@ function tCardH(t){
     +(isDone?'':'')+'</div>'
     +'<div class="tcard-body">'
     +'<div class="tcard-name'+(isDone?' done':'')+'" onclick="openEditTask(\''+t.id+'\')">'+colorDot+t.text+'</div>'
-    +'<div class="tcard-sub">'+timedSub+resHint+'</div>'
+    +'<div class="tcard-sub">'+timedSub+resHint+syncBadge+'</div>'
     +'</div>'
     +'<span class="tcard-badge '+badgeCls+'">'+label+'</span>'
     +'<button class="tcard-del" onclick="delTask(\''+t.id+'\')">×</button>'
@@ -2737,8 +2665,15 @@ function tCardH(t){
 
 // rAllTabs不再用于任务页，保留兼容用
 function rAllTabs(){
-  // 保留兼容
   updateSelectorPills();
+  // 也刷新其他页面的tabs
+  var pages=['task','log','chart'];
+  for(var i=0;i<pages.length;i++){
+    var ge=document.getElementById(pages[i]+'-gtabs');
+    var ae=document.getElementById(pages[i]+'-atabs');
+    if(ge)rGTabs(pages[i]+'-gtabs',pages[i]);
+    if(ae)rATabs(pages[i]+'-atabs',pages[i]);
+  }
 }
 
 // ── TABS ──
@@ -2773,11 +2708,6 @@ function selA(aid,ctx){
   curAid=aid;rATabs((ctx+'-atabs'),ctx);
   if(ctx==='task')rTasks();else if(ctx==='log')rLogs();else if(ctx==='chart')rCharts();
   // MODIFIED: 日历不再通过 selA 触发
-}
-function rAllTabs(){
-  // MODIFIED: 日历不再需要 tabs
-  var pages=['task','log','chart'];
-  for(var i=0;i<pages.length;i++){rGTabs(pages[i]+'-gtabs',pages[i]);rATabs(pages[i]+'-atabs',pages[i]);}
 }
 
 // ── RESOURCE MANAGE ──
@@ -3085,6 +3015,69 @@ function addAcctSetup(gid,aid){
   }
   showM('m-addacct');
 }
+// ⑤ 检查并自动补全：把 syncAll 任务同步到该游戏所有缺失的账号
+function syncAllTasksToGame(g){
+  if(!g)return;
+  var aa=g.accounts||[];
+  if(aa.length<2)return;
+  // 收集所有 syncAll 任务（跨账号去重）
+  var seen={};
+  for(var ai=0;ai<aa.length;ai++){
+    var ts=aa[ai].tasks||[];
+    for(var ti=0;ti<ts.length;ti++){
+      if(ts[ti].syncAll) seen[ts[ti].text]=ts[ti];
+    }
+  }
+  var syncKeys=Object.keys(seen);
+  if(!syncKeys.length)return;
+  var changed=false;
+  for(var ai2=0;ai2<aa.length;ai2++){
+    if(!aa[ai2].tasks)aa[ai2].tasks=[];
+    for(var ki=0;ki<syncKeys.length;ki++){
+      var template=seen[syncKeys[ki]];
+      var has=false;
+      for(var ti2=0;ti2<aa[ai2].tasks.length;ti2++){
+        if(aa[ai2].tasks[ti2].text===template.text){has=true;break;}
+      }
+      if(!has){
+        aa[ai2].tasks.push(Object.assign({},template,{id:uid(),isDone:false,lastReset:today()}));
+        changed=true;
+      }
+    }
+  }
+  return changed;
+}
+
+// ⑤ 启动时对所有游戏执行一次同步补全
+function _bootSyncAllTasks(){
+  var changed=false;
+  for(var gi=0;gi<state.games.length;gi++){
+    if(syncAllTasksToGame(state.games[gi]))changed=true;
+  }
+  if(changed)saveData();
+}
+
+// ⑤ 收集一个游戏中所有标记了 syncAll 的任务（跨账号去重，取最新版本）
+function _collectSyncAllTasks(g){
+  var seen={};  // text -> taskObj
+  var aa=g.accounts||[];
+  for(var ai=0;ai<aa.length;ai++){
+    var ts=aa[ai].tasks||[];
+    for(var ti=0;ti<ts.length;ti++){
+      if(ts[ti].syncAll){
+        // 用任务文本去重，后者覆盖前者（保持最新设置）
+        seen[ts[ti].text]=ts[ti];
+      }
+    }
+  }
+  var result=[];
+  var keys=Object.keys(seen);
+  for(var ki=0;ki<keys.length;ki++){
+    result.push(Object.assign({},seen[keys[ki]],{id:uid(),isDone:false,lastReset:today()}));
+  }
+  return result;
+}
+
 function doSaveAcct(){
   var gid=document.getElementById('aa-gid').value;
   var aid=document.getElementById('aa-id').value;
@@ -3107,8 +3100,11 @@ function doSaveAcct(){
       }
       toast('账号已更新');
     } else {
-      g.accounts.push({id:aid||uid(),name:name,note:note,desc:desc,avatarData:avatarRef||'',logs:[],tasks:[],diary:[]});
-      toast(name+' 已添加');
+      var newAcctId=aid||uid();
+      // ⑤ 从游戏所有账号收集 syncAll 任务（跨账号去重）
+      var syncedTasks=_collectSyncAllTasks(g);
+      g.accounts.push({id:newAcctId,name:name,note:note,desc:desc,avatarData:avatarRef||'',logs:[],tasks:syncedTasks,diary:[]});
+      toast(name+' 已添加'+(syncedTasks.length?' · 已自动同步'+syncedTasks.length+'个任务 🔗':''));
     }
     saveData();hideM('m-addacct');tmpAcctAvatar=null;avatarCleared=false;
     rRes();rAllTabs();if(curGid===gid&&!curAid&&g.accounts.length)curAid=g.accounts[0].id;
@@ -3122,8 +3118,10 @@ function doSaveAcct(){
       var newAid=uid();
       saveAcctAvatar(newAid,avatarDataRaw,function(err,ref){
         var aRef=err?avatarDataRaw:ref;
-        g.accounts.push({id:newAid,name:name,note:note,desc:desc,avatarData:aRef,logs:[],tasks:[],diary:[]});
-        toast(name+' 已添加');
+        // ⑤ 从游戏所有账号收集 syncAll 任务（跨账号去重）
+        var syncedTasks2=_collectSyncAllTasks(g);
+        g.accounts.push({id:newAid,name:name,note:note,desc:desc,avatarData:aRef,logs:[],tasks:syncedTasks2,diary:[]});
+        toast(name+' 已添加'+(syncedTasks2.length?' · 已自动同步'+syncedTasks2.length+'个任务 🔗':''));
         saveData();hideM('m-addacct');tmpAcctAvatar=null;avatarCleared=false;
         rRes();rAllTabs();if(curGid===gid&&!curAid&&g.accounts.length)curAid=g.accounts[0].id;
       });
@@ -3190,17 +3188,18 @@ function _taskNeedsReset(t){
   var td=today();
   if(!lr||lr===td) return false;
   if(mode==='daily'){
-    // ① 按设定时间判断（北京时间）
-    var resetTime=t.dailyResetTime||'04:00';
+    // 北京时间重置：只有当前北京时间 >= 重置时间，且lastReset不是今天才重置
+    var resetTime=t.dailyResetTime||'05:00';
     var parts=resetTime.split(':');
-    var resetH=parseInt(parts[0])||4, resetM=parseInt(parts[1])||0;
+    var resetH=parseInt(parts[0])||5, resetM=parseInt(parts[1])||0;
     var bjNowD=bjDate();
     var nowMins=bjNowD.getHours()*60+bjNowD.getMinutes();
     var resetMins=resetH*60+resetM;
-    // 如果今天还没到重置时间，且lastReset是今天，则不重置
-    if(lr===td && nowMins < resetMins) return false;
-    // lastReset不是今天则重置
-    return lr!==td;
+    // lastReset不是今天，且当前时间已到重置点，才重置
+    if(lr!==td && nowMins>=resetMins) return true;
+    // 如果重置时间在午夜后（比如05:00），处理跨天情况：
+    // lastReset是昨天但现在还没到05:00，不重置
+    return false;
   }
   if(mode==='weekly'){
     // ① 按设定星期几重置
@@ -3277,7 +3276,7 @@ function _resetLabel(t){
   if(mode==='none') return '一次';
   if(mode==='daily'){
     var rt=t.dailyResetTime;
-    return rt&&rt!=='04:00'?('每天'+rt):'每天';
+    return rt&&rt!=='05:00'?('每天'+rt):'每天';
   }
   if(mode==='weekly'){
     var wds=['日','一','二','三','四','五','六'];
@@ -3317,16 +3316,17 @@ function togTask(id){
   var hasEntries=theTask.resEntries&&theTask.resEntries.length;
 
   if(mode==='none'||!hasEntries){
-    // ③ 无资源变更：仅提示，写日志
-    saveData();rTasks();
+    // ③ 无资源变更：写日志备注
     _appendTaskDoneLog(theTask);
+    saveData();rTasks();
     toast('✅ 已完成：'+theTask.text);
   } else if(mode==='add'){
-    // ② 增加模式：自动叠加资源，不弹界面
+    // ② 增加模式：自动叠加资源（内部会写日志备注）
     _applyTaskResUpdate(theTask);
     saveData();rTasks();
   } else if(mode==='set'){
-    // ① 设置模式：弹出记录界面让用户手动设置资源
+    // ① 设置模式：弹出记录界面，先写完成备注
+    _appendTaskDoneLog(theTask);
     saveData();rTasks();
     toast('✅ 任务完成！请手动设置今日资源');
     setTimeout(function(){openLogFor(curGid,curAid);},400);
@@ -3342,21 +3342,48 @@ function togTask(id){
   }
 }
 
-// 仅在日志界面写入"已完成xx任务"的文字记录（无资源变更模式）
+// 在日志备注中追加任务完成信息（所有任务类型通用）
 function _appendTaskDoneLog(task){
   var a=A();if(!a)return;
   if(!a.logs)a.logs=[];
-  // 找今天日志或创建
+  var appendTxt='已完成「'+task.text+'」';
+  // 找今天日志，但【不创建】新的空日志（避免干扰后续资源任务）
   var todayLog=null;
   for(var i=0;i<a.logs.length;i++){if(a.logs[i].date===today()){todayLog=a.logs[i];break;}}
-  if(!todayLog){
-    todayLog={id:uid(),date:today(),timeNote:'',note:'',entries:[]};
-    a.logs.push(todayLog);
+  if(todayLog){
+    // 防重复：已有该条则不追加
+    if(todayLog.note.indexOf(appendTxt)<0){
+      todayLog.note=todayLog.note?(todayLog.note+'\n'+appendTxt):appendTxt;
+    }
+    saveData();
+  } else {
+    // 没有今日日志：暂存到pending，等下次记录时合并
+    if(!state._pendingTaskNotes)state._pendingTaskNotes={};
+    var td=today();
+    // 防重复检查
+    if(!state._pendingTaskNotes[td]||state._pendingTaskNotes[td].indexOf(appendTxt)<0){
+      state._pendingTaskNotes[td]=state._pendingTaskNotes[td]
+        ?(state._pendingTaskNotes[td]+'\n'+appendTxt):appendTxt;
+    }
+    saveData();
   }
-  // 在备注末尾追加任务完成信息
-  var appendTxt='已完成「'+task.text+'」';
-  todayLog.note=todayLog.note?(todayLog.note+'\n'+appendTxt):appendTxt;
-  saveData();
+}
+
+// 将待写入的任务完成备注合并到今日日志
+function _flushPendingTaskNotes(todayLog){
+  if(!state._pendingTaskNotes)return;
+  var td=today();
+  if(state._pendingTaskNotes[td]){
+    var pending=state._pendingTaskNotes[td];
+    // 防重复：只合并还没有的行
+    var lines=pending.split('\n');
+    for(var li=0;li<lines.length;li++){
+      if(lines[li]&&(!todayLog.note||todayLog.note.indexOf(lines[li])<0)){
+        todayLog.note=todayLog.note?(todayLog.note+'\n'+lines[li]):lines[li];
+      }
+    }
+    delete state._pendingTaskNotes[td];
+  }
 }
 
 // ① 执行任务资源更新
@@ -3374,6 +3401,14 @@ function _applyTaskResUpdate(task){
     todayLog={id:uid(),date:today(),timeNote:'',note:'',entries:[]};
     logs.push(todayLog);
     a.logs=logs;
+  }
+  // 合并待写备注（把之前none模式任务写的备注合并进来）
+  _flushPendingTaskNotes(todayLog);
+  // 追加本次任务完成备注
+  var appendTxt2='已完成「'+task.text+'」';
+  // 防重复：只有备注中还没有这条才追加
+  if(todayLog.note.indexOf(appendTxt2)<0){
+    todayLog.note=todayLog.note?(todayLog.note+'\n'+appendTxt2):appendTxt2;
   }
   for(var j=0;j<entries.length;j++){
     var e=entries[j];
@@ -3442,7 +3477,7 @@ function openAddTask(){
   document.getElementById('nt-weekly-day-row').style.display='none';
   document.getElementById('nt-monthly-day-row').style.display='none';
   document.getElementById('nt-daily-time-row').style.display='block';
-  document.getElementById('nt-daily-time').value='04:00';
+  document.getElementById('nt-daily-time').value='05:00';
   document.getElementById('nt-monthly-day').value='';
   document.getElementById('nt-timed-start').value='';
   document.getElementById('nt-timed-end').value='';
@@ -3507,9 +3542,11 @@ function openEditTask(id){
     document.getElementById('nt-monthly-day').value=t.monthlyDay||'';
   } else if(mode==='daily'){
     document.getElementById('nt-daily-time-row').style.display='block';
-    document.getElementById('nt-daily-time').value=t.dailyResetTime||'04:00';
+    document.getElementById('nt-daily-time').value=t.dailyResetTime||'05:00';
   }
-  document.getElementById('nt-sync-all').classList.remove('on');
+  // 恢复 syncAll 开关状态（显示当前任务是否已同步）
+  var syncEl=document.getElementById('nt-sync-all');
+  if(t.syncAll){syncEl.classList.add('on');}else{syncEl.classList.remove('on');}
   document.getElementById('nt-share-collab').classList.remove('on');
   document.getElementById('nt-share-row').style.display=(_sbReady&&_collabRoom)?'flex':'none';
   _taskResModeVal=t.resUpdateMode||'none';
@@ -3535,7 +3572,7 @@ function doAddTask(){
   var timedEnd=document.getElementById('nt-timed-end').value||'';
   var weeklyDay=parseInt(document.getElementById('nt-weekly-day').value)||1;
   var monthlyDay=parseInt(document.getElementById('nt-monthly-day').value)||1;
-  var dailyResetTime=document.getElementById('nt-daily-time').value||'04:00';
+  var dailyResetTime=document.getElementById('nt-daily-time').value||'05:00';
   // 限时任务校验
   if(mode==='timed'){
     if(!timedStart||!timedEnd){toast('请设置活动开始和结束日期');return;}
@@ -3551,6 +3588,7 @@ function doAddTask(){
     customDays: mode==='custom'?customDays:undefined,
     lastReset: today(),
     color: taskColor,
+    syncAll: syncAll,   // ⑤ 持久化同步标记，新账号自动继承
     resUpdateMode: _taskResModeVal||'none',
     resEntries: _taskResEntries.length?_taskResEntries.map(function(e){return{resId:e.resId,value:parseFloat(e.value)||0};}): [],
     // ① 新增
@@ -3571,8 +3609,18 @@ function doAddTask(){
       for(var j=0;j<aa.length;j++){
         if(aa[j].id===a.id) continue;
         var at=aa[j].tasks||[];
+        var foundInAcct=false;
         for(var k=0;k<at.length;k++){
-          if(at[k].id===editId) Object.assign(at[k],{text:taskObj.text,resetMode:taskObj.resetMode,isDaily:taskObj.isDaily,customDays:taskObj.customDays,color:taskObj.color,resUpdateMode:taskObj.resUpdateMode,resEntries:taskObj.resEntries,timedStart:taskObj.timedStart,timedEnd:taskObj.timedEnd,weeklyDay:taskObj.weeklyDay,monthlyDay:taskObj.monthlyDay,dailyResetTime:taskObj.dailyResetTime});
+          // 通过 text+resetMode 匹配跨账号的同名任务
+          if(at[k].id===editId||at[k].text===taskObj.text){
+            Object.assign(at[k],{text:taskObj.text,resetMode:taskObj.resetMode,isDaily:taskObj.isDaily,customDays:taskObj.customDays,color:taskObj.color,syncAll:true,resUpdateMode:taskObj.resUpdateMode,resEntries:taskObj.resEntries,timedStart:taskObj.timedStart,timedEnd:taskObj.timedEnd,weeklyDay:taskObj.weeklyDay,monthlyDay:taskObj.monthlyDay,dailyResetTime:taskObj.dailyResetTime});
+            foundInAcct=true;
+          }
+        }
+        // 该账号没有此任务，自动补充
+        if(!foundInAcct){
+          if(!aa[j].tasks)aa[j].tasks=[];
+          aa[j].tasks.push(Object.assign({},taskObj,{id:uid(),isDone:false,lastReset:today()}));
         }
       }
     }
@@ -3582,12 +3630,24 @@ function doAddTask(){
     a.tasks.push(taskObj);
     if(syncAll&&g){
       var aa2=g.accounts||[];
+      var syncCount=0;
       for(var j2=0;j2<aa2.length;j2++){
         if(aa2[j2].id===a.id) continue;
         if(!aa2[j2].tasks)aa2[j2].tasks=[];
-        aa2[j2].tasks.push(Object.assign({},taskObj,{id:uid()}));
+        // 检查是否已有同名任务，有则更新，没有则新增
+        var found2=false;
+        for(var k2=0;k2<aa2[j2].tasks.length;k2++){
+          if(aa2[j2].tasks[k2].text===taskObj.text){
+            Object.assign(aa2[j2].tasks[k2],{resetMode:taskObj.resetMode,isDaily:taskObj.isDaily,color:taskObj.color,syncAll:true,resUpdateMode:taskObj.resUpdateMode,resEntries:taskObj.resEntries});
+            found2=true;break;
+          }
+        }
+        if(!found2){
+          aa2[j2].tasks.push(Object.assign({},taskObj,{id:uid()}));
+          syncCount++;
+        }
       }
-      toast('任务已添加（已同步'+g.accounts.length+'个账号）');
+      toast('任务已添加（已同步至全部'+g.accounts.length+'个账号）');
     } else { toast('任务已添加'); }
   }
 
@@ -3649,11 +3709,15 @@ function _renderTaskResEntries(){
     var e=_taskResEntries[i];
     var r=null;for(var j=0;j<res.length;j++){if(res[j].id===e.resId){r=res[j];break;}}
     if(!r)continue;
+    // ⑥ 资源名称做成可点击选择的 pill（点击弹出滑轮选择器）
     h+='<div class="task-res-entry">'
-      +'<span style="font-size:16px">'+r.emoji+'</span>'
-      +'<span style="font-size:13px;font-weight:600;flex:1">'+r.name+'</span>'
-      +'<input type="number" class="fi" value="'+e.value+'" style="width:80px;padding:6px 8px;text-align:center" oninput="updateTaskResEntry('+i+',this.value)" placeholder="0">'
-      +'<span style="font-size:11px;color:var(--text3);margin-left:4px">'+r.unit+'</span>'
+      +'<div onclick="openResWheelPicker('+i+')" style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--accbg);border:1.5px solid var(--accent);border-radius:20px;cursor:pointer;flex-shrink:0;max-width:48%;overflow:hidden">'
+      +'<span style="font-size:15px">'+r.emoji+'</span>'
+      +'<span style="font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.name+'</span>'
+      +'<span style="font-size:10px;color:var(--text3)">▼</span>'
+      +'</div>'
+      +'<input type="number" class="fi" value="'+e.value+'" style="width:80px;padding:6px 8px;text-align:center;flex-shrink:0" oninput="updateTaskResEntry('+i+',this.value)" placeholder="0" inputmode="decimal">'
+      +'<span style="font-size:11px;color:var(--text3);flex-shrink:0">'+r.unit+'</span>'
       +'<button class="task-res-del" onclick="removeTaskResEntry('+i+')">×</button>'
       +'</div>';
   }
@@ -3662,12 +3726,94 @@ function _renderTaskResEntries(){
 function addTaskResEntry(){
   var g=G();if(!g){toast('请先选择游戏');return;}
   var res=g.resources||[];if(!res.length){toast('该游戏还没有资源类型');return;}
-  // 选择未添加的资源
   var usedIds=_taskResEntries.map(function(e){return e.resId;});
   var avail=res.filter(function(r){return!usedIds.includes(r.id);});
   if(!avail.length){toast('所有资源已添加');return;}
-  _taskResEntries.push({resId:avail[0].id,value:0});
+  // ⑥ 直接弹出滑轮选择器让玩家选资源
+  _openResWheelPickerNew(avail);
+}
+
+// ⑥ 新条目资源选择器
+function _openResWheelPickerNew(avail){
+  var existing=document.getElementById('m-res-wheel');
+  if(existing) existing.remove();
+  var g=G();if(!g)return;
+  var res=g.resources||[];
+  var usedIds=_taskResEntries.map(function(e){return e.resId;});
+  var allAvail=res.filter(function(r){return!usedIds.includes(r.id);});
+  if(!allAvail.length){toast('所有资源已添加');return;}
+
+  var listH='';
+  for(var i=0;i<allAvail.length;i++){
+    var r=allAvail[i];
+    listH+='<div onclick="pickNewResEntry(\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s" onmousedown="this.style.background=\'var(--accbg)\'" ontouchstart="this.style.background=\'var(--accbg)\'" onmouseup="this.style.background=\'\'" ontouchend="this.style.background=\'\'">'
+      +'<span style="font-size:22px">'+r.emoji+'</span>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:14px;font-weight:700;color:var(--text)">'+r.name+'</div>'
+      +'<div style="font-size:11px;color:var(--text3)">单位：'+r.unit+'</div>'
+      +'</div>'
+      +'<span style="font-size:18px;color:var(--accent)">+</span>'
+      +'</div>';
+  }
+  var el=document.createElement('div');
+  el.id='m-res-wheel';
+  el.className='mover';
+  el.style.zIndex='500';  // 高于 m-addtask 的 z-index:300
+  function _closeResWheel(){var w=document.getElementById('m-res-wheel');if(w){w.classList.remove('show');setTimeout(function(){if(w.parentNode)w.parentNode.removeChild(w);},350);}}
+  el.innerHTML='<div class="mbox"><div class="m-handle"></div>'
+    +'<div class="mhdr"><div class="mtitle">选择资源</div><button class="mclose" onclick="_closeResWheel()">×</button></div>'
+    +'<div style="padding-bottom:8px">'+listH+'</div></div>';
+  el.onclick=function(ev){if(ev.target===el)_closeResWheel();};
+  document.body.appendChild(el);
+  el.style.display='flex';
+  requestAnimationFrame(function(){requestAnimationFrame(function(){el.classList.add('show');});});
+}
+function pickNewResEntry(resId){
+  _taskResEntries.push({resId:resId,value:0});
   _renderTaskResEntries();
+  _closeResWheel();
+}
+
+// ⑥ 修改已有条目的资源（点击资源 pill 弹出选择）
+function openResWheelPicker(idx){
+  var existing=document.getElementById('m-res-wheel');
+  if(existing) existing.remove();
+  var g=G();if(!g)return;
+  var res=g.resources||[];
+  // 可选：当前已用的（排除自身）
+  var selfId=_taskResEntries[idx]?_taskResEntries[idx].resId:'';
+  var usedIds=_taskResEntries.map(function(e,i){return i===idx?null:e.resId;}).filter(Boolean);
+
+  var listH='';
+  for(var i=0;i<res.length;i++){
+    var r=res[i];
+    var isUsed=usedIds.indexOf(r.id)>=0;
+    if(isUsed) continue; // 已被其他行用的不显示
+    var isCur=(r.id===selfId);
+    listH+='<div onclick="changeResEntry('+idx+',\''+r.id+'\')" style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;background:'+(isCur?'var(--accbg)':'transparent')+'">'
+      +'<span style="font-size:22px">'+r.emoji+'</span>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:14px;font-weight:700;color:'+(isCur?'var(--accent)':'var(--text)')+'">'+r.name+(isCur?' ✓':'')+'</div>'
+      +'<div style="font-size:11px;color:var(--text3)">单位：'+r.unit+'</div>'
+      +'</div>'
+      +'</div>';
+  }
+  var el2=document.createElement('div');
+  el2.id='m-res-wheel';
+  el2.className='mover';
+  el2.style.zIndex='500';  // 高于 m-addtask
+  el2.innerHTML='<div class="mbox"><div class="m-handle"></div>'
+    +'<div class="mhdr"><div class="mtitle">更换资源</div><button class="mclose" onclick="_closeResWheel()">×</button></div>'
+    +'<div style="padding-bottom:8px">'+listH+'</div></div>';
+  el2.onclick=function(ev){if(ev.target===el2)_closeResWheel();};
+  document.body.appendChild(el2);
+  el2.style.display='flex';
+  requestAnimationFrame(function(){requestAnimationFrame(function(){el2.classList.add('show');});});
+}
+function changeResEntry(idx,resId){
+  if(_taskResEntries[idx]) _taskResEntries[idx].resId=resId;
+  _renderTaskResEntries();
+  _closeResWheel();
 }
 function updateTaskResEntry(idx,val){
   if(_taskResEntries[idx]) _taskResEntries[idx].value=val;
@@ -3706,13 +3852,37 @@ function showLogM(){
   if(!res.length){openManRes(curGid);return;}
   document.getElementById('addlog-title').textContent='记录 · '+a.name;
   document.getElementById('log-date').value=today();
-  document.getElementById('log-note').value='';document.getElementById('log-time').value='';
-  var logs=a.logs||[],last=null;
-  if(logs.length){var sl=logs.slice().sort(function(a,b){return b.date.localeCompare(a.date);});last=sl[0];}
+  // ⑦ 优先用今日已有数据预填，否则用最近一条
+  var logs=a.logs||[],prefill=null;
+  var todayLog=null;
+  for(var ti=0;ti<logs.length;ti++){if(logs[ti].date===today()){todayLog=logs[ti];break;}}
+  if(todayLog){
+    prefill=todayLog;
+    document.getElementById('log-note').value=todayLog.note||'';
+    document.getElementById('log-time').value=todayLog.timeNote||'';
+  } else {
+    if(logs.length){var sl=logs.slice().sort(function(a,b){return b.date.localeCompare(a.date);});prefill=sl[0];}
+    document.getElementById('log-note').value='';document.getElementById('log-time').value='';
+  }
+  // 合并待写任务备注到备注框（并在UI展示后清除pending，避免doAddLog再次合并）
+  if(state._pendingTaskNotes&&state._pendingTaskNotes[today()]){
+    var pNote=state._pendingTaskNotes[today()];
+    var existNote=document.getElementById('log-note').value;
+    // 只补充还没出现的行
+    var pLines=pNote.split('\n');
+    for(var pli=0;pli<pLines.length;pli++){
+      if(pLines[pli]&&(!existNote||existNote.indexOf(pLines[pli])<0)){
+        existNote=existNote?(existNote+'\n'+pLines[pli]):pLines[pli];
+      }
+    }
+    document.getElementById('log-note').value=existNote;
+    // 已合并到UI，清除pending避免doAddLog重复写入
+    delete state._pendingTaskNotes[today()];
+  }
   var h='';
   for(var i=0;i<res.length;i++){
     var r=res[i],lv='';
-    if(last){for(var j=0;j<(last.entries||[]).length;j++){if(last.entries[j].resourceId===r.id){lv=last.entries[j].value;break;}}}
+    if(prefill){for(var j=0;j<(prefill.entries||[]).length;j++){if(prefill.entries[j].resourceId===r.id){lv=prefill.entries[j].value;break;}}}
     h+='<div class="fg"><label class="fl">'+r.emoji+' '+r.name+'（'+r.unit+'）</label><input class="fi" type="number" inputmode="decimal" id="li-'+r.id+'" value="'+lv+'" placeholder="0"></div>';
   }
   document.getElementById('log-inputs').innerHTML=h;showM('m-addlog');
@@ -3726,7 +3896,17 @@ function doAddLog(){
   var entries=[];
   for(var i=0;i<res.length;i++){var r=res[i],el=document.getElementById('li-'+r.id);entries.push({resourceId:r.id,value:parseFloat(el?el.value:0)||0});}
   if(!a.logs)a.logs=[];
-  a.logs.push({id:uid(),date:date,timeNote:timeNote,note:note,entries:entries});
+  // ①⑦ 合并待写任务备注到备注字段
+  var newLog={id:uid(),date:date,timeNote:timeNote,note:note,entries:entries};
+  if(date===today()) _flushPendingTaskNotes(newLog);
+  // ⑦ 如当天已有记录，提示用户（防重复）
+  var sameDayCount=a.logs.filter(function(l){return l.date===date;}).length;
+  if(sameDayCount>0&&!timeNote){
+    // 自动补充时间备注以区分
+    var now=bjDate();
+    newLog.timeNote=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  }
+  a.logs.push(newLog);
   saveData();hideM('m-addlog');
   //刷新账号详情页（如果开着）
   if(document.getElementById('dp-acct').classList.contains('open')&&dpAcctGid===curGid&&dpAcctAid===curAid){
@@ -3781,6 +3961,7 @@ function rCal(){
 
   // 收集有颜色的周期任务 + 限时任务日期范围
   var taskColorDates={};   // date -> [{color, taskId, taskText, gameName, mode}]
+  var timedCalSeen={};     // gid+'|'+text+'|'+start+'|'+end -> true，限时任务按游戏去重
   for(var gi2=0;gi2<state.games.length;gi2++){
     var g2=state.games[gi2];
     var aa2=g2.accounts||[];
@@ -3790,10 +3971,13 @@ function rCal(){
         var t=ts[ti];
         var tColor=t.color||'';
         var tMode=t.resetMode||(t.isDaily?'daily':'none');
-        // ② 限时任务：即使没设颜色也标注（用橙色默认）
+        // ② 限时任务：按游戏去重，避免多账号产生重复色点
         if(tMode==='timed'){
           var tStart=t.timedStart,tEnd=t.timedEnd;
           if(!tStart||!tEnd) continue;
+          var timedKey=g2.id+'|'+t.text+'|'+tStart+'|'+tEnd;
+          if(timedCalSeen[timedKey]) continue;
+          timedCalSeen[timedKey]=true;
           var markColor=tColor||'#D0A040';
           var cur=new Date(tStart+'T00:00:00');
           var endD=new Date(tEnd+'T00:00:00');
@@ -3869,8 +4053,9 @@ function rCalDetail(){
   var el=document.getElementById('cal-detail');
   if(!calSel){el.innerHTML='';return;}
 
-  // ② 收集当天的限时活动任务
+  // ② 收集当天的限时活动任务 — 按【游戏+任务名称】去重，避免多账号重复显示
   var timedItems=[];
+  var timedSeenKey={};  // key: gid+'|'+taskText
   for(var gi=0;gi<state.games.length;gi++){
     var g=state.games[gi];
     var aa=g.accounts||[];
@@ -3880,7 +4065,23 @@ function rCalDetail(){
       for(var ti=0;ti<ts.length;ti++){
         var t=ts[ti];
         if(t.resetMode==='timed'&&t.timedStart&&t.timedEnd&&calSel>=t.timedStart&&calSel<=t.timedEnd){
-          timedItems.push({task:t,gameName:g.name,acctName:a.name,gid:g.id,aid:a.id,color:t.color||'#D0A040'});
+          var dedupeKey=g.id+'|'+t.text+'|'+t.timedStart+'|'+t.timedEnd;
+          if(!timedSeenKey[dedupeKey]){
+            timedSeenKey[dedupeKey]=true;
+            // 统计该游戏有几个账号有此任务，以及完成状态
+            var acctTotal=0,acctDone=0;
+            for(var ai3=0;ai3<aa.length;ai3++){
+              var tlist=aa[ai3].tasks||[];
+              for(var ti3=0;ti3<tlist.length;ti3++){
+                if(tlist[ti3].text===t.text&&tlist[ti3].resetMode==='timed'&&tlist[ti3].timedStart===t.timedStart&&tlist[ti3].timedEnd===t.timedEnd){
+                  acctTotal++;
+                  if(tlist[ti3].isDone)acctDone++;
+                  break;
+                }
+              }
+            }
+            timedItems.push({task:t,gameName:g.name,gid:g.id,aid:a.id,color:t.color||'#D0A040',acctTotal:acctTotal,acctDone:acctDone});
+          }
         }
       }
     }
@@ -3903,7 +4104,7 @@ function rCalDetail(){
 
   var h='<div class="cal-detail"><div class="cal-detail-date">'+fmtD(calSel)+'</div>';
 
-  // ② 限时活动区块
+  // ② 限时活动区块 — 按游戏显示，不再展示账号
   if(timedItems.length){
     h+='<div style="margin-bottom:10px">'
       +'<div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">⏳ 当天限时活动</div>';
@@ -3911,20 +4112,21 @@ function rCalDetail(){
       var item=timedItems[ti2];
       var t2=item.task;
       var isToday=(calSel===today());
-      var isDone=t2.isDone;
-      // 点击跳转到任务页对应游戏账号
+      var allDone=(item.acctTotal>0&&item.acctDone===item.acctTotal);
+      var progressTxt=item.acctTotal>1?(' '+item.acctDone+'/'+item.acctTotal+' 账号已完成'):(allDone?'已完成':'');
       h+='<div onclick="jumpToTask(\''+item.gid+'\',\''+item.aid+'\',\''+t2.id+'\')" '
         +'style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card);border:2px solid '
         +item.color+';border-radius:var(--r2);margin-bottom:6px;cursor:pointer;transition:all 0.15s" '
         +'>'
         +'<div style="width:10px;height:10px;border-radius:50%;background:'+item.color+';flex-shrink:0"></div>'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:700;color:var(--text)'+(isDone?';text-decoration:line-through;color:var(--text3)':'')+'">'+(isDone?'✓ ':'')+t2.text+'</div>'
-        +'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+item.gameName+' · '+item.acctName
+        +'<div style="font-size:13px;font-weight:700;color:var(--text)'+(allDone?';text-decoration:line-through;color:var(--text3)':'')+'">'+(allDone?'✓ ':'')+t2.text+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);margin-top:1px">🎮 '+item.gameName
         +' &nbsp;|&nbsp; '+(t2.timedStart?t2.timedStart.slice(5).replace('-','/'):'?')+'→'+(t2.timedEnd?t2.timedEnd.slice(5).replace('-','/'):'?')
+        +(progressTxt?'&nbsp;|&nbsp;<span style="color:var(--green)">'+progressTxt+'</span>':'')
         +'</div>'
         +'</div>'
-        +(isToday&&!isDone?'<span style="font-size:10px;color:var(--accent);font-weight:700;flex-shrink:0">去完成 →</span>':'')
+        +(isToday&&!allDone?'<span style="font-size:10px;color:var(--accent);font-weight:700;flex-shrink:0">去完成 →</span>':'')
         +'</div>';
     }
     h+='</div>';
@@ -5548,6 +5750,8 @@ window.onload=function(){
     var aa=state.games[0].accounts||[];
     if(aa.length)curAid=aa[0].id;
   }
+  // ⑤ 启动时自动补全 syncAll 任务到所有账号
+  try{_bootSyncAllTasks();}catch(e){}
   // 初始化主页面（任务页）
   goPage('task');
   initThemePanel();
@@ -5570,4 +5774,4 @@ window.onload=function(){
 };
 </script>
 </body>
-</html>
+</html>                                                 </html>
